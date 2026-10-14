@@ -156,3 +156,19 @@ def install_fdroid():
         run(["waydroid", "app", "install", str(apk)], timeout=180)
     emit("ready", "F-Droid is installed", ready=True)
     return 0
+
+
+def resume():
+    """Quiet login resume; never triggers downloads or polkit elevation."""
+    if not settings.load()["android_enabled"]:
+        return {"ok": True, "skipped": True}
+    if not shutil.which("waydroid"):
+        return {"ok": False, "error": "Waydroid is not installed"}
+    if status()["ready"]:
+        return {"ok": True, "already_running": True}
+    if not Path("/var/lib/waydroid/waydroid.cfg").is_file():
+        return {"ok": False, "error": "Android needs one-time setup in Settings"}
+    subprocess.Popen(["waydroid", "session", "start"], stdin=subprocess.DEVNULL,
+                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                     start_new_session=True)
+    return {"ok": True, "starting": True}
