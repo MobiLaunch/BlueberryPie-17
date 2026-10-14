@@ -153,24 +153,49 @@ Third-party Linux applications retain their own themes in this milestone.
 
 ## Build a live ISO on Arch
 
-First build the package without installing it:
+Run these commands on your Arch Linux machine **as a normal user**:
 
 ```bash
-./scripts/build-package.sh
-sudo pacman -S --needed archiso ripgrep
-sudo ./scripts/build-iso.sh --package "$(find build/package -maxdepth 1 -name 'prism-shell-*.pkg.tar.zst' -print -quit)"
+sudo pacman -Syu --needed base-devel archiso git ripgrep
+git clone https://github.com/MobiLaunch/BlueberryPie-17.git
+cd BlueberryPie-17
+bash ./build.sh
 ```
 
-The script copies the complete installed `/usr/share/archiso/configs/releng`
-profile, preserving its bootloader files and `install_dir` relationship. It
-adds a local package repository, packages, live account and greetd session.
-The output goes to `out/`; this pipeline still needs a real Arch ISO build,
-UEFI/BIOS boot tests, and hardware verification. No disk installer is included.
+If you have already cloned the repository, run `git pull --ff-only` from the
+existing checkout instead of cloning it again. The new root `build.sh` handles
+package creation, locates the actual package file, stages the complete upstream
+Arch releng profile and attempts `mkarchiso`. No manual package paths required.
+Logs go to `build/iso-build.log`; successful ISO output goes to `out/`.
+Use `bash ./build.sh --stage-only` to inspect just the generated Arch profile.
 
-Use `--stage-only` to inspect the assembled profile before building. The live
-demo uses username `prism`, password `prism`, and live-only passwordless sudo; it is not an
-installed-system account policy.
+This ISO remains **unverified until an Arch build and physical boot succeed**.
+There is no permanent disk installer yet. Live login: `prism` / `prism`.
 
+### Make a bootable USB
+
+**All data on the target USB disk will be erased.** First identify its model
+and unmount its partitions. Use the entire disk, not a numbered partition.
+
+```bash
+lsblk -o NAME,SIZE,MODEL,TRAN,MOUNTPOINTS
+ISO="$(find "$PWD/out" -maxdepth 1 -name '*.iso' -type f | sort | tail -n 1)"
+test -f "$ISO" || { echo 'No ISO found. Build it first.'; exit 1; }
+# Replace /dev/sdX with your carefully verified USB disk
+sudo dd if="$ISO" of=/dev/sdX bs=4M status=progress conv=fsync
+sync
+```
+
+Reboot and select the USB entry in your firmware boot menu.
+
+## Prism Store and optional Android apps
+
+Prism Store now offers real Flathub search and user-scoped Flatpak install,
+remove and launch actions. Open it from the dock or app drawer and explicitly
+enable the Flathub remote. The Android tab opens optional Waydroid after setup.
+Waydroid requires a compatible binder-enabled kernel and separately downloaded
+Android image; it is not proof of native Android 17, and some games will not work.
+See [Prism Store and Waydroid setup](docs/WAYDROID_STORE.md).
 ## Publish updates to this repository
 
 Commit your changes in a clone of this repository. The included script checks

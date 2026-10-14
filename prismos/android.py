@@ -26,6 +26,8 @@ def open_android():
 
 
 def install_apk(path):
+    if not path:
+        raise ValueError('An APK filename is required')
     apk = Path(path).expanduser().resolve()
     if not apk.is_file() or apk.suffix.lower() != ".apk":
         raise ValueError("Select an existing .apk file")

@@ -43,8 +43,14 @@ def search(term):
     state = status()
     if not state["available"] or not state["configured"]:
         return {**state, "items": []}
-    output = run(["flatpak", "search", "--user",
-                  "--columns=application,name,description,remotes", term.strip()], timeout=35)
+    try:
+        output = run(["flatpak", "search", "--user",
+                      "--columns=application,name,description,remotes", term.strip()], timeout=35)
+    except CommandError as error:
+        if "No matches" in str(error) or "No results" in str(error):
+            output = ""
+        else:
+            raise
     installed = installed_ids()
     items, seen = [], set()
     for line in output.splitlines():

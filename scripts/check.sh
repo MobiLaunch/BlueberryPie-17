@@ -5,6 +5,7 @@ cd -- "$prism_root"
 python3 -m unittest discover -s tests -v
 while IFS= read -r prism_script; do bash -n "$prism_script"; done < <(find scripts bin archiso -type f \( -name '*.sh' -o -name prism-shell -o -name prism-session \))
 bash -n packaging/arch/PKGBUILD
+bash -n build.sh
 node --check preview/app.js
 node tests/launch.spec.cjs
 node tests/audio-events.spec.cjs
