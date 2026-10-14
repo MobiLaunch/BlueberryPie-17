@@ -3,7 +3,7 @@
 @define-color theme_fg_color #19151e;
 @define-color theme_base_color #f1eef5;
 @define-color theme_text_color #19151e;
-@define-color theme_selected_bg_color #c27443;
+@define-color theme_selected_bg_color #955125;
 @define-color theme_selected_fg_color #f7e1d0;
 @define-color borders #8c8392;
 window, dialog, .background {
@@ -27,8 +27,8 @@ button {
 }
 button:hover { background-color: #f7e1d0; }
 button:active, button:checked, button.suggested-action {
-    background-color: #c27443;
-    border-color: #c27443;
+    background-color: #955125;
+    border-color: #955125;
     color: #ffffff;
 }
 entry, spinbutton, searchentry, combobox {
@@ -40,7 +40,7 @@ entry, spinbutton, searchentry, combobox {
     min-height: 28px;
 }
 entry:focus, spinbutton:focus {
-    border: 2px solid #c27443;
+    border: 2px solid #955125;
 }
 popover, menu, .menu, .csd {
     background-color: #f1eef5;
@@ -53,7 +53,7 @@ popover modelbutton:hover, menuitem:hover, .menuitem:hover {
     color: #19151e;
 }
 selection, text selection, flowboxchild:selected, row:selected {
-    background-color: #c27443;
+    background-color: #955125;
     color: #ffffff;
 }
 switch {
@@ -61,10 +61,10 @@ switch {
     border-radius: 20px;
     border: 1px solid #8c8392;
 }
-switch:checked { background-color: #c27443; border-color: #c27443; }
+switch:checked { background-color: #955125; border-color: #955125; }
 switch slider { border-radius: 100%; }
 scale highlight, progressbar progress, levelbar block.filled {
-    background-color: #c27443;
+    background-color: #955125;
     border-radius: 12px;
 }
 scale trough, progressbar trough {
