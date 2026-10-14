@@ -64,6 +64,60 @@ Column {
         }
     }
     Label {
+        text: "Arrange monitors"
+        font.pixelSize: 17
+        font.weight: Font.DemiBold
+        visible: DisplayState.monitors.length > 1
+    }
+    Label {
+        text: "Choose a screen, then place it beside another."
+        width: parent.width
+        font.pixelSize: 13
+        wrapMode: Text.WordWrap
+        opacity: .72
+        visible: DisplayState.monitors.length > 1
+    }
+    Column {
+        id: arrangement
+        width: parent.width
+        spacing: 8
+        visible: DisplayState.monitors.length > 1
+        ComboBox {
+            id: movedMonitor
+            width: parent.width
+            model: DisplayState.monitors.map(m => m.name)
+            currentIndex: 0
+            Accessible.name: "Display to move"
+        }
+        ComboBox {
+            id: targetMonitor
+            width: parent.width
+            model: DisplayState.monitors.map(m => m.name).filter(n => n !== movedMonitor.currentText)
+            currentIndex: 0
+            Accessible.name: "Place relative to display"
+        }
+        Flow {
+            width: parent.width
+            spacing: 7
+            Repeater {
+                model: [
+                    {label: "← Left", direction: "left"},
+                    {label: "Right →", direction: "right"},
+                    {label: "↑ Above", direction: "above"},
+                    {label: "Below ↓", direction: "below"}
+                ]
+                delegate: PillButton {
+                    required property var modelData
+                    text: modelData.label
+                    enabled: !DisplayState.busy && targetMonitor.currentText.length > 0
+                    onClicked: DisplayState.arrange(movedMonitor.currentText,
+                                                    modelData.direction,
+                                                    targetMonitor.currentText)
+                }
+            }
+        }
+    }
+    Label {
         width: parent.width
         text: DisplayState.monitors.length === 0 ?
               "No monitors were detected. Display settings require an active PrismOS session." : ""
