@@ -58,6 +58,10 @@ PanelWindow {
     }
     function refresh() { navigate(currentPath); }
     function pasteInto(folder) { request(["paste", folder], "paste"); }
+    function copyDrop(source, folder) {
+        if (!source || !folder || root.busy) return;
+        request(["transfer", source, "--dest", folder], "paste");
+    }
     function stageItem(path, action) { request(["stage", path, "--action", action], "stage"); }
     function loadDrives() { if (!driveReader.running && !volumeBusy) driveReader.running = true; }
     function driveAction(item) {
@@ -220,6 +224,21 @@ PanelWindow {
             else ShellState.close();
         }
         focus: root.opened
+        Keys.onPressed: event => {
+            if (root.dialogKind || root.busy) return;
+            if (event.key === Qt.Key_V && (event.modifiers & Qt.ControlModifier)) {
+                root.pasteInto(root.currentPath);
+                event.accepted = true;
+            } else if (root.selectedPath && (event.modifiers & Qt.ControlModifier)) {
+                if (event.key === Qt.Key_C) {
+                    root.stageItem(root.selectedPath, "copy");
+                    event.accepted = true;
+                } else if (event.key === Qt.Key_X) {
+                    root.stageItem(root.selectedPath, "cut");
+                    event.accepted = true;
+                }
+            }
+        }
         Label {
             x: 28; y: 20
             text: "▣  Files"
@@ -322,6 +341,16 @@ PanelWindow {
                                 filled: root.currentPath === modelData.path
                                 enabled: !root.busy
                                 onClicked: root.navigate(modelData.path)
+                                DropArea {
+                                    anchors.fill: parent
+                                    keys: ["prism-file"]
+                                    onDropped: event => {
+                                        if (event.source && event.source.filePath) {
+                                            root.copyDrop(event.source.filePath, modelData.path);
+                                            event.acceptProposedAction();
+                                        }
+                                    }
+                                }
                             }
                         }
                         Label { text: "Removable drives"; font.weight: Font.DemiBold }
@@ -399,6 +428,12 @@ PanelWindow {
                     delegate: Rectangle {
                         id: fileRow
                         required property var modelData
+                        property string filePath: modelData.path
+                        Drag.active: rowDrag.active
+                        Drag.keys: ["prism-file"]
+                        Drag.source: fileRow
+                        Drag.hotSpot.x: 22
+                        Drag.hotSpot.y: 32
                         width: listing.width
                         height: 64
                         radius: 20
@@ -406,6 +441,25 @@ PanelWindow {
                                Theme.primary : area.containsMouse ? Theme.surfaceHigh :
                                "transparent"
                         Behavior on color { ColorAnimation { duration: Theme.fast } }
+                        DragHandler {
+                            id: rowDrag
+                            target: fileRow
+                            onActiveChanged: if (!active) {
+                                fileRow.Drag.drop();
+                                listing.forceLayout();
+                            }
+                        }
+                        DropArea {
+                            anchors.fill: parent
+                            enabled: fileRow.modelData.directory
+                            keys: ["prism-file"]
+                            onDropped: event => {
+                                if (event.source && event.source.filePath !== fileRow.filePath) {
+                                    root.copyDrop(event.source.filePath, fileRow.filePath);
+                                    event.acceptProposedAction();
+                                }
+                            }
+                        }
                         Rectangle {
                             x: 8
                             anchors.verticalCenter: parent.verticalCenter
