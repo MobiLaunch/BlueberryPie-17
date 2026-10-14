@@ -53,10 +53,11 @@ def main():
         nodes = []
         for name, media in (("speakers", "Audio/Sink"), ("headphones", "Audio/Sink"),
                             ("microphone", "Audio/Source"), ("usb-microphone", "Audio/Source")):
-            nodes.append({"factory": "adapter", "args": {"factory.name": "support.null-audio-sink",
-                "node.name": "prism-test-" + name, "node.description": "Test " + name,
-                "media.class": media, "audio.position": ["FL", "FR"]}})
-        (config/"80-prism-test.conf").write_text(json.dumps({"context.properties": {"core.name": "prism-audio-test"}, "context.objects": nodes}))
+            nodes.append("{ factory = adapter args = { factory.name = support.null-audio-sink "
+                "node.name = " + json.dumps("prism-test-" + name) + " node.description = " + json.dumps("Test " + name) +
+                " media.class = " + json.dumps(media) + " audio.position = [ FL FR ] } }")
+        # context.objects is parsed as SPA-JSON objects: use its native separators.
+        (config/"80-prism-test.conf").write_text("context.properties = { core.name = prism-audio-test }\ncontext.objects = [\n" + "\n".join(nodes) + "\n]\n")
         children, logs = [], []
         try:
             for name, command in (("pipewire", ["pipewire"]), ("wireplumber", ["wireplumber", "--profile", "policy"])):

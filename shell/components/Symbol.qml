@@ -7,6 +7,8 @@ Image {
     id: root
     property string name: "spark"
     property color color: Theme.onSurfaceHigh
+    implicitWidth: 24
+    implicitHeight: 24
     source: Quickshell.shellPath("../design/icons/" + name + ".svg")
     sourceSize: Qt.size(width * 2, height * 2)
     fillMode: Image.PreserveAspectFit
