@@ -285,6 +285,9 @@ Scope {
     Appearance {
         screen: root.screen
     }
+    FirstRun {
+        screen: root.screen
+    }
     LaunchSplash {
         screen: root.screen
     }

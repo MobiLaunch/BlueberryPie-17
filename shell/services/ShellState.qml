@@ -7,6 +7,8 @@ import "LaunchTracking.js" as LaunchTracking
 QtObject {
     id: root
     property var activeScreen: Quickshell.screens.length ? Quickshell.screens[0] : null
+    property bool onboardingOpen: false
+    property bool firstRunChecked: false
     property bool shadeOpen: false
     property bool drawerOpen: false
     property bool settingsOpen: false
@@ -18,6 +20,24 @@ QtObject {
     property bool launchMinimumElapsed: false
     property string toast: ""
 
+
+    function checkFirstRun() {
+        if (firstRunChecked)
+            return;
+        const prefs = SystemBridge.snapshot.settings;
+        if (!prefs || typeof prefs.onboarding_complete !== "boolean")
+            return;
+        firstRunChecked = true;
+        if (!prefs.onboarding_complete) {
+            close();
+            activeScreen = focusedScreen();
+            onboardingOpen = true;
+        }
+    }
+    property Connections welcomeObserver: Connections {
+        target: SystemBridge
+        function onSnapshotChanged() { root.checkFirstRun(); }
+    }
     function close() {
         cancelLaunch();
         shadeOpen = false;
