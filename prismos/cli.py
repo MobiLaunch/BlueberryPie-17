@@ -2,7 +2,7 @@ import argparse
 import json
 import sys
 
-from . import android, apps, audio, favorites, fdroid, inputs, settings, store, system, theme, wireless
+from . import android, apps, audio, favorites, fdroid, files, inputs, settings, store, system, theme, wireless
 
 
 def main(argv=None):
@@ -14,6 +14,11 @@ def main(argv=None):
     inp.add_argument("operation", choices=("list", "set", "apply"))
     inp.add_argument("key", nargs="?")
     inp.add_argument("value", nargs="?")
+    fileargs = sub.add_parser("files")
+    fileargs.add_argument("operation", choices=("list", "bookmarks", "open", "mkdir", "rename", "trash"))
+    fileargs.add_argument("path", nargs="?")
+    fileargs.add_argument("--name")
+    fileargs.add_argument("--hidden", action="store_true")
     software = sub.add_parser("store")
     software.add_argument("operation", choices=("status", "enable", "search", "install", "remove", "open"))
     software.add_argument("value", nargs="?")
@@ -65,6 +70,19 @@ def main(argv=None):
                 result = inputs.change(args.key, args.value)
             else:
                 result = inputs.apply()
+        elif args.command == "files":
+            if args.operation == "list":
+                result = files.browse(args.path, args.hidden)
+            elif args.operation == "bookmarks":
+                result = files.bookmarks()
+            elif args.operation == "open":
+                result = files.open_item(args.path)
+            elif args.operation == "mkdir":
+                result = files.create_folder(args.path, args.name)
+            elif args.operation == "rename":
+                result = files.rename(args.path, args.name)
+            else:
+                result = files.trash(args.path)
         elif args.command == "store":
             if args.operation == "status":
                 result = store.status()
