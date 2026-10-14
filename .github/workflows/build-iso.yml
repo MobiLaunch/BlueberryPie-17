@@ -1,0 +1,67 @@
+name: Build PrismOS ISO
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/build-iso.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build-iso:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    container:
+      image: archlinux:latest
+      options: --privileged
+    steps:
+      - name: Install Arch Linux build dependencies
+        run: |
+          pacman -Syu --needed --noconfirm \
+            base-devel archiso git ripgrep pacman-contrib python python-pillow sudo
+      - name: Checkout BlueberryPie-17
+        uses: actions/checkout@v4
+      - name: Create unprivileged package builder
+        shell: bash
+        run: |
+          useradd --create-home prismbuilder
+          printf 'prismbuilder ALL=(ALL) NOPASSWD: ALL\n' > /etc/sudoers.d/prismbuilder
+          chmod 0440 /etc/sudoers.d/prismbuilder
+          chown -R prismbuilder:prismbuilder "$GITHUB_WORKSPACE"
+      - name: Build PrismOS package and live ISO
+        shell: bash
+        run: |
+          runuser -u prismbuilder -- bash -c 'cd "$1" && bash ./build.sh' _ "$GITHUB_WORKSPACE"
+      - name: Verify generated ISO
+        shell: bash
+        run: |
+          shopt -s nullglob
+          images=(out/*.iso)
+          if (( ${#images[@]} != 1 )); then
+            echo "Expected exactly one nonempty ISO in out/" >&2
+            exit 1
+          fi
+          test -s "${images[0]}"
+          sha256sum "${images[0]}" > out/SHA256SUMS
+          ls -lh "${images[0]}"
+          cat out/SHA256SUMS
+      - name: Upload bootable ISO candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: PrismOS-v0.8-ISO
+          path: |
+            out/*.iso
+            out/SHA256SUMS
+          compression-level: 0
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload build log when available
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: PrismOS-ISO-build-log
+          path: build/iso-build.log
+          if-no-files-found: ignore
+          retention-days: 7

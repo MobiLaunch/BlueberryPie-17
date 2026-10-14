@@ -11,9 +11,9 @@ case "${1:-}" in
     -h|--help) echo "Usage: bash ./build.sh [--stage-only]"; exit 0 ;;
     *) echo "Usage: bash ./build.sh [--stage-only]" >&2; exit 2 ;;
 esac
-for utility in makepkg sudo mkarchiso repo-add bsdtar rg; do
+for utility in makepkg sudo mkarchiso repo-add bsdtar rg python3; do
     if ! command -v "$utility" >/dev/null; then
-        echo "Missing $utility. On Arch: sudo pacman -Syu --needed base-devel archiso git ripgrep" >&2
+        echo "Missing $utility. On Arch: sudo pacman -Syu --needed base-devel archiso git ripgrep pacman-contrib python-pillow sudo" >&2
         exit 1
     fi
 done

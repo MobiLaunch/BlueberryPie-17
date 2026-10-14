@@ -14,6 +14,13 @@ interactive offline design preview, real Linux system adapters, and an Arch
 package/live-ISO staging pipeline. This is a development foundation. A bootable
 ISO and hardware qualification have not been completed in this release.
 
+## Build the ISO on Windows
+
+See **[Windows build instructions](docs/WINDOWS-ISO.md)** for the
+one-click GitHub Actions option and the local Arch Linux VirtualBox VM
+workflow. A finished artifact is an unverified boot candidate until a
+real VM or USB boot is tested.
+
 ## Try the look immediately
 
 Open `PrismOS-Preview-v0.4.html` directly for the complete standalone preview, or
