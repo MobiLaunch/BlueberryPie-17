@@ -23,6 +23,14 @@ hl.animation({ leaf = "windowsIn", enabled = true, speed = 3.2, spring = "prismS
 hl.animation({ leaf = "windowsOut", enabled = true, speed = 1.6, bezier = "prismFade", style = "popin 95%" })
 hl.animation({ leaf = "fade", enabled = true, speed = 1.6, bezier = "prismFade" })
 hl.animation({ leaf = "layers", enabled = false }) -- The shell animates its own panels.
+-- Hyprland 0.56 native trackpad gestures: continuous workspace movement
+-- plus Android-like 4-finger launcher / Quick Settings reveals.
+-- These do not intercept ordinary two-finger app scrolling.
+hl.gesture({ fingers = 3, direction = "horizontal", action = "workspace" })
+hl.gesture({ fingers = 4, direction = "up",
+    action = function() hl.exec_cmd("prism-shell ipc launcher") end })
+hl.gesture({ fingers = 4, direction = "down",
+    action = function() hl.exec_cmd("prism-shell ipc shade") end })
 hl.bind("SUPER + SPACE", hl.dsp.exec_cmd("prism-shell ipc launcher"))
 hl.bind("SUPER + A", hl.dsp.exec_cmd("prism-shell ipc launcher"))
 hl.bind("SUPER + Q", hl.dsp.exec_cmd("prism-shell ipc shade"))
