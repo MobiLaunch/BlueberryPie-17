@@ -133,3 +133,17 @@ working permissions and predictable error/retry handling across every app.
 - User-triggered F-Droid install/open and regular app-drawer integration.
 - Unverified: real image download, binder/kernel compatibility, USB boot,
   compositor transitions and robust F-Droid APK publisher verification.
+
+
+## v0.8 delivered development slice
+
+- File copy/cut/paste with conflict protection; thumbnail cache.
+- Removable USB volume discovery, mount/unmount through UDisks2.
+- Initial within-Prism-Files drag-to-copy, pending compositor QA.
+- Multi-monitor relative arrangement with overlap validation and 20-second
+  reversible preview.
+- Trackpad gesture integration with workspace swipe, drawer and Quick Settings.
+
+Follow-on acceptance: boot and run PrismOS on real Arch hardware, test
+touchscreen gestures, external displays, live drag/drop, XDG portals, and
+review large file transfers, media indexing and hotplug behavior.

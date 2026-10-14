@@ -24,11 +24,12 @@ HARDWARE = real compositor/device testing still required, GAP = missing.
 | Connections, display, sound, DND, power in Settings | SOURCE / QA | real changes + focus / layout |
 | GTK3/GTK4 and QtQuick Material session skin | SOURCE / QA | Thunar + common Qt clients, light/dark |
 | Third-party Electron/libadwaita/Java/Flutter UI | GAP | test each app; no universal style guarantee |
-| Native file browser | SOURCE / QA | real mounts, USB drives, drag-and-drop, Trash behavior |
+| Native file browser | SOURCE / QA | validate drag-drop, USB devices and large folder performance |
 | XDG file chooser portals | SOURCE / QA | GTK portal open/save from web browser and sandboxed apps |
 | Keyboard layouts, IMEs, accessibility, on-screen keyboard | GAP | device-specific settings, ibus/fcitx testing |
-| Touch-first window management and tablet gestures | GAP | gesture compositor API and physical touch |
-| Display scaling with rollback | SOURCE / QA | real monitors, check every scale and return path |
+| Touchpad swipe gestures | SOURCE / QA | compatible touchpad hardware, input inhibitors and focus checks |
+| Touchscreen edge swipes and tablet layout | GAP | dedicated touch input and tablet hardware QA |
+| Display scaling and arrangement with rollback | SOURCE / QA | physical multi-monitor hotplug and arrangement checks |
 | Printer, monitor arrangement, audio streams, permissions | GAP | settings panels with service APIs |
 | Installer, disk manager, Wi-Fi first boot, persistence | GAP | supervised destructive disk QA |
 | HCT dynamic material color across GTK/Qt | GAP | implement supported accent handoff, live reapply |
@@ -66,3 +67,22 @@ HARDWARE = real compositor/device testing still required, GAP = missing.
   can opt into a custom PrismOS config with PRISM_HYPRLAND_CONFIG.
 - Pending: physical boot, removable-media mounting, thumbnailing, file drag,
   cut/copy/paste, advanced display arrangements, external file picker rendering.
+
+
+## v0.8 engineering status
+
+- File copy/cut/paste: per-user short-lived clipboard, no silent overwrite;
+  symlink preservation and self-copy guard; explicit GIO cut/move.
+- Local picture thumbnails: cached PNGs, bounded original size and 30/visit cap.
+- Removable drives: user-scoped `lsblk` discovery and
+  `udisksctl mount/unmount` with standard polkit decisions.
+- Internal Prism Files drag-and-drop: initial UI with Qt Quick DropArea; not
+  yet qualified on a live compositor for mouse and touchscreen.
+- Relative multi-monitor placement: edge alignment, overlap rejection,
+  confirmation and rollback, per-user persistence.
+- Touchpad: 3-finger workspace transition and 4-finger drawer/quick panel
+  through Hyprland Lua gestures.
+- Still open: robust large file transfer progress/cancellation, copy conflict
+  rename resolution, removable-drive hotplug push notifications, drag across
+  processes, actual touchscreen edge gestures, display rotation/duplicate mode
+  with rollback, and real hardware testing.

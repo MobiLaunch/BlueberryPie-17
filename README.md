@@ -9,7 +9,7 @@ PrismOS is a new Arch Linux desktop project inspired by Android 17 and Material
 3 Expressive: playful color, tactile rounded controls, emphasized typography,
 and motion that connects an action to its result.
 
-The v0.7 source release includes a native **Qt Quick / Quickshell** shell, an
+The v0.8 source release includes a native **Qt Quick / Quickshell** shell, an
 interactive offline design preview, real Linux system adapters, and an Arch
 package/live-ISO staging pipeline. This is a development foundation. A bootable
 ISO and hardware qualification have not been completed in this release.
@@ -326,3 +326,37 @@ and session config startup). The updated Arch package can be installed using
 `./scripts/build-package.sh -i`; rebuild the ISO using `bash ./build.sh`.
 CI tests verify source/logic; **real USB boot, XDG portal integration,
 multi-monitor changes and Waydroid still require a machine/VM test**.
+
+
+## v0.8 — Files, drives, multi-monitor layouts and gestures
+
+**Prism Files** now supports Copy, Cut and Paste with a per-user clipboard and
+name-collision protection. File and folder operations preserve symlinks and
+refuse copying a directory into itself. Use the context menu or Ctrl+C,
+Ctrl+X, Ctrl+V (when the Files window has keyboard focus).
+Image files get cached preview thumbnails (bounded size, max 30 generated per
+folder listing). The file manager can discover removable drives, mount them
+through UDisks2 with standard Linux/polkit approval, open the mounted volume,
+and safely unmount it.
+
+An **experimental internal drag-to-copy** path lets you drag files onto
+folders or saved places in Prism Files. It only copies: moves require explicit
+Cut/Paste, and overwrites are refused. Physical mouse/touch drag needs live
+Quickshell/Hyprland verification.
+
+**Display arrangement** allows placing a screen left/right/above/below another.
+Overlaps are refused. Changes require confirmation within 20 seconds; otherwise
+the old position is restored. Validated positions are saved per PrismOS user.
+
+**Compositor gestures** supported on compatible touchpads:
+
+- 3-finger horizontal swipe: change workspaces (continuous Hyprland gesture).
+- 4-finger swipe up: open PrismOS app drawer.
+- 4-finger swipe down: open Quick Settings.
+
+These use the official Hyprland 0.56 Lua gesture configuration. This does not
+implement system-wide touchscreen edge swipes; touch-display hardware gestures
+are a separate compatibility target.
+
+Source checks and unit tests cover critical data safety behaviors, but ISO
+boot, real USB devices and monitor layout transitions require physical QA.

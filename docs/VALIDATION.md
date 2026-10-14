@@ -141,3 +141,14 @@ Unit tests cover file operations, safe paths, display input validation,
 rolled-back vs confirmed scaling, and persistent prefs. CI source and native
 QML checks do **not** qualify physical multi-monitor transitions or prove
 Waydroid and GTK portals work on a real ISO. Full device QA pending.
+
+
+## v0.8 source validation versus hardware
+
+Unit test coverage expanded to local file copying/cutting/pasting, collision
+and subfolder guards, symlink copy, image thumbnail caching, removable volume
+filtering, safe UDisks2 calls, display relative placement, collision checks
+and confirmation rollback. Native Qt lint and the existing UI interaction
+tests run in GitHub Actions. The optional internal drag-and-drop interaction
+is NOT certified on real hardware, and no Arch ISO, USB mount, display-hotplug,
+or touchpad/touchscreen gesture was exercised from this environment.

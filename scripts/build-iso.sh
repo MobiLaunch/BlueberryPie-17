@@ -60,10 +60,10 @@ UNIT
 rm -f -- "$prism_airoot/etc/systemd/system/getty@tty1.service.d/autologin.conf"
 cat > "$prism_airoot/etc/os-release" <<'OS'
 NAME="PrismOS"
-PRETTY_NAME="PrismOS 0.7 Live Preview"
+PRETTY_NAME="PrismOS 0.8 Live Preview"
 ID=prismos
 ID_LIKE=arch
-VERSION_ID=0.7
+VERSION_ID=0.8
 OS
 install -d -m755 "$prism_airoot/etc/sudoers.d"
 printf '%%wheel ALL=(ALL:ALL) NOPASSWD: ALL\n' > "$prism_airoot/etc/sudoers.d/prismos-live"

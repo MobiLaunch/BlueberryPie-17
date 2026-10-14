@@ -1,12 +1,12 @@
 # Maintainer: MobiLaunch
 pkgname=prism-shell
-pkgver=0.7.0
+pkgver=0.8.0
 pkgrel=1
 pkgdesc='PrismOS expressive native desktop shell and dedicated Wayland session'
 arch=('any')
 url='https://github.com/MobiLaunch/BlueberryPie-17'
 license=('MIT')
-depends=('quickshell>=0.3.2' 'hyprland>=0.56' 'python' 'python-pillow' 'qt6-declarative' 'qt6-svg' 'qt6-shadertools' 'networkmanager' 'nm-connection-editor' 'bluez' 'bluez-utils' 'blueman' 'pipewire' 'pipewire-pulse' 'wireplumber' 'brightnessctl' 'glib2' 'hyprlock' 'hypridle' 'dbus' 'foot' 'thunar' 'xdg-utils' 'polkit-kde-agent' 'ttf-roboto' 'xdg-desktop-portal-hyprland' 'xdg-desktop-portal-gtk' 'flatpak' 'waydroid' 'polkit')
+depends=('quickshell>=0.3.2' 'hyprland>=0.56' 'python' 'python-pillow' 'qt6-declarative' 'qt6-svg' 'qt6-shadertools' 'networkmanager' 'nm-connection-editor' 'bluez' 'bluez-utils' 'blueman' 'pipewire' 'pipewire-pulse' 'wireplumber' 'brightnessctl' 'glib2' 'hyprlock' 'hypridle' 'dbus' 'foot' 'thunar' 'xdg-utils' 'udisks2' 'util-linux' 'polkit-kde-agent' 'ttf-roboto' 'xdg-desktop-portal-hyprland' 'xdg-desktop-portal-gtk' 'flatpak' 'waydroid' 'polkit')
 source=("PrismOS-${pkgver}.tar.gz")
 sha256sums=('GENERATED_BY_BUILD_SCRIPT')
 
