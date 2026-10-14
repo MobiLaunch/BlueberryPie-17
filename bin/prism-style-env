@@ -1,0 +1,20 @@
+#!/usr/bin/env python3
+"""Resolve session-only GTK/Qt Material theme env values safely from preferences."""
+import sys
+sys.path.insert(0, "/usr/lib/prismos")
+try:
+    from prismos import settings
+    data = settings.load()
+except (OSError, ImportError, ValueError):
+    data = {}
+options = {
+    "#8469cf": ("Lilac", "DeepPurple"),
+    "#47846a": ("Mint", "Teal"),
+    "#c27443": ("Tangerine", "DeepOrange"),
+    "#b85c80": ("Rose", "Pink"),
+}
+name, accent = options.get(str(data.get("seed", "")).lower(), ("Lilac", "DeepPurple"))
+dark = data.get("dark") is True
+print("PrismOS-" + name + ("-Dark" if dark else ""))
+print("Dark" if dark else "Light")
+print(accent)

@@ -7,6 +7,12 @@ fi
 export XDG_CURRENT_DESKTOP=Hyprland:PrismOS
 export XDG_SESSION_DESKTOP=prismos
 export XDG_SESSION_TYPE=wayland
+# Scope GTK/Qt Material styling to PrismOS, never overwrite other sessions.
+mapfile -t prism_style < <(python3 /usr/bin/prism-style-env)
+export GTK_THEME="${prism_style[0]:-PrismOS-Lilac}"
+export QT_QUICK_CONTROLS_STYLE=Material
+export QT_QUICK_CONTROLS_MATERIAL_THEME="${prism_style[1]:-Light}"
+export QT_QUICK_CONTROLS_MATERIAL_ACCENT="${prism_style[2]:-DeepPurple}"
 prism_config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/prismos/hypr"
 mkdir -p -- "$prism_config_dir"
 for prism_config_name in hyprland.lua hyprlock.conf hypridle.conf; do

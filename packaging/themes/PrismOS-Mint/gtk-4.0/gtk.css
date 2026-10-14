@@ -1,0 +1,82 @@
+/* PrismOS expressive GTK skin; only active in the PrismOS session. */
+@define-color theme_bg_color #faf9fb;
+@define-color theme_fg_color #19151e;
+@define-color theme_base_color #f1eef5;
+@define-color theme_text_color #19151e;
+@define-color theme_selected_bg_color #47846a;
+@define-color theme_selected_fg_color #d5f1e4;
+@define-color borders #8c8392;
+window, dialog, .background {
+    background-color: #faf9fb;
+    color: #19151e;
+}
+headerbar, .titlebar, toolbar {
+    background-color: #f1eef5;
+    color: #19151e;
+    border: none;
+    border-radius: 14px;
+    min-height: 38px;
+}
+button {
+    background-color: #e5e0ec;
+    color: #19151e;
+    border: 1px solid #8c8392;
+    border-radius: 18px;
+    min-height: 30px;
+    padding: 6px 12px;
+}
+button:hover { background-color: #d5f1e4; }
+button:active, button:checked, button.suggested-action {
+    background-color: #47846a;
+    border-color: #47846a;
+    color: #ffffff;
+}
+entry, spinbutton, searchentry, combobox {
+    color: #19151e;
+    background-color: #f1eef5;
+    border: 1px solid #8c8392;
+    border-radius: 16px;
+    padding: 7px 12px;
+    min-height: 28px;
+}
+entry:focus, spinbutton:focus {
+    border: 2px solid #47846a;
+}
+popover, menu, .menu, .csd {
+    background-color: #f1eef5;
+    color: #19151e;
+    border-radius: 20px;
+}
+popover modelbutton:hover, menuitem:hover, .menuitem:hover {
+    border-radius: 12px;
+    background-color: #d5f1e4;
+    color: #19151e;
+}
+selection, text selection, flowboxchild:selected, row:selected {
+    background-color: #47846a;
+    color: #ffffff;
+}
+switch {
+    background-color: #e5e0ec;
+    border-radius: 20px;
+    border: 1px solid #8c8392;
+}
+switch:checked { background-color: #47846a; border-color: #47846a; }
+switch slider { border-radius: 100%; }
+scale highlight, progressbar progress, levelbar block.filled {
+    background-color: #47846a;
+    border-radius: 12px;
+}
+scale trough, progressbar trough {
+    background-color: #e5e0ec;
+    border-radius: 12px;
+}
+scrollbar slider {
+    background-color: #8c8392;
+    border-radius: 10px;
+}
+tooltip {
+    background-color: #e5e0ec;
+    color: #19151e;
+    border-radius: 12px;
+}
