@@ -9,7 +9,14 @@ from .system import CommandError, run
 
 def roots():
     home = Path(os.environ.get("XDG_DATA_HOME", Path.home()/".local/share"))
-    return [home/"applications"] + [Path(p)/"applications" for p in os.environ.get("XDG_DATA_DIRS", "/usr/local/share:/usr/share").split(":") if p]
+    # Flatpak --user exports desktop entries beneath the XDG data home, not
+    # directly within its applications/ directory. Also include system exports
+    # if a minimal greetd session has not set the Flatpak XDG_DATA_DIRS yet.
+    paths = [home/"applications", home/"flatpak/exports/share/applications",
+             Path("/var/lib/flatpak/exports/share/applications")]
+    paths += [Path(p)/"applications" for p in os.environ.get(
+        "XDG_DATA_DIRS", "/usr/local/share:/usr/share").split(":") if p]
+    return list(dict.fromkeys(paths))
 
 
 def entries():

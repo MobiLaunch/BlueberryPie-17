@@ -160,6 +160,13 @@ class DesktopEntryTests(unittest.TestCase):
         self.desktop("nested/browser.desktop","Comment=Open %U safely\n")
         self.assertEqual(apps.entries()[0]["id"],"nested-browser.desktop")
 
+    def test_flatpak_user_exports_are_discoverable(self):
+        export = self.user/"flatpak/exports/share/applications"
+        export.mkdir(parents=True)
+        (export/"org.example.Game.desktop").write_text(
+            "[Desktop Entry]\nType=Application\nName=Example Game\nExec=flatpak run org.example.Game\n")
+        self.assertEqual([item["id"] for item in apps.entries()], ["org.example.Game.desktop"])
+
     @patch("prismos.apps.run",return_value="")
     def test_launch_resolves_known_entry_through_gio(self, run):
         path=self.desktop("test.desktop","Exec=app; echo ignored\n")
