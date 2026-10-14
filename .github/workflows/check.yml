@@ -27,8 +27,9 @@ jobs:
       - run: pacman -Syu --noconfirm git nodejs python python-pillow quickshell qt6-declarative
       - uses: actions/checkout@v4
       - run: |
-          while IFS= read -r path; do qmllint -I /usr/lib/qt6/qml "$path"; done < <(find shell -name '*.qml')
+          while IFS= read -r path; do /usr/lib/qt6/bin/qmllint -I /usr/lib/qt6/qml "$path"; done < <(find shell -name '*.qml')
           ./scripts/check.sh
+        shell: bash
   preview-interactions:
     runs-on: ubuntu-latest
     steps:

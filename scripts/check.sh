@@ -7,8 +7,12 @@ while IFS= read -r prism_script; do bash -n "$prism_script"; done < <(find scrip
 bash -n packaging/arch/PKGBUILD
 node --check preview/app.js
 python3 -m compileall -q prismos scripts/generate-design.py
-if command -v qmlformat >/dev/null; then
-    while IFS= read -r prism_qml; do qmlformat "$prism_qml" >/dev/null; done < <(find shell -name '*.qml')
+prism_qmlformat="$(command -v qmlformat || true)"
+if [[ -z "$prism_qmlformat" && -x /usr/lib/qt6/bin/qmlformat ]]; then
+    prism_qmlformat=/usr/lib/qt6/bin/qmlformat
+fi
+if [[ -n "$prism_qmlformat" ]]; then
+    while IFS= read -r prism_qml; do "$prism_qmlformat" "$prism_qml" >/dev/null; done < <(find shell -name '*.qml')
     echo 'QML syntax check passed.'
 else
     echo 'QML parse skipped: install qt6-declarative for qmlformat.'
