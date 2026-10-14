@@ -52,7 +52,13 @@ visible, pausing during an expanded Wi-Fi row. Scans and commands have bounded
 deadlines. No browser engine runs inside the native shell and no privileged HTTP
 control server is exposed.
 
-BlueZ/PipeWire subscriptions remain future work. The shell listens to Hyprland
+PipeWire monitoring frames JSON arrays across reads and filters for audio
+endpoints and default metadata. It ignores client/port churn, including objects
+created by the shell's queries. Updates are debounced; failed monitors retry at
+30 seconds and visible sound panels have five-second recovery polling. Sound
+refresh is deferred during a drag. BlueZ subscriptions remain future work.
+
+The shell listens to Hyprland
 open/focus events and matches desktop IDs/StartupWMClass to finish a launch splash;
 an eight-second deadline covers unmatched/background apps. The shell controls
 its panel animations; Hyprland layer animations are disabled in the dedicated
@@ -65,6 +71,18 @@ current user, have autoconnect disabled during activation, and are removed if
 activation fails. Existing profiles are reused by SSID and security type and are
 never deleted by a failed attempt. Network selections and paired Bluetooth device
 addresses are rediscovered before actions. Blueman handles new-device pairing.
+
+Sound discovery uses `pw-dump` JSON and reads the selected endpoints with `wpctl`.
+Picker writes resolve the supplied lifetime serial and node name against a fresh
+graph, then run fixed `wpctl set-default`, `set-volume` or `set-mute` commands.
+Volume is limited to 100%; mute is explicit. No device IDs are stored in PrismOS
+preferences. WirePlumber owns default-device persistence and routing policy;
+per-app stream migration is outside this slice.
+
+Audio references: [pw-dump](https://docs.pipewire.org/page_man_pw-dump_1.html),
+[WirePlumber wpctl](https://pipewire.pages.freedesktop.org/wireplumber/man/wpctl.html),
+[PipeWire object keys](https://docs.pipewire.org/group__pw__keys.html), and
+[WirePlumber profiles](https://pipewire.pages.freedesktop.org/wireplumber/daemon/configuration/components_and_profiles.html).
 
 Adapter references: [NetworkManager nmcli](https://networkmanager.pages.freedesktop.org/NetworkManager/NetworkManager/nmcli.html),
 [BlueZ bluetoothctl](https://github.com/bluez/bluez/blob/master/doc/bluetoothctl.rst),

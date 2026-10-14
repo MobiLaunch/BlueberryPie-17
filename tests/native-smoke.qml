@@ -5,7 +5,38 @@ import "../shell/components"
 import "../shell/services"
 
 ShellRoot {
+    id: smokeRoot
+    property int sliderLevel: 50
     Component.onCompleted: {
+        const output = {
+            id: 42,
+            serial: "1042",
+            name: "fixture-speakers",
+            label: "Fixture speakers",
+            kind: "output",
+            selected: true,
+            available: true,
+            value: 64,
+            muted: false
+        };
+        const input = {
+            id: 54,
+            serial: "1054",
+            name: "fixture-mic",
+            label: "Fixture microphone",
+            kind: "input",
+            selected: true,
+            available: true,
+            value: 48,
+            muted: true
+        };
+        AudioState.devices = {
+            available: true,
+            outputs: [output],
+            inputs: [input],
+            output: output,
+            input: input
+        };
         Wireless.wifi = ({
                 available: true,
                 enabled: true,
@@ -81,8 +112,9 @@ ShellRoot {
                 activated: true
             }
             ExpressiveSlider {
+                id: smokeSlider
                 width: parent.width
-                value: 50
+                modelValue: smokeRoot.sliderLevel
             }
             MediaCard {
                 width: parent.width
@@ -105,6 +137,9 @@ ShellRoot {
                 width: parent.width
                 kind: "bluetooth"
             }
+            SoundPanel {
+                width: parent.width
+            }
         }
         AppMenu {
             app: ({
@@ -123,6 +158,16 @@ ShellRoot {
             attempts++;
             if (Applications.dockApps.length === 1 && Theme.roles.primary) {
                 if (phase === 0) {
+                    smokeSlider.value = 25;
+                    smokeRoot.sliderLevel = 70;
+                    AudioState.adjusting = true;
+                    AudioState.refresh();
+                    if (AudioState.busy || !AudioState.needsRead) {
+                        console.error("PRISM_NATIVE_SMOKE_FAILED: sound refresh interrupted a drag");
+                        Qt.exit(1);
+                        return;
+                    }
+                    AudioState.adjusting = false;
                     // Exercise the production stdin pipe with a synthetic secret;
                     // the subprocess only asserts input and returns fixture JSON.
                     const accepted = Wireless.execute("wifi", "connect", ["python3", "-c", "import json,sys; assert json.loads(sys.stdin.readline())['password'] == 'fixture secret'; print(json.dumps({'ok':True}))"], "fixture secret");
@@ -154,8 +199,13 @@ ShellRoot {
                     return;
                 }
                 if (phase === 1) {
-                    if (Wireless.busy)
+                    if (Wireless.busy || AudioState.busy)
                         return;
+                    if (smokeSlider.value !== 70 || AudioState.needsRead) {
+                        console.error("PRISM_NATIVE_SMOKE_FAILED: slider lost model binding or deferred sound refresh");
+                        Qt.exit(1);
+                        return;
+                    }
                     if (Wireless.secret || Wireless.notice !== "Connected" || ShellState.launching) {
                         console.error("PRISM_NATIVE_SMOKE_FAILED: pipe or window readiness");
                         Qt.exit(1);

@@ -1,6 +1,6 @@
 # Maintainer: MobiLaunch
 pkgname=prism-shell
-pkgver=0.3.0
+pkgver=0.4.0
 pkgrel=1
 pkgdesc='PrismOS expressive native desktop shell and dedicated Wayland session'
 arch=('any')

@@ -2,7 +2,7 @@ import argparse
 import json
 import sys
 
-from . import apps, favorites, settings, system, theme, wireless
+from . import apps, audio, favorites, settings, system, theme, wireless
 
 
 def main(argv=None):
@@ -10,6 +10,12 @@ def main(argv=None):
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("status")
     sub.add_parser("apps")
+    sound = sub.add_parser("audio")
+    sound.add_argument("operation", choices=("list", "select", "volume", "mute"))
+    sound.add_argument("--kind", choices=("output", "input"))
+    sound.add_argument("--serial")
+    sound.add_argument("--node-name")
+    sound.add_argument("--value")
     wifi = sub.add_parser("wifi")
     wifi.add_argument("operation", choices=("list", "scan", "connect", "disconnect"))
     wifi.add_argument("--bssid")
@@ -36,6 +42,8 @@ def main(argv=None):
             result = system.status()
         elif args.command == "apps":
             result = apps.entries()
+        elif args.command == "audio":
+            result = audio.snapshot() if args.operation == "list" else audio.action(args.operation, args.kind, args.serial, args.node_name, args.value)
         elif args.command == "wifi":
             if args.operation in ("list", "scan"):
                 result = wireless.wifi_list(args.operation == "scan")

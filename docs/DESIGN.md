@@ -60,7 +60,9 @@ third-party GTK/Qt application theming are explicit later work.
 The browser preview is a review aid, not the operating system. Its hardware
 controls, media player, files, terminal and application contents are simulated
 and labeled. Native code launches installed Linux apps and changes actual
-supported system controls. The v0.3 native shell includes power/session actions,
-tray, MPRIS and inline wireless selection/passwords. PIN pairing uses Blueman and
+supported system controls. The v0.4 native shell includes power/session actions,
+tray, MPRIS, inline wireless selection/passwords and sound-device controls.
+Output and microphone tabs keep the sound surface compact on narrow screens.
+PIN pairing uses Blueman and
 advanced network configuration uses NetworkManager's editor. Native wallpaper
 customization and actual app-surface morphs remain planned.

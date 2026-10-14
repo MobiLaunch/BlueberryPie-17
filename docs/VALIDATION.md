@@ -5,10 +5,10 @@ a bootable distribution. The latter still require an Arch machine or VM.
 
 | Check | Result |
 | --- | --- |
-| Python bridge, desktop entry, settings, wireless and color regression suite | 57 tests passed |
+| Python bridge, desktop entry, settings, wireless, audio and color regression suite | 77 tests passed |
 | CLI on host without Linux hardware tools | Missing services returned structured unavailable/error state |
 | Missing percentage CLI input | Structured JSON error; no unhandled traceback |
-| QML parser | All 24 native QML files and smoke fixture parsed using Qt 6.12 tooling |
+| QML parser | All 27 native QML files and smoke fixture parsed using Qt 6.12 tooling |
 | QML type lint | Checked with official Quickshell 0.3.2 package type definitions; tooling warnings are not hardware qualification |
 | Hyprland Lua syntax | Passed through Lua 5.4 parser |
 | Shell scripts and PKGBUILD syntax | Passed `bash -n` |
@@ -23,6 +23,8 @@ a bootable distribution. The latter still require an Arch machine or VM.
 | Full `makepkg` / dependency resolution | Not run on this Ubuntu host |
 | Native offscreen component load | Arch CI covers shared components, wireless panel delegates, private stdin and synthetic launch readiness |
 | Launch matching logic | Node checks exact desktop/StartupWMClass matching and comma-containing titles |
+| PipeWire event stream | Node checks framing across reads, defaults, partial updates, removals and ignored client churn |
+| Virtual audio API integration | Arch CI runs a private PipeWire/WirePlumber policy-only server with four null endpoints |
 | Native Quickshell + Hyprland compositor session | Not run |
 | Physical Wi-Fi/Bluetooth/audio/backlight writes | Not run on hardware |
 | Full ISO build, UEFI/BIOS and USB boot | Not run |
@@ -83,3 +85,21 @@ with synthetic window events, minimum timing, existing-window focus and timeout.
 It loads both connection panel delegates. This does not prove hardware
 authentication, saved-secret reuse, RF discovery, pairing, or real compositor
 event timing. Full app-surface morphs are not implemented.
+
+## v0.4 sound and microphone slice
+
+Audio tests cover graph filtering/default metadata, malformed or missing services,
+serial/name revalidation, stale node IDs, bounds, explicit mute, command failures
+and JSON CLI errors. The event parser is tested with fragmented/concatenated JSON,
+quoted brackets, partial updates, removal and client changes that must not cause
+query loops. The native smoke loads sound delegates and checks that a slider
+keeps its model binding after a local edit and defers reads during adjustment.
+
+The preview exercises device selection, per-device levels, independent microphone
+mute and the output/microphone tabs at desktop and phone widths. It is simulated.
+The separate integration check uses real PipeWire and WirePlumber APIs on four
+private null endpoints, with the policy-only profile and isolated runtime/config/
+state. It exercises default changes, level/mute readback, independent microphone
+unmute, output switching and removed-device rejection. No physical hardware
+monitor is started. Physical sound output/capture, Bluetooth profiles, headset
+hotplug, suspend/resume and per-app routing remain hardware acceptance work.

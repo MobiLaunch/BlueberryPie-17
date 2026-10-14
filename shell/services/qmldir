@@ -5,3 +5,4 @@ singleton Notifications 1.0 Notifications.qml
 singleton Applications 1.0 Applications.qml
 singleton MediaState 1.0 MediaState.qml
 singleton Wireless 1.0 Wireless.qml
+singleton AudioState 1.0 AudioState.qml

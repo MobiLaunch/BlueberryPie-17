@@ -19,6 +19,11 @@ QtObject {
                 value: 0,
                 muted: false
             },
+            microphone: {
+                available: false,
+                value: 0,
+                muted: false
+            },
             brightness: {
                 available: false,
                 value: 0
@@ -149,6 +154,8 @@ QtObject {
             root.refresh();
             if (Wireless.watchedKind)
                 Wireless.refresh(Wireless.watchedKind, false, false);
+            if (AudioState.panelOpen)
+                AudioState.refresh();
             nextWrite.restart();
         }
     }

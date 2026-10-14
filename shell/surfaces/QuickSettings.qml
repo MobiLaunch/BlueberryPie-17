@@ -13,13 +13,22 @@ PanelWindow {
     property string clockText: Qt.formatTime(new Date(), "hh:mm")
     property string dateText: Qt.formatDate(new Date(), "ddd, MMM d")
     property string connectionKind: ""
+    property bool soundOpen: false
+    onSoundOpenChanged: AudioState.panelOpen = soundOpen
     onConnectionKindChanged: Wireless.watchedKind = connectionKind
     function showConnections(kind) {
+        soundOpen = false;
         connectionKind = kind;
         Wireless.error = "";
         Wireless.notice = "";
         Wireless.operation = "";
         Wireless.refresh(kind);
+    }
+    function showSound(kind = "output") {
+        connectionKind = "";
+        const open = !soundOpen || AudioState.tab !== kind;
+        AudioState.tab = kind;
+        soundOpen = open;
     }
     Timer {
         interval: 1000
@@ -49,8 +58,10 @@ PanelWindow {
     onOpenedChanged: {
         if (opened)
             card.forceActiveFocus();
-        else
+        else {
             connectionKind = "";
+            soundOpen = false;
+        }
     }
     HyprlandFocusGrab {
         active: root.opened
@@ -126,7 +137,7 @@ PanelWindow {
                     label: "Brightness"
                     symbol: "brightness"
                     enabled: SystemBridge.snapshot.brightness.available
-                    value: SystemBridge.snapshot.brightness.value
+                    modelValue: SystemBridge.snapshot.brightness.value
                     onCommitted: level => SystemBridge.action("brightness", level)
                 }
                 GridLayout {
@@ -177,8 +188,10 @@ PanelWindow {
                         title: "Sound"
                         subtitle: activated ? "On" : "Muted"
                         symbol: "volume"
+                        hasDetails: true
+                        onDetailsRequested: root.showSound()
                         activated: !SystemBridge.snapshot.volume.muted
-                        enabled: SystemBridge.snapshot.volume.available
+                        enabled: SystemBridge.snapshot.volume.available && !AudioState.writing
                         onClicked: SystemBridge.action("mute")
                     }
                     QuickTile {
@@ -189,6 +202,25 @@ PanelWindow {
                         activated: Theme.reducedMotion
                         onClicked: SystemBridge.action("reduced_motion")
                     }
+                    QuickTile {
+                        Layout.fillWidth: true
+                        title: "Microphone"
+                        subtitle: SystemBridge.snapshot.microphone.available ? (activated ? "On" : "Muted") : "Unavailable"
+                        symbol: "microphone"
+                        activated: SystemBridge.snapshot.microphone.available && !SystemBridge.snapshot.microphone.muted
+                        enabled: SystemBridge.snapshot.microphone.available && !AudioState.writing
+                        hasDetails: true
+                        onDetailsRequested: root.showSound("input")
+                        onClicked: SystemBridge.action("microphone-mute")
+                    }
+                    QuickTile {
+                        Layout.fillWidth: true
+                        title: "Audio devices"
+                        subtitle: "Output & input"
+                        symbol: "headphones"
+                        activated: root.soundOpen
+                        onClicked: root.showSound()
+                    }
                 }
                 WirelessPanel {
                     width: parent.width
@@ -197,12 +229,18 @@ PanelWindow {
                     height: visible ? implicitHeight : 0
                     onCloseRequested: root.connectionKind = ""
                 }
+                SoundPanel {
+                    width: parent.width
+                    visible: root.soundOpen
+                    height: visible ? implicitHeight : 0
+                    onCloseRequested: root.soundOpen = false
+                }
                 ExpressiveSlider {
                     width: parent.width
                     label: "Volume"
                     symbol: "volume"
-                    enabled: SystemBridge.snapshot.volume.available
-                    value: SystemBridge.snapshot.volume.value
+                    enabled: SystemBridge.snapshot.volume.available && !AudioState.writing
+                    modelValue: SystemBridge.snapshot.volume.value
                     onCommitted: level => SystemBridge.action("volume", level)
                 }
                 MediaCard {

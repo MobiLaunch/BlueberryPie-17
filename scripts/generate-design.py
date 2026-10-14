@@ -14,6 +14,8 @@ icons = {
     "bluetooth": '<path d="m7 7 10 10-5 4V3l5 4L7 17"/>',
     "brightness": '<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5M17.5 17.5 19 19M5 19l1.5-1.5M17.5 6.5 19 5"/>',
     "volume": '<path d="M3 9h4l5-4v14l-5-4H3zM16 8a6 6 0 0 1 0 8M19 5a10 10 0 0 1 0 14"/>',
+    "microphone": '<rect x="8" y="2" width="8" height="13" rx="4"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3m-4 0h8"/>',
+    "headphones": '<path d="M4 13v-2a8 8 0 0 1 16 0v2"/><rect x="2" y="11" width="5" height="10" rx="2.5"/><rect x="17" y="11" width="5" height="10" rx="2.5"/>',
     "moon": '<path d="M20 14.2A8.6 8.6 0 0 1 9.8 4 8.5 8.5 0 1 0 20 14.2Z"/>',
     "dnd": '<circle cx="12" cy="12" r="9"/><path d="M7 12h10"/>',
     "motion": '<path d="M3 6h7M2 11h5M3 16h7m5-12a8 8 0 1 1 0 16m-2-12 5 4-5 4"/>',

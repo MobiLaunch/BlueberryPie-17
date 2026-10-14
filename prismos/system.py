@@ -58,6 +58,11 @@ def volume():
         return {"available": False, "value": 0, "muted": False, "error": str(error)}
 
 
+def microphone():
+    from .audio import default_level
+    return default_level("input")
+
+
 def brightness():
     try:
         current = int(run(["brightnessctl", "-c", "backlight", "get"]))
@@ -98,7 +103,7 @@ def power():
 
 
 def status():
-    readers = {"wifi": wifi, "bluetooth": bluetooth, "volume": volume, "brightness": brightness, "battery": battery, "power": power}
+    readers = {"wifi": wifi, "bluetooth": bluetooth, "volume": volume, "microphone": microphone, "brightness": brightness, "battery": battery, "power": power}
     with ThreadPoolExecutor(max_workers=len(readers)) as pool:
         futures = {key: pool.submit(reader) for key, reader in readers.items()}
         result = {key: future.result() for key, future in futures.items()}
@@ -132,6 +137,8 @@ def action(name, value=None):
         run(["brightnessctl", "-c", "backlight", "set", f"{percentage(value, 1)}%"])
     elif name == "mute":
         run(["wpctl", "set-mute", "@DEFAULT_AUDIO_SINK@", "toggle"])
+    elif name == "microphone-mute":
+        run(["wpctl", "set-mute", "@DEFAULT_AUDIO_SOURCE@", "toggle"])
     elif name in ("dark", "reduced_motion", "dnd"):
         settings.toggle(name)
     elif name == "lock":

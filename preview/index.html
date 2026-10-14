@@ -54,8 +54,10 @@
         <div class="quick-tile active split-tile"><button class="tile-main" data-toggle="bluetooth" aria-pressed="true" aria-label="Toggle Bluetooth"><span class="tile-icon" data-icon="bluetooth"></span><span><b>Bluetooth</b><span class="tile-status">Connected</span></span></button><button class="tile-details" data-connections="bluetooth" aria-label="Bluetooth devices and connections"><span data-icon="arrow"></span></button></div>
         <button class="quick-tile" data-toggle="dnd" aria-pressed="false"><span class="tile-icon" data-icon="dnd"></span><div><b>Do Not Disturb</b><span class="tile-status">Off</span></div></button>
         <button class="quick-tile" data-toggle="dark" aria-pressed="false"><span class="tile-icon" data-icon="moon"></span><div><b>Dark theme</b><span class="tile-status">Off</span></div></button>
-        <button class="quick-tile active" data-toggle="sound" aria-pressed="true"><span class="tile-icon" data-icon="volume"></span><div><b>Sound</b><span class="tile-status">On</span></div></button>
+        <div class="quick-tile active split-tile"><button class="tile-main" data-toggle="sound" aria-pressed="true" aria-label="Toggle sound"><span class="tile-icon" data-icon="volume"></span><span><b>Sound</b><span class="tile-status">On</span></span></button><button class="tile-details" data-open="sound-panel" aria-label="Sound devices and levels"><span data-icon="arrow"></span></button></div>
         <button class="quick-tile" data-toggle="reduced" aria-pressed="false"><span class="tile-icon" data-icon="motion"></span><div><b>Reduced motion</b><span class="tile-status">Off</span></div></button>
+        <div class="quick-tile active split-tile"><button class="tile-main" data-toggle="microphone" aria-pressed="true" aria-label="Toggle microphone"><span class="tile-icon" data-icon="microphone"></span><span><b>Microphone</b><span class="tile-status">On</span></span></button><button class="tile-details" data-sound-open="input" aria-label="Microphone devices and levels"><span data-icon="arrow"></span></button></div>
+        <button class="quick-tile" data-open="sound-panel"><span class="tile-icon" data-icon="headphones"></span><div><b>Audio devices</b><span class="tile-status">Output & input</span></div></button>
       </div>
       <div class="volume control-slider"><span data-icon="volume"></span><input id="volume" type="range" min="0" max="100" value="64" aria-label="Media volume"><output for="volume">64%</output></div>
       <div class="notification-heading"><b>Notifications</b><button id="clear-notifications" class="text-button">Clear all</button></div>
@@ -93,6 +95,25 @@
       <p id="connection-status" role="status"></p>
       <div id="connection-list" class="connection-list"></div>
       <p class="demo-note">Interactive design preview · connections are simulated</p>
+    </section>
+    <section id="sound-panel" class="sound-panel modal panel" hidden role="dialog" aria-modal="true" aria-label="Sound and microphone" tabindex="-1">
+      <div class="modal-heading"><div><span class="eyebrow">FIND YOUR SOUND</span><h2>Sound & mic.</h2></div><button class="round-button quiet" data-open="shade" aria-label="Back to Quick Settings"><span data-icon="close"></span></button></div>
+      <p id="sound-status" role="status">Choose where sound goes.</p>
+      <div class="sound-tabs" role="tablist" aria-label="Sound controls"><button id="sound-output-tab" role="tab" aria-selected="true" aria-controls="sound-output-section" data-sound-tab="output">Output</button><button id="sound-input-tab" role="tab" aria-selected="false" aria-controls="sound-input-section" data-sound-tab="input" tabindex="-1">Microphone</button></div>
+      <div id="sound-output-section" role="tabpanel" aria-labelledby="sound-output-tab">
+      <h3>Play through</h3><div id="sound-outputs" class="sound-choices" aria-label="Playback devices"></div>
+      <p id="selected-output" class="sound-current"></p>
+      <div class="control-slider"><span data-icon="volume"></span><input id="output-level" type="range" min="0" max="100" value="64" aria-label="Output volume"><output for="output-level">64%</output></div>
+      <button id="mute-output" class="pill-button sound-mute" aria-pressed="false">Mute output</button>
+      </div>
+      <div id="sound-input-section" role="tabpanel" aria-labelledby="sound-input-tab" hidden>
+      <h3>Microphone</h3><div id="sound-inputs" class="sound-choices" aria-label="Microphones"></div>
+      <p id="selected-input" class="sound-current"></p>
+      <div class="control-slider"><span data-icon="microphone"></span><input id="input-level" type="range" min="0" max="100" value="48" aria-label="Microphone level"><output for="input-level">48%</output></div>
+      <button id="mute-input" class="pill-button sound-mute" aria-pressed="false">Mute microphone</button>
+      <p class="sound-explanation">Muting affects the selected microphone. Other microphones can remain available to apps.</p>
+      </div>
+      <p class="demo-note">Design preview · devices and levels are simulated</p>
     </section>
     <div id="app-context" class="app-context panel" hidden role="menu" aria-label="Application actions"><button id="context-open" role="menuitem">Open</button><button id="context-pin" role="menuitem">Pin to dock</button></div>
     <section id="app-window" class="app-window panel" hidden aria-label="Application preview" role="dialog" aria-modal="true" tabindex="-1">

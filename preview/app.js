@@ -15,7 +15,7 @@
     {id:'style',name:'Wallpaper & style',icon:'spark',color:'rose'},
   ];
   const icon = name => window.PRISM_ICONS[name] || window.PRISM_ICONS.spark;
-  const state = {palette:'Lilac',dark:false,reduced:matchMedia('(prefers-reduced-motion: reduce)').matches,wifi:true,bluetooth:true,dnd:false,sound:true,favorites:['browser','files','terminal','music']};
+  const state = {palette:'Lilac',dark:false,reduced:matchMedia('(prefers-reduced-motion: reduce)').matches,wifi:true,bluetooth:true,dnd:false,sound:true,microphone:true,favorites:['browser','files','terminal','music']};
   try { const saved = JSON.parse(localStorage.getItem('prismos-preview') || '{}');
     for (const key of ['palette','dark','reduced']) if (typeof saved[key] === typeof state[key]) state[key] = saved[key];
     if(Array.isArray(saved.favorites))state.favorites=[...new Set(saved.favorites)].filter(id=>apps.some(app=>app.id===id)).slice(0,8);
@@ -26,13 +26,19 @@
   let launchToken = 0;
   let toastTimeout;
   let playing = false;
-  const panels = ['shade','drawer','appearance','power-panel','connections'];
+  const panels = ['shade','drawer','appearance','power-panel','connections','sound-panel'];
   let contextApp=null,contextSource=null,powerChoice=null,holdTimer=null,heldSource=null;
   let connectionKind='wifi',selectedNetwork=null,connectionToken=0,connectionBusy=false;
   const networks=[{id:'prism',name:'Prism Network',signal:96,secured:true,connected:true,saved:true},
     {id:'blueberry',name:'Blueberry Studio',signal:82,secured:true,connected:false,saved:false},
     {id:'cafe',name:'Cafe: Open',signal:54,secured:false,connected:false,saved:false}];
   const devices=[{id:'buds',name:'Blue buds',paired:true,connected:true},{id:'keyboard',name:'Studio keyboard',paired:true,connected:false},{id:'speaker',name:'New speaker',paired:false,connected:false}];
+  const soundDevices={outputs:[{id:'speakers',label:'Built-in speakers',value:64,muted:false},{id:'buds',label:'Blue buds',value:45,muted:false},{id:'hdmi',label:'HDMI display',value:80,muted:false}],
+    inputs:[{id:'internal',label:'Internal microphone',value:48,muted:false},{id:'usb',label:'USB microphone',value:62,muted:false}]};
+  let selectedOutput='speakers',selectedInput='internal';
+  let soundTab='output';
+  const currentOutput=()=>soundDevices.outputs.find(d=>d.id===selectedOutput);
+  const currentInput=()=>soundDevices.inputs.find(d=>d.id===selectedInput);
 
   function hydrate(root = document) {
     $$('[data-icon]',root).forEach(el => { el.innerHTML = icon(el.dataset.icon); });
@@ -132,9 +138,46 @@
     } else {
       el.hidden = false; $('#modal-backdrop').hidden = false;
       if(id==='power-panel')resetPower();
+      if(id==='sound-panel'){setSoundTab('output');renderSound();}
       if (id === 'drawer') { $('#app-search').value = ''; renderApps(''); $('#app-search').focus(); }
       else el.focus();
     }
+  }
+  function syncSound(){
+    const output=currentOutput(),input=currentInput();
+    state.sound=!output.muted;state.microphone=!input.muted;
+    for(const [id,device] of [['volume',output],['output-level',output],['input-level',input]]){
+      const slider=$('#'+id);slider.value=device.value;syncSlider(slider);
+    }
+    $('#selected-output').textContent=output.label+' · '+(output.muted?'Muted':output.value+'%');
+    $('#selected-input').textContent=input.label+' · '+(input.muted?'Muted':input.value+'%');
+    $('#mute-output').textContent=output.muted?'Unmute output':'Mute output';$('#mute-output').setAttribute('aria-pressed',String(output.muted));
+    $('#mute-input').textContent=input.muted?'Unmute microphone':'Mute microphone';$('#mute-input').setAttribute('aria-pressed',String(input.muted));
+    syncTiles();
+  }
+  function setSoundTab(tab){
+    soundTab=tab;
+    for(const kind of ['output','input']){
+      const selected=kind===tab,button=$('#sound-'+kind+'-tab');button.setAttribute('aria-selected',String(selected));button.tabIndex=selected?0:-1;
+      $('#sound-'+kind+'-section').hidden=!selected;
+    }
+  }
+  function renderSound(){
+    for(const kind of ['outputs','inputs']){
+      const list=$('#sound-'+kind);list.replaceChildren();
+      soundDevices[kind].forEach(device=>{
+        const selected=kind==='outputs'?selectedOutput===device.id:selectedInput===device.id;
+        const button=document.createElement('button');button.className='sound-choice'+(selected?' selected':'');button.setAttribute('aria-pressed',String(selected));
+        button.setAttribute('aria-label',(kind==='outputs'?'Play through ':'Use microphone ')+device.label);
+        const symbol=document.createElement('span');symbol.innerHTML=icon(kind==='outputs'?'headphones':'microphone');
+        const label=document.createElement('span');label.textContent=device.label;
+        const check=document.createElement('b');check.textContent=selected?'✓':'';check.setAttribute('aria-hidden','true');
+        button.append(symbol,label,check);list.append(button);
+        button.addEventListener('click',()=>{if(kind==='outputs')selectedOutput=device.id;else selectedInput=device.id;renderSound();$('#sound-status').textContent=device.label+' selected · preview';
+          [...list.querySelectorAll('button')].find(el=>el.getAttribute('aria-pressed')==='true')?.focus();});
+      });
+    }
+    syncSound();
   }
   function renderApps(query) {
     const filtered = apps.filter(app => app.name.toLowerCase().includes(query.trim().toLowerCase()));
@@ -233,7 +276,7 @@
     } else if (app.id === 'browser') {
       target.innerHTML = '<div class="browser-app"><div class="browser-address">prismos://welcome</div><div class="browser-home">'+icon('browser')+'<h2>A colorful start.</h2><p>This is a browser layout preview.</p><p>The native session launches your installed browser.</p><button class="pill-button" style="margin:25px auto 0" data-open="appearance">Find your color</button></div></div>';
     } else if (app.id === 'terminal') {
-      target.innerHTML = '<div class="terminal-app"><div id="terminal-output"><b>PrismOS</b> 0.3 · design preview\nArch at heart. A little more you.\n\nType help for demo commands.\n</div><form id="terminal-form" class="terminal-line"><b>prism ~ ❯</b><input aria-label="Terminal command" autocomplete="off" spellcheck="false"></form></div>';
+      target.innerHTML = '<div class="terminal-app"><div id="terminal-output"><b>PrismOS</b> 0.4 · design preview\nArch at heart. A little more you.\n\nType help for demo commands.\n</div><form id="terminal-form" class="terminal-line"><b>prism ~ ❯</b><input aria-label="Terminal command" autocomplete="off" spellcheck="false"></form></div>';
       $('#terminal-form').addEventListener('submit',event => {
         event.preventDefault();const input=$('input',event.currentTarget),command=input.value.trim();input.value='';
         const output=$('#terminal-output');
@@ -264,6 +307,10 @@
     }
     if(event.target.closest('#context-open')){const app=contextApp,source=contextSource;$('#app-context').hidden=true;launchApp(app.id,source);return;}
     $('#app-context').hidden=true;
+    const soundTabButton=event.target.closest('[data-sound-tab]');
+    if(soundTabButton){setSoundTab(soundTabButton.dataset.soundTab);return;}
+    const soundOpen=event.target.closest('[data-sound-open]');
+    if(soundOpen){openPanel('sound-panel');setSoundTab(soundOpen.dataset.soundOpen);return;}
     const connections=event.target.closest('[data-connections]');
     if(connections){openConnections(connections.dataset.connections);return;}
     const power=event.target.closest('[data-power-choice]');
@@ -271,7 +318,7 @@
     const open=event.target.closest('[data-open]'),close=event.target.closest('[data-close]'),toggle=event.target.closest('[data-toggle]'),setting=event.target.closest('[data-setting]'),palette=event.target.closest('[data-palette]'),app=event.target.closest('[data-app]'),folder=event.target.closest('[data-folder]'),file=event.target.closest('[data-file]');
     if(open){openPanel(open.dataset.open);return;}
     if(close){closePanels();return;}
-    if(toggle){const key=toggle.dataset.toggle;state[key]=!state[key];applyTheme();if(key==='dnd')toast(state.dnd?'Notifications will be quiet.':'Notifications are back on.');return;}
+    if(toggle){const key=toggle.dataset.toggle;state[key]=!state[key];if(key==='sound')currentOutput().muted=!state.sound;if(key==='microphone')currentInput().muted=!state.microphone;syncSound();applyTheme();if(key==='dnd')toast(state.dnd?'Notifications will be quiet.':'Notifications are back on.');return;}
     if(setting){const key=setting.dataset.setting;state[key]=!state[key];applyTheme();return;}
     if(palette){state.palette=palette.dataset.palette;applyTheme();return;}
     if(app){launchApp(app.dataset.app,app);return;}
@@ -290,8 +337,14 @@
   $('#cancel-power').addEventListener('click',()=>{if(powerChoice)resetPower();else closePanels();});
   $('#connection-radio').addEventListener('click',()=>{state[connectionKind]=!state[connectionKind];if(!state[connectionKind]){(connectionKind==='wifi'?networks:devices).forEach(item=>item.connected=false);}selectedNetwork=null;syncTiles();renderConnections();});
   $('#scan-connections').addEventListener('click',()=>simulateConnection(()=>{}));
+  $('#mute-output').addEventListener('click',()=>{currentOutput().muted=!currentOutput().muted;syncSound();});
+  $('#mute-input').addEventListener('click',()=>{currentInput().muted=!currentInput().muted;syncSound();});
+  $('.sound-tabs').addEventListener('keydown',event=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(event.key)){event.preventDefault();setSoundTab(event.key==='Home'?'output':event.key==='End'?'input':soundTab==='output'?'input':'output');$('#sound-'+soundTab+'-tab').focus();}});
   $('#play-media').addEventListener('click',()=>{playing=!playing;$('.wave').classList.toggle('playing',playing);$('#play-media').textContent=playing?'Ⅱ':'▶';$('#play-media').setAttribute('aria-label',playing?'Pause demo track':'Play demo track');});
-  $$('input[type="range"]').forEach(input=>{syncSlider(input);input.addEventListener('input',()=>syncSlider(input));});
+  $$('input[type="range"]').forEach(input=>{syncSlider(input);input.addEventListener('input',()=>{syncSlider(input);
+    if(input.id==='volume'||input.id==='output-level'){currentOutput().value=Number(input.value);syncSound();}
+    if(input.id==='input-level'){currentInput().value=Number(input.value);syncSound();}
+  });});
   document.addEventListener('keydown',event=>{
     if(event.key==='Escape'&&!$('#app-context').hidden){$('#app-context').hidden=true;contextSource?.focus();return;}
     if(event.key==='ContextMenu'||(event.shiftKey&&event.key==='F10')){const source=document.activeElement.closest('[data-app]');if(source){event.preventDefault();const box=source.getBoundingClientRect();showContext(source,box.left,box.bottom);}return;}

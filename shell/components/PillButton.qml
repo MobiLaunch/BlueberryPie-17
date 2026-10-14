@@ -38,6 +38,8 @@ Button {
     }
     contentItem: Label {
         text: root.text
+        elide: Text.ElideRight
+        maximumLineCount: 2
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
         color: root.filled ? Theme.onPrimary : Theme.onSurface

@@ -46,3 +46,10 @@ jobs:
         with:
           name: preview-review
           path: test-results/
+  audio-integration:
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel
+    steps:
+      - run: pacman -Syu --noconfirm git python pipewire wireplumber dbus
+      - uses: actions/checkout@v4
+      - run: dbus-run-session -- python tests/audio_integration.py

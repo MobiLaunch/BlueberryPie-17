@@ -9,14 +9,14 @@ PrismOS is a new Arch Linux desktop project inspired by Android 17 and Material
 3 Expressive: playful color, tactile rounded controls, emphasized typography,
 and motion that connects an action to its result.
 
-The v0.3 source release includes a native **Qt Quick / Quickshell** shell, an
+The v0.4 source release includes a native **Qt Quick / Quickshell** shell, an
 interactive offline design preview, real Linux system adapters, and an Arch
 package/live-ISO staging pipeline. This is a development foundation. A bootable
 ISO and hardware qualification have not been completed in this release.
 
 ## Try the look immediately
 
-Open `PrismOS-Preview-v0.3.html` directly for the complete standalone preview, or
+Open `PrismOS-Preview-v0.4.html` directly for the complete standalone preview, or
 open `preview/index.html` alongside its local assets. Neither needs external dependencies.
 Alternatively:
 
@@ -34,12 +34,13 @@ controls and app contents are explicitly simulated. Native controls use Linux.
 | Area | First implementation |
 | --- | --- |
 | Native shell | Wallpaper, top bar, saved dock favorites, app badges, system tray, searchable app drawer, appearance panel |
-| Quick Settings | Split Wi-Fi/Bluetooth tiles, inline network/password and device panels, Do Not Disturb, dark theme, sound, brightness, reduced motion |
+| Quick Settings | Split radio/sound/microphone controls, inline connection and audio panels, Do Not Disturb, dark theme, brightness, reduced motion |
 | System controls | NetworkManager, BlueZ, WirePlumber/PipeWire, brightnessctl; no shell evaluation |
 | Color | Four palettes, custom seed, optional wallpaper sampling, contrast-checked semantic roles |
 | Motion | Tile shape response, slider feedback, shade/drawer transitions, morphing loader, launch splash that ends on matching Hyprland window arrival/focus |
 | Notifications | Action buttons, urgency, 50-item retention cap, plain-text cards, dismissal and quiet mode |
 | Media | MPRIS metadata/artwork, capability-guarded playback controls and player selection |
+| Sound devices | Output/microphone tabs, default selection, levels, independent mute, unavailable-device feedback and filtered PipeWire event updates |
 | Session | Confirmed power actions, idle locking, per-monitor shortcuts and unplug recovery |
 | Arch integration | Dedicated session, PKGBUILD, complete upstream releng profile staging |
 
@@ -112,6 +113,15 @@ configuration. Credential reuse and reconnect still require hardware validation.
 Network events refresh status promptly, with periodic recovery polling. Automatic
 network-list refresh pauses while a row is expanded, so typing is not interrupted.
 
+Open the Sound or Microphone tile's arrow for playback and input devices. Select
+a device, adjust its level, or mute it independently. The microphone tile toggles
+the current default input; it does not block every microphone or recording app.
+The picker changes the WirePlumber default. Apps with explicit device routing may
+keep their own selection; this release does not move individual app streams.
+Levels stay within 0–100%, and changing volume does not implicitly unmute a device.
+Device names and lifetime serials are checked against a fresh PipeWire graph
+before each picker action. Device removal clears unavailable choices on refresh.
+
 Power actions require confirmation and are disabled when unavailable for the
 current login session. Idle locking uses `hypridle` after ten minutes and before
 sleep. If you previously ran v0.1, add the new hypridle startup line from the
@@ -136,7 +146,7 @@ when upgrading. Native hardware qualification remains open.
 ./bin/prismctl theme --seed '#47846a'
 ```
 
-Wallpaper sampling changes the shell palette. The v0.3 desktop still uses the
+Wallpaper sampling changes the shell palette. The v0.4 desktop still uses the
 bundled vector wallpaper; a wallpaper picker is planned. The initial tonal
 algorithm is HSL-based with contrast checks, **not** Google's HCT/Monet system.
 Third-party Linux applications retain their own themes in this milestone.
@@ -184,6 +194,8 @@ python3 scripts/generate-design.py
 ./scripts/check.sh
 # Optional preview interaction tests, after installing Playwright:
 node tests/preview.spec.cjs
+# On Arch, verify real audio APIs against private virtual devices:
+dbus-run-session -- python3 tests/audio_integration.py
 ```
 
 Start with [the roadmap](docs/ROADMAP.md), [architecture](docs/ARCHITECTURE.md),

@@ -24,3 +24,13 @@
 .connection-row input{width:100%;min-width:0;background:var(--surface);color:var(--onSurface);border:0;border-radius:16px;padding:14px}
 .connection-row .pill-button{width:100%;justify-content:center}.connection-error{font-size:12px;color:var(--error);line-height:1.5;margin:0}
 .connection-row .connection-action{margin-top:5px}.connections .modal-heading h2{font-size:30px}
+
+.sound-panel{width:min(470px,calc(100% - 20px));max-height:calc(100dvh - 110px);overflow:auto}
+.sound-panel .modal-heading h2{font-size:32px}.sound-panel h3{font-size:14px;margin:22px 0 12px}.sound-panel>p{font-size:12px;line-height:1.5}
+.sound-choices{display:grid;gap:8px}.sound-choice{display:flex;align-items:center;gap:12px;padding:15px 18px;border-radius:24px;background:var(--surfaceHigh);width:100%;text-align:left}
+.sound-choice.selected{background:var(--primary);color:var(--onPrimary)}.sound-choice>span:nth-child(2){flex:1;min-width:0;overflow-wrap:anywhere;font-size:13px}.sound-choice svg{width:22px;height:22px}.sound-choice>b{font-size:16px;min-width:16px}
+.sound-current{margin:15px 0 8px}.sound-panel .control-slider{margin-bottom:10px}.sound-panel .sound-mute{width:100%;justify-content:center;font-size:12px}
+.sound-mute[aria-pressed="true"]{background:var(--primaryStrong);color:var(--onPrimaryStrong)}.sound-explanation{opacity:.8;margin-top:18px;font-size:12px;line-height:1.5}
+
+.sound-tabs{display:flex;gap:6px;padding:5px;background:var(--surfaceHigh);border-radius:28px;margin-top:18px}
+.sound-tabs button{flex:1;padding:12px;border-radius:22px;font-size:13px}.sound-tabs [aria-selected="true"]{background:var(--primary);color:var(--onPrimary)}

@@ -6,12 +6,22 @@ Slider {
     id: root
     property string symbol: "brightness"
     property string label: "Brightness"
+    property real modelValue: 0
     signal committed(real level)
     from: symbol === "brightness" ? 1 : 0
     to: 100
     stepSize: 1
     implicitHeight: 52
     Accessible.name: label
+    // A separate Binding survives keyboard assignments to value. It also waits
+    // until release before applying external hardware updates to the thumb.
+    Binding {
+        target: root
+        property: "value"
+        value: root.modelValue
+        when: !root.pressed
+        restoreMode: Binding.RestoreBindingOrValue
+    }
     onPressedChanged: if (!pressed)
         committed(value)
     Keys.onLeftPressed: {

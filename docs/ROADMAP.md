@@ -49,9 +49,22 @@ runtime and ISO boot qualification remain open and are recorded separately.
   support, a minimum entrance interval, cancellation and bounded fallback.
 - Wireless preview interactions and native offscreen stdin/launch-state coverage.
 
+### v0.4 sound and microphone slice completed
+
+- Separate output/microphone tabs, discovered devices, selected-device labels,
+  0–100% levels, independent mute and a default-microphone Quick Settings tile.
+- PipeWire JSON discovery, actual default metadata, lifetime serial/name checks
+  and structured unavailable/removed-device errors.
+- Filtered PipeWire event subscriptions with polling recovery; client-query
+  churn is ignored to prevent refresh loops.
+- Slider model bindings survive keyboard edits and refresh waits during a drag.
+- New microphone/headphone symbols shared by preview and native shell.
+- Audio adapter/event tests, native panel/binding checks, preview sound flows and
+  a real PipeWire/WirePlumber integration check using isolated virtual endpoints.
+
 Still open: native Bluetooth pairing agent, hidden/enterprise setup in the shell,
-full event-driven BlueZ/PipeWire services, output/microphone pickers, actual app
-surface morphs, third-party theming and compositor/hardware/ISO qualification.
+full event-driven BlueZ services, per-app stream routing, actual app surface
+morphs, third-party theming and compositor/hardware/ISO qualification.
 The list below retains the full acceptance scope.
 
 1. Run the packaged session on Arch + Hyprland 0.56/Quickshell 0.3.2.

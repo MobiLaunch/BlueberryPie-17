@@ -7,6 +7,7 @@ while IFS= read -r prism_script; do bash -n "$prism_script"; done < <(find scrip
 bash -n packaging/arch/PKGBUILD
 node --check preview/app.js
 node tests/launch.spec.cjs
+node tests/audio-events.spec.cjs
 python3 -m compileall -q prismos scripts/generate-design.py
 prism_qmlformat="$(command -v qmlformat || true)"
 if [[ -z "$prism_qmlformat" && -x /usr/lib/qt6/bin/qmlformat ]]; then
