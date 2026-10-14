@@ -133,7 +133,7 @@ PanelWindow {
                             text: "Optional system image download and first-time setup"
                             font.pixelSize: 13
                         }
-                        Switch {
+                        AndroidToggle {
                             checked: root.includeAndroid
                             anchors.right: parent.right
                             anchors.rightMargin: 18

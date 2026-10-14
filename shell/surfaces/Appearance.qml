@@ -104,7 +104,7 @@ PanelWindow {
                         text: "Games and apps alongside Linux windows"
                         opacity: .75
                     }
-                    Switch {
+                    AndroidToggle {
                         id: androidToggle
                         anchors.right: parent.right; anchors.rightMargin: 20
                         anchors.verticalCenter: parent.verticalCenter

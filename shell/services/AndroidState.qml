@@ -90,6 +90,8 @@ QtObject {
                     const data = JSON.parse(text);
                     if (data.ok === false)
                         return;
+                    if (root.busy)
+                        return;
                     root.enabled = data.enabled === true;
                     root.available = data.available === true;
                     root.initialized = data.initialized === true;
