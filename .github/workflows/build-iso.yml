@@ -33,7 +33,7 @@ jobs:
       - name: Build PrismOS package and live ISO
         shell: bash
         run: |
-          runuser -u prismbuilder -- bash -c 'cd "$1" && bash ./build.sh' _ "$GITHUB_WORKSPACE"
+          runuser -u prismbuilder -- bash -c 'cd "$1" && set -o pipefail && bash ./build.sh 2>&1 | tee build-output.log' _ "$GITHUB_WORKSPACE"
       - name: Verify generated ISO
         shell: bash
         run: |
@@ -62,6 +62,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: PrismOS-ISO-build-log
-          path: build/iso-build.log
+          path: |
+            build/iso-build.log
+            build-output.log
           if-no-files-found: ignore
           retention-days: 7
