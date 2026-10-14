@@ -2,7 +2,7 @@ import argparse
 import json
 import sys
 
-from . import android, apps, audio, favorites, fdroid, files, inputs, settings, store, system, theme, wireless
+from . import android, apps, audio, displays, favorites, fdroid, files, inputs, settings, store, system, theme, wireless
 
 
 def main(argv=None):
@@ -14,6 +14,10 @@ def main(argv=None):
     inp.add_argument("operation", choices=("list", "set", "apply"))
     inp.add_argument("key", nargs="?")
     inp.add_argument("value", nargs="?")
+    disp = sub.add_parser("display")
+    disp.add_argument("operation", choices=("list", "preview", "confirm", "apply"))
+    disp.add_argument("name", nargs="?")
+    disp.add_argument("value", nargs="?")
     fileargs = sub.add_parser("files")
     fileargs.add_argument("operation", choices=("list", "bookmarks", "open", "mkdir", "rename", "trash"))
     fileargs.add_argument("path", nargs="?")
@@ -70,6 +74,15 @@ def main(argv=None):
                 result = inputs.change(args.key, args.value)
             else:
                 result = inputs.apply()
+        elif args.command == "display":
+            if args.operation == "list":
+                result = displays.status()
+            elif args.operation == "preview":
+                return displays.preview(args.name, args.value)
+            elif args.operation == "confirm":
+                result = displays.confirm(args.name)
+            else:
+                result = displays.apply_saved()
         elif args.command == "files":
             if args.operation == "list":
                 result = files.browse(args.path, args.hidden)

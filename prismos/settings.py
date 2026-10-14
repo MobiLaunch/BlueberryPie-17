@@ -9,7 +9,7 @@ from pathlib import Path
 DEFAULTS = {"seed": "#8469cf", "dark": False, "reduced_motion": False, "dnd": False,
             "favorites": None, "android_enabled": False, "onboarding_complete": False,
             "natural_scroll": True, "tap_to_click": True,
-            "pointer_speed": 0.0, "repeat_rate": 25}
+            "pointer_speed": 0.0, "repeat_rate": 25, "display_scales": {}}
 
 
 def directory():
@@ -32,6 +32,13 @@ def load():
         rate = data.get("repeat_rate")
         if type(rate) is int and 10 <= rate <= 60:
             valid["repeat_rate"] = rate
+        monitors = data.get("display_scales")
+        if isinstance(monitors, dict):
+            valid["display_scales"] = {
+                name: float(scale) for name, scale in list(monitors.items())[:8]
+                if isinstance(name, str) and re.fullmatch(r"[A-Za-z0-9_][A-Za-z0-9_-]{0,39}", name)
+                and type(scale) in (float, int) and scale in (1, 1.25, 1.5, 1.75, 2)
+            }
         seed = data.get("seed")
         if isinstance(seed, str) and re.fullmatch(r"#[0-9a-fA-F]{6}", seed):
             valid["seed"] = seed.lower()

@@ -6,7 +6,6 @@ arbitrary code execution, privilege changes or raw file contents are exposed.
 import mimetypes
 import os
 from pathlib import Path
-import re
 import shutil
 import subprocess
 
@@ -22,7 +21,9 @@ def location(raw):
     path = Path(raw).expanduser()
     if not path.is_absolute():
         raise ValueError("A location must be an absolute path")
-    return path.resolve(strict=False)
+    # Keep symlinks as file entries. Resolving symlinks before rename/trash
+    # would target the destination rather than the selected symlink itself.
+    return Path(os.path.abspath(path))
 
 
 def filename(raw):
