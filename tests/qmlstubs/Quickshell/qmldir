@@ -1,0 +1,11 @@
+module Quickshell
+singleton Quickshell 1.0 Quickshell.qml
+singleton ExclusionMode 1.0 ExclusionMode.qml
+singleton HarnessDesk 1.0 HarnessDesk.qml
+ShellRoot 1.0 ShellRoot.qml
+Scope 1.0 Scope.qml
+Variants 1.0 Variants.qml
+PanelWindow 1.0 PanelWindow.qml
+PanelAnchors 1.0 PanelAnchors.qml
+PanelMargins 1.0 PanelMargins.qml
+Region 1.0 Region.qml
