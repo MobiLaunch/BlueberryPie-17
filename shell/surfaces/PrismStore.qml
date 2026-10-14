@@ -12,8 +12,6 @@ PanelWindow {
     property bool opened: ShellState.storeOpen && ShellState.activeScreen === screen
     property bool configured: false
     property bool flatpakAvailable: false
-    property bool androidAvailable: false
-    property string androidMessage: ""
     property string tab: "Games"
     property string task: ""
     property string notice: ""
@@ -48,12 +46,8 @@ PanelWindow {
     }
     function activateTab(name) {
         tab = name;
-        if (name === "Android") {
-            request(["android", "status"], "android-status");
-        } else {
-            searchField.text = name === "Games" ? "game" : "editor";
-            lookUp();
-        }
+        searchField.text = name === "Games" ? "game" : "editor";
+        lookUp();
     }
     function handleReply(output) {
         try {
@@ -69,14 +63,12 @@ PanelWindow {
                     queue(["store", "search", searchField.text || "game"], "search");
             } else if (task === "search") {
                 items = data.items || [];
-            } else if (task === "android-status") {
-                androidAvailable = data.available === true;
-                androidMessage = data.status || data.error || "Container status unknown";
+
             } else if (task === "install" || task === "remove") {
                 notice = task === "install" ? "Installed — ready to play!" : "Application removed";
                 SystemBridge.refreshApps();
                 queue(["store", "search", searchField.text || "game"], "search");
-            } else if (task === "open" || task === "android-open") {
+            } else if (task === "open") {
                 notice = "Opening application…";
             }
         } catch (e) {
@@ -139,7 +131,7 @@ PanelWindow {
         Row {
             x: 26; y: 82; spacing: 10
             Repeater {
-                model: ["Games", "Apps", "Android"]
+                model: ["Games", "Apps"]
                 delegate: PillButton {
                     required property string modelData
                     text: modelData
@@ -152,7 +144,7 @@ PanelWindow {
         TextField {
             id: searchField
             x: 26; y: 144; width: parent.width - 52; height: 50
-            visible: root.tab !== "Android" && root.configured
+            visible: root.configured
             placeholderText: "Search Flathub games and apps"
             color: Theme.onSurface
             font.family: Theme.font
@@ -176,7 +168,7 @@ PanelWindow {
             height: Math.max(80, parent.height - 264)
             clip: true
             spacing: 10
-            visible: root.tab !== "Android" && root.configured
+            visible: root.configured
             model: root.items
             ScrollBar.vertical: ScrollBar {}
             delegate: Rectangle {
@@ -235,7 +227,7 @@ PanelWindow {
         }
         Column {
             x: 30; y: 235; width: parent.width - 60; spacing: 18
-            visible: root.tab !== "Android" && !root.configured
+            visible: !root.configured
             Label {
                 text: root.flatpakAvailable ? "Connect to Flathub" : "Flatpak is not installed"
                 font.pixelSize: 24; font.weight: Font.DemiBold
@@ -248,26 +240,6 @@ PanelWindow {
                 text: "Enable Flathub"; filled: true
                 enabled: root.flatpakAvailable && !root.busy
                 onClicked: root.request(["store", "enable"], "enable")
-            }
-        }
-        Column {
-            x: 30; y: 235; width: parent.width - 60; spacing: 18
-            visible: root.tab === "Android"
-            Label { text: "Android on your desktop"; font.pixelSize: 25; font.weight: Font.Bold }
-            Label {
-                width: parent.width
-                text: "Waydroid lets compatible Android apps run beside Linux apps. Image downloads and setup are optional."
-                wrapMode: Text.WordWrap
-            }
-            Label { width: parent.width; text: root.androidMessage; wrapMode: Text.WordWrap }
-            PillButton {
-                text: "Open Waydroid"; filled: true
-                enabled: root.androidAvailable && !root.busy
-                onClicked: root.request(["android", "open"], "android-open")
-            }
-            Label {
-                width: parent.width; wrapMode: Text.WordWrap
-                text: "First-time setup: sudo waydroid init && sudo systemctl enable --now waydroid-container.service. See docs/WAYDROID_STORE.md."
             }
         }
     }
