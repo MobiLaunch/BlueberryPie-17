@@ -49,6 +49,7 @@ QtObject {
         phase = "downloading";
         label = "Downloading F-Droid";
         error = "";
+        lastSetupSucceeded = false;
         installer.running = true;
     }
     function openAndroid() {

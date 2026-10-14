@@ -66,9 +66,11 @@ def enable():
         raise CommandError("Waydroid is missing; install the waydroid package")
     settings.update(android_enabled=True)
     emit("preparing", "Checking your Android environment")
-    if not status()["ready"]:
-        emit("authorization", "Preparing Android services; administrator approval may be required")
-        privileged_setup()
+    existing = status()
+    if not existing["ready"]:
+        if not existing["initialized"] or "Container: RUNNING" not in existing.get("status", ""):
+            emit("authorization", "Preparing Android services; administrator approval may be required")
+            privileged_setup()
         emit("starting", "Starting the Android user session")
         subprocess.Popen(["waydroid", "session", "start"], stdin=subprocess.DEVNULL,
                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
