@@ -147,10 +147,15 @@ PanelWindow {
                         onClicked: AndroidState.setEnabled(true)
                     }
                     PillButton {
-                        text: "Install F-Droid"
+                        text: AndroidState.fdroidInstalled ? "Open F-Droid" : "Install F-Droid"
                         filled: true
                         visible: AndroidState.ready
-                        onClicked: AndroidState.installFdroid()
+                        onClicked: {
+                            if (AndroidState.fdroidInstalled)
+                                AndroidState.openFdroid();
+                            else
+                                AndroidState.installFdroid();
+                        }
                     }
                     PillButton {
                         text: "Open Android"

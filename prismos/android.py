@@ -1,5 +1,6 @@
 """Opt-in Android lifecycle; no automatic image downloads or privileged QML."""
 import json
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -36,6 +37,12 @@ def status():
                            and "Container: RUNNING" in output)
         if result["ready"]:
             result["phase"] = "ready"
+            try:
+                applications = run(["waydroid", "app", "list"], timeout=10)
+                result["fdroid_installed"] = bool(re.search(
+                    r"(?<![\\w.])org\\.fdroid\\.fdroid(?![\\w.])", applications))
+            except CommandError:
+                result["fdroid_installed"] = False
     except CommandError as error:
         result["status"] = str(error)
     return result
@@ -174,3 +181,10 @@ def resume():
                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                      start_new_session=True)
     return {"ok": True, "starting": True}
+
+
+def open_fdroid():
+    if not status()["ready"]:
+        raise ValueError("Android is not ready")
+    run(["waydroid", "app", "launch", "org.fdroid.fdroid"], timeout=15)
+    return {"ok": True, "message": "Opening F-Droid"}

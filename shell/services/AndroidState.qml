@@ -9,6 +9,7 @@ QtObject {
     property bool enabled: false
     property bool available: false
     property bool initialized: false
+    property bool fdroidInstalled: false
     property bool ready: false
     property string phase: "off"
     property string label: "Android is off"
@@ -52,6 +53,10 @@ QtObject {
         lastSetupSucceeded = false;
         installer.running = true;
     }
+    function openFdroid() {
+        if (ready && fdroidInstalled && !fdroidOpener.running)
+            fdroidOpener.running = true;
+    }
     function openAndroid() {
         if (ready && !opener.running)
             opener.running = true;
@@ -89,6 +94,7 @@ QtObject {
                     root.available = data.available === true;
                     root.initialized = data.initialized === true;
                     root.ready = data.ready === true;
+                    root.fdroidInstalled = data.fdroid_installed === true;
                     if (!root.busy) {
                         root.phase = data.phase || "off";
                         root.label = root.ready ? "Android is ready" :
@@ -138,6 +144,17 @@ QtObject {
             if (!root.error) root.label = "F-Droid is installed";
             SystemBridge.refreshApps();
             refreshLater.restart();
+        }
+    }
+    property Process fdroidOpener: Process {
+        command: ["prismctl", "android", "fdroid-open"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const data = JSON.parse(text);
+                    if (data.ok === false) root.error = data.error;
+                } catch (e) { root.error = "Could not open F-Droid"; }
+            }
         }
     }
     property Process opener: Process {

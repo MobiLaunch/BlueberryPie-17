@@ -14,7 +14,7 @@ def main(argv=None):
     software.add_argument("operation", choices=("status", "enable", "search", "install", "remove", "open"))
     software.add_argument("value", nargs="?")
     droid = sub.add_parser("android")
-    droid.add_argument("operation", choices=("status", "enable", "disable", "resume", "open", "install", "fdroid"))
+    droid.add_argument("operation", choices=("status", "enable", "disable", "resume", "open", "install", "fdroid", "fdroid-open"))
     droid.add_argument("value", nargs="?")
     welcome = sub.add_parser("welcome")
     welcome.add_argument("operation", choices=("status", "finish"))
@@ -71,6 +71,8 @@ def main(argv=None):
                 result = android.resume()
             elif args.operation == "fdroid":
                 return android.install_fdroid()
+            elif args.operation == "fdroid-open":
+                result = android.open_fdroid()
             elif args.operation == "open":
                 result = android.open_android()
             else:
