@@ -9,7 +9,7 @@ PrismOS is a new Arch Linux desktop project inspired by Android 17 and Material
 3 Expressive: playful color, tactile rounded controls, emphasized typography,
 and motion that connects an action to its result.
 
-The v0.4 source release includes a native **Qt Quick / Quickshell** shell, an
+The v0.5 source release includes a native **Qt Quick / Quickshell** shell, an
 interactive offline design preview, real Linux system adapters, and an Arch
 package/live-ISO staging pipeline. This is a development foundation. A bootable
 ISO and hardware qualification have not been completed in this release.
@@ -236,6 +236,24 @@ dbus-run-session -- python3 tests/audio_integration.py
 
 Start with [the roadmap](docs/ROADMAP.md), [architecture](docs/ARCHITECTURE.md),
 [design contract](docs/DESIGN.md), and [validation record](docs/VALIDATION.md).
-This project is an independent Linux desktop; it does not ship Android, Google
-services, or Android application compatibility. Optional Waydroid integration
-comes later, after the core desktop is reliable.
+This is an independent Linux desktop. Android compatibility uses Waydroid as an optional user-enabled runtime; no Android images or Google services are bundled. Hardware qualification remains outstanding.
+
+## First-use Android experience (v0.5)
+
+On first login, a Material Expressive wizard offers theme colors and an
+optional Android switch. Android stays off if the user declines. Opting in
+opens Settings with a small animated spinner and actual setup stage labels
+(authorization, image download, container start, app readiness). There are no
+fabricated download percentages. The administrator prompt authorizes a
+fixed-purpose polkit helper, not arbitrary shell commands.
+
+Once ready, users can explicitly Install F-Droid from its official HTTPS site,
+then open it from the same Settings section. Compatible Android applications
+can appear in the regular PrismOS launcher. Switching Android off stops the
+current user's session without uninstalling Android apps; consenting users
+get a quiet session resume at the next login.
+
+**Limits:** no tested bootable ISO yet, no real disk installer, and Waydroid
+needs compatible kernel Android Binder support. Games dependent on ARM,
+Google services, DRM or anti-cheat can fail. Live USB changes are not
+persistent. No Android compatibility is silently activated.

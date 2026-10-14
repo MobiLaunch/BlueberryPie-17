@@ -123,3 +123,13 @@ working permissions and predictable error/retry handling across every app.
 - One-command build.sh wrapper to find real Arch package and assemble ISO.
 
 **Gate:** Full ISO, compositor, Flatpak games and Waydroid on hardware remain unverified.
+
+## M4 / v0.5 native Android slice
+
+- First-run Material Expressive pages and saved opt-in.
+- Optional Waydroid initialization via polkit-protected fixed-action helper.
+- Native Settings toggle, real staged indeterminate loader and error/retry.
+- Quiet session resume for consenting users, without deleting data on opt-out.
+- User-triggered F-Droid install/open and regular app-drawer integration.
+- Unverified: real image download, binder/kernel compatibility, USB boot,
+  compositor transitions and robust F-Droid APK publisher verification.

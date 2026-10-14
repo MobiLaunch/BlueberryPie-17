@@ -45,3 +45,21 @@ bundled. Native ARM-only or DRM-dependent games may not work on x86_64.
 On a live USB, the environment is ephemeral; first-run Waydroid images and app
 installs vanish on reboot. For full prerequisites, see:
 https://wiki.archlinux.org/title/Waydroid and https://docs.waydro.id/
+
+## First-run consent and backstage Android runtime
+
+PrismOS presents optional Android support during the first-run wizard and
+later as a toggle in Settings. With consent, an administrator-approved polkit
+helper runs only the fixed Waydroid initialization and container-service
+actions. It downloads the official VANILLA Waydroid image when needed.
+
+Settings shows a small expressive spinner, driven by real setup stages.
+Waydroid session readiness and app enumeration are checked before announcing
+success. Setup does not report guessed percentages. First-run and saved
+preferences belong to the current user; the live ISO is ephemeral.
+
+F-Droid is optional and user-initiated: its APK comes from the official
+HTTPS download URL with a file-size limit, then is installed into Waydroid.
+After installation, Settings changes the button to Open F-Droid.
+Full APK publisher-signature pinning and richer Android catalog metadata
+remain future security hardening; Android image/GApps are not bundled.

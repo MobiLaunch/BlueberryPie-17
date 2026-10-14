@@ -107,3 +107,12 @@ hotplug, suspend/resume and per-app routing remain hardware acceptance work.
 ## v0.5 source slice
 
 New store backend tests validate scoped search, install arguments, IDs and explicit remote setup. Not yet tested: live Flathub catalogue, hardware Waydroid/binder, the store QML surface running under Hyprland, Arch ISO build and USB boot. No hardware or boot success is claimed.
+
+## v0.5 first-use Android setup
+
+The new sources implement onboarding consent, a non-privileged user toggle,
+an explicitly authorized fixed-purpose polkit helper, streamed setup stages,
+a small native loader, optional F-Droid APK installation and session resume.
+Source CI validates Python and QML syntax and regressions, but does not
+establish a functioning Waydroid session, polkit prompt, successful APK
+install or physical ISO/USB boot. No hardware success has been claimed.

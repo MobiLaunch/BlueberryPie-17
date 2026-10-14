@@ -40,7 +40,7 @@ def status():
             try:
                 applications = run(["waydroid", "app", "list"], timeout=10)
                 result["fdroid_installed"] = bool(re.search(
-                    r"(?<![\\w.])org\\.fdroid\\.fdroid(?![\\w.])", applications))
+                    r"(?<![\w.])org\.fdroid\.fdroid(?![\w.])", applications))
             except CommandError:
                 result["fdroid_installed"] = False
     except CommandError as error:
