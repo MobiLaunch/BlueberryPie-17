@@ -15,14 +15,27 @@ export QT_QUICK_CONTROLS_MATERIAL_THEME="${prism_style[1]:-Light}"
 export QT_QUICK_CONTROLS_MATERIAL_ACCENT="${prism_style[2]:-DeepPurple}"
 prism_config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/prismos/hypr"
 mkdir -p -- "$prism_config_dir"
-for prism_config_name in hyprland.lua hyprlock.conf hypridle.conf; do
+prism_bin_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+prism_source_root="$(dirname -- "$prism_bin_dir")"
+prism_shipped_dir="/usr/share/prismos/config/hypr"
+if [[ -f "$prism_source_root/config/hypr/hyprland.lua" ]]; then
+    prism_shipped_dir="$prism_source_root/config/hypr"
+fi
+# Preserve local PrismOS overrides and legacy config files. Managed session
+# updates now use the packaged config by default so fixes reach existing users.
+for prism_config_name in hyprlock.conf hypridle.conf; do
     if [[ ! -e "$prism_config_dir/$prism_config_name" ]]; then
-        cp -- "/usr/share/prismos/config/hypr/$prism_config_name" "$prism_config_dir/$prism_config_name"
+        cp -- "$prism_shipped_dir/$prism_config_name" "$prism_config_dir/$prism_config_name"
     fi
 done
 export PRISM_HYPRLOCK_CONFIG="$prism_config_dir/hyprlock.conf"
 export PRISM_HYPRIDLE_CONFIG="$prism_config_dir/hypridle.conf"
-if [[ -z "${DBUS_SESSION_BUS_ADDRESS:-}" ]]; then
-    exec dbus-run-session -- Hyprland --config "$prism_config_dir/hyprland.lua"
+prism_hypr_config="${PRISM_HYPRLAND_CONFIG:-$prism_shipped_dir/hyprland.lua}"
+if [[ ! -f "$prism_hypr_config" ]]; then
+    echo "PrismOS session config does not exist: $prism_hypr_config" >&2
+    exit 1
 fi
-exec Hyprland --config "$prism_config_dir/hyprland.lua"
+if [[ -z "${DBUS_SESSION_BUS_ADDRESS:-}" ]]; then
+    exec dbus-run-session -- Hyprland --config "$prism_hypr_config"
+fi
+exec Hyprland --config "$prism_hypr_config"
