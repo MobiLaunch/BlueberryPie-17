@@ -63,3 +63,19 @@ HTTPS download URL with a file-size limit, then is installed into Waydroid.
 After installation, Settings changes the button to Open F-Droid.
 Full APK publisher-signature pinning and richer Android catalog metadata
 remain future security hardening; Android image/GApps are not bundled.
+
+
+## Prism Store unified discovery (v0.6)
+
+In Prism Store, All shows Linux Flatpak results together with Android F-Droid
+results when the user has enabled Android. Linux and Android are also available
+as source filters. F-Droid metadata comes from the official public search API.
+Results are clearly marked by platform and source.
+
+Android applications are not installed from unverified API URLs. The Details
+action passes a validated package ID as an official F-Droid package URL through
+the Waydroid Android intent interface. F-Droid must be installed and Android
+ready; the user performs the final installation confirmation in F-Droid.
+
+Android compatibility varies by hardware/ABI. An Android listing in search
+is not a promise that its game will work on x86_64.

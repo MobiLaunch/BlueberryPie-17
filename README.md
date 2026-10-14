@@ -9,7 +9,7 @@ PrismOS is a new Arch Linux desktop project inspired by Android 17 and Material
 3 Expressive: playful color, tactile rounded controls, emphasized typography,
 and motion that connects an action to its result.
 
-The v0.5 source release includes a native **Qt Quick / Quickshell** shell, an
+The v0.6 source release includes a native **Qt Quick / Quickshell** shell, an
 interactive offline design preview, real Linux system adapters, and an Arch
 package/live-ISO staging pipeline. This is a development foundation. A bootable
 ISO and hardware qualification have not been completed in this release.
@@ -257,3 +257,41 @@ get a quiet session resume at the next login.
 needs compatible kernel Android Binder support. Games dependent on ARM,
 Google services, DRM or anti-cheat can fail. Live USB changes are not
 persistent. No Android compatibility is silently activated.
+
+
+
+## v0.6 — Full-desktop expressive integration pass
+
+Prism Store combines Flatpak/Flathub **Linux** listings and search metadata
+from the official F-Droid **Android** catalog, with source labels for each
+result. Selecting an Android title opens its official F-Droid package listing
+through Waydroid; the Android client, not a Linux-side APK downloader, confirms
+actual installation and updates. The public F-Droid search API is for display
+metadata, not signature verification.
+
+The PrismOS Settings surface now groups working connections, brightness,
+audio, DND, appearance, input preferences, Android consent and system actions.
+The native touchpad and pointer changes persist per user and are applied only
+in the PrismOS Hyprland session. Shared expressive context menus now cover the
+desktop background, dock and launcher. Text fields in Wi-Fi setup, Prism Store
+and app search use shared Material-inspired controls.
+
+The PrismOS login session sets a bundled, per-palette GTK3/GTK4 theme and the
+Qt Quick Material style without editing another desktop's settings. A newly
+selected color is applied **immediately to the PrismOS shell**; existing GTK/Qt
+applications may need restarting, and the toolkit theme preset is selected at
+the **next PrismOS login**. Some libadwaita, Electron, Flutter, Java and
+other third-party applications may not fully honor these themes.
+
+**Real ISO boot, Waydroid F-Droid intent support and physical input/device
+behavior still require testing on Arch hardware.** Complete feature coverage
+is tracked in [Expressive coverage audit](docs/EXPRESSIVE-COVERAGE.md).
+
+Useful PrismOS shortcuts:
+
+- Super + S — Prism Store
+- Super + comma — Settings (appearance, connections, sound and input)
+- Super + Q — Quick Settings
+- Super + Space — App launcher
+- Alt + left-drag / right-drag — Move / resize an eligible app window
+
