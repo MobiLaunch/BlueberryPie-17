@@ -7,7 +7,9 @@ from contextlib import contextmanager
 from pathlib import Path
 
 DEFAULTS = {"seed": "#8469cf", "dark": False, "reduced_motion": False, "dnd": False,
-            "favorites": None, "android_enabled": False, "onboarding_complete": False}
+            "favorites": None, "android_enabled": False, "onboarding_complete": False,
+            "natural_scroll": True, "tap_to_click": True,
+            "pointer_speed": 0.0, "repeat_rate": 25}
 
 
 def directory():
@@ -20,9 +22,16 @@ def load():
         if not isinstance(data, dict):
             return dict(DEFAULTS)
         valid = {}
-        for key in ("dark", "reduced_motion", "dnd", "android_enabled", "onboarding_complete"):
+        for key in ("dark", "reduced_motion", "dnd", "android_enabled", "onboarding_complete",
+                    "natural_scroll", "tap_to_click"):
             if isinstance(data.get(key), bool):
                 valid[key] = data[key]
+        speed = data.get("pointer_speed")
+        if type(speed) in (int, float) and -1.0 <= speed <= 1.0:
+            valid["pointer_speed"] = float(speed)
+        rate = data.get("repeat_rate")
+        if type(rate) is int and 10 <= rate <= 60:
+            valid["repeat_rate"] = rate
         seed = data.get("seed")
         if isinstance(seed, str) and re.fullmatch(r"#[0-9a-fA-F]{6}", seed):
             valid["seed"] = seed.lower()

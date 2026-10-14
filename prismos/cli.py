@@ -2,7 +2,7 @@ import argparse
 import json
 import sys
 
-from . import android, apps, audio, favorites, fdroid, settings, store, system, theme, wireless
+from . import android, apps, audio, favorites, fdroid, inputs, settings, store, system, theme, wireless
 
 
 def main(argv=None):
@@ -10,6 +10,10 @@ def main(argv=None):
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("status")
     sub.add_parser("apps")
+    inp = sub.add_parser("input")
+    inp.add_argument("operation", choices=("list", "set", "apply"))
+    inp.add_argument("key", nargs="?")
+    inp.add_argument("value", nargs="?")
     software = sub.add_parser("store")
     software.add_argument("operation", choices=("status", "enable", "search", "install", "remove", "open"))
     software.add_argument("value", nargs="?")
@@ -54,6 +58,13 @@ def main(argv=None):
             result = system.status()
         elif args.command == "apps":
             result = apps.entries()
+        elif args.command == "input":
+            if args.operation == "list":
+                result = inputs.list_settings()
+            elif args.operation == "set":
+                result = inputs.change(args.key, args.value)
+            else:
+                result = inputs.apply()
         elif args.command == "store":
             if args.operation == "status":
                 result = store.status()
