@@ -7,7 +7,7 @@ import "surfaces"
 ShellRoot {
     Component.onCompleted: {
         SystemBridge.refresh();
-        console.info("PrismOS 0.6 shell started");
+        console.info("PrismOS 0.7 shell started");
     }
     Variants {
         model: Quickshell.screens

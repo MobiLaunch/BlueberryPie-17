@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Prism Files
+GenericName=File Manager
+Comment=Explore and manage your files in PrismOS
+Exec=prism-shell ipc files
+Icon=system-file-manager
+Categories=System;FileManager;Utility;
+OnlyShowIn=PrismOS;
+StartupNotify=false
+Terminal=false

@@ -127,3 +127,17 @@ GTK palettes are checked by unit tests. CI validates syntax and service
 adapters, not real USB boot or Waydroid/GTK application rendering. Third-party
 apps may not use the session theme. See docs/EXPRESSIVE-COVERAGE.md for the
 remaining work required before claiming full user-facing consistency.
+
+
+## v0.7 file/portal/display milestone
+
+Code: native Prism Files frontend/backend, bounded directory listing, safe
+renames (including symlinks), no-shell GIO Trash, per-session XDG portal
+configuration and a managed PrismOS Hyprland session file.
+Display scaling has real-hardware monitor discovery, choices based on physical
+resolution and an explicit 20-second confirmation/automatic rollback.
+
+Unit tests cover file operations, safe paths, display input validation,
+rolled-back vs confirmed scaling, and persistent prefs. CI source and native
+QML checks do **not** qualify physical multi-monitor transitions or prove
+Waydroid and GTK portals work on a real ISO. Full device QA pending.

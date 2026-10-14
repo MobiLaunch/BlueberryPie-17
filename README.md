@@ -9,7 +9,7 @@ PrismOS is a new Arch Linux desktop project inspired by Android 17 and Material
 3 Expressive: playful color, tactile rounded controls, emphasized typography,
 and motion that connects an action to its result.
 
-The v0.6 source release includes a native **Qt Quick / Quickshell** shell, an
+The v0.7 source release includes a native **Qt Quick / Quickshell** shell, an
 interactive offline design preview, real Linux system adapters, and an Arch
 package/live-ISO staging pipeline. This is a development foundation. A bootable
 ISO and hardware qualification have not been completed in this release.
@@ -295,3 +295,34 @@ Useful PrismOS shortcuts:
 - Super + Space — App launcher
 - Alt + left-drag / right-drag — Move / resize an eligible app window
 
+
+
+## v0.7 — Prism Files, file picker, and safe display scaling
+
+- Native **Prism Files** panel opened with Super+E, dock icon or app drawer.
+  Includes bookmarks, folder navigation, local search, hidden files,
+  open-with-default, new folders, rename and **Move to Trash** with confirmation.
+  Actions always run as the logged-in user, never root.
+- PrismOS-specific XDG portal preference selects the GTK file chooser for
+  ordinary application upload/open/save dialogs. The Hyprland portal retains
+  screen-sharing functionality. The `xdg-desktop-portal-gtk` package is an
+  explicit dependency.
+- **Display scaling** in Settings discovers attached displays and supports safe
+  scale options. Each change starts a **20-second confirmation trial**; an
+  unconfirmed change automatically reverts. Confirmed options persist per user.
+  Display rotation, resolution changes and mirroring are not exposed until they
+  have equally safe rollback and physical tests.
+- Fixed launcher shortcut routing for Prism Store and Files.
+- The PrismOS session now loads its **versioned packaged Hyprland config**
+  automatically, so upgrades bring updated shortcuts and compositor behavior
+  to existing users. It never deletes the prior copied config at
+  `~/.config/prismos/hypr/hyprland.lua`.
+  To intentionally launch a custom config, set
+  `PRISM_HYPRLAND_CONFIG=/absolute/path/to/custom.lua` before starting
+  `prism-session`.
+
+Testing this release requires logging out and starting PrismOS again (toolkit
+and session config startup). The updated Arch package can be installed using
+`./scripts/build-package.sh -i`; rebuild the ISO using `bash ./build.sh`.
+CI tests verify source/logic; **real USB boot, XDG portal integration,
+multi-monitor changes and Waydroid still require a machine/VM test**.

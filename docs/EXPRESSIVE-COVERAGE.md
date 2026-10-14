@@ -24,10 +24,12 @@ HARDWARE = real compositor/device testing still required, GAP = missing.
 | Connections, display, sound, DND, power in Settings | SOURCE / QA | real changes + focus / layout |
 | GTK3/GTK4 and QtQuick Material session skin | SOURCE / QA | Thunar + common Qt clients, light/dark |
 | Third-party Electron/libadwaita/Java/Flutter UI | GAP | test each app; no universal style guarantee |
-| Native file browser and file selection portals | GAP | build component library, XDG integration |
+| Native file browser | SOURCE / QA | real mounts, USB drives, drag-and-drop, Trash behavior |
+| XDG file chooser portals | SOURCE / QA | GTK portal open/save from web browser and sandboxed apps |
 | Keyboard layouts, IMEs, accessibility, on-screen keyboard | GAP | device-specific settings, ibus/fcitx testing |
 | Touch-first window management and tablet gestures | GAP | gesture compositor API and physical touch |
-| Printer, display layouts, audio streams, permissions | GAP | settings panels with service APIs |
+| Display scaling with rollback | SOURCE / QA | real monitors, check every scale and return path |
+| Printer, monitor arrangement, audio streams, permissions | GAP | settings panels with service APIs |
 | Installer, disk manager, Wi-Fi first boot, persistence | GAP | supervised destructive disk QA |
 | HCT dynamic material color across GTK/Qt | GAP | implement supported accent handoff, live reapply |
 | Secure Android APK trust and seamless native install | GAP | publisher signatures, authorized F-Droid API |
@@ -48,3 +50,19 @@ HARDWARE = real compositor/device testing still required, GAP = missing.
    GTK/Qt skinning changes Electron, Java, Flutter or libadwaita apps.
 6. Run Python unit tests, native QML lint and scenario tests in CI. Record real
    hardware and ISO validation separately in docs/VALIDATION.md.
+
+
+## v0.7 experience integration
+
+- Prism Files: bookmarks, navigation, search/filter, create folder, rename,
+  open with default association, Trash confirmation and themed menus. File
+  operations use user permissions and argv-only subprocesses.
+- Fixed XDG file chooser portal fallback for a PrismOS-specific session.
+- Display scaling: supported monitor scales are calculated from actual
+  compositor resolution. A monitored 20-second preview reverts unless explicitly
+  confirmed, then saves settings for PrismOS logins.
+- Hyprland session now launches the shipped config, not an obsolete copied
+  default from v0.6. Existing personal files are preserved, and advanced users
+  can opt into a custom PrismOS config with PRISM_HYPRLAND_CONFIG.
+- Pending: physical boot, removable-media mounting, thumbnailing, file drag,
+  cut/copy/paste, advanced display arrangements, external file picker rendering.
