@@ -5,7 +5,7 @@ a bootable distribution. The latter still require an Arch machine or VM.
 
 | Check | Result |
 | --- | --- |
-| Python bridge, desktop entry, settings and color regression suite | 27 tests passed |
+| Python bridge, desktop entry, settings and color regression suite | 37 tests passed |
 | CLI on host without Linux hardware tools | Missing services returned structured unavailable/error state |
 | Missing percentage CLI input | Structured JSON error; no unhandled traceback |
 | QML parser | All 16 native QML files parsed using Qt 6.12 tooling |
@@ -21,6 +21,7 @@ a bootable distribution. The latter still require an Arch machine or VM.
 | Archiso profile staging | Passed against official archiso 91 releng; 14 bootloader files preserved byte for byte |
 | Package repository index | Stubbed for staging review; real `repo-add` remains an Arch check |
 | Full `makepkg` / dependency resolution | Not run on this Ubuntu host |
+| Native offscreen component load | Automated runtime check added in Arch CI |
 | Native Quickshell + Hyprland compositor session | Not run |
 | Physical Wi-Fi/Bluetooth/audio/backlight writes | Not run on hardware |
 | Full ISO build, UEFI/BIOS and USB boot | Not run |
@@ -54,3 +55,13 @@ Install the package in a current Arch environment, select the PrismOS session,
 and inspect `qs log` for component errors. Verify each control against the system
 state, then test monitor scale/hotplug, focus, app launch/close and suspend/resume.
 Only after these pass should the live ISO and installer milestones advance.
+
+## v0.2 desktop slice
+
+Favorites tests cover saved order, empty docks, duplicates, missing applications,
+capacity and concurrent writes. Power tests cover capability denial, fixed command
+mapping and current-session-only logout. The native smoke test runs real
+Quickshell shared components with an isolated D-Bus/config environment and synthetic
+media/notification objects; it never launches apps or changes hardware state.
+It does not qualify layer-shell focus, the compositor, actual MPRIS clients,
+physical suspend/resume or shutdown. Those remain hardware acceptance gates.

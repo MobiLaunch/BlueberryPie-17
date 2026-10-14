@@ -181,6 +181,10 @@ PanelWindow {
                     value: SystemBridge.snapshot.volume.value
                     onCommitted: level => SystemBridge.action("volume", level)
                 }
+                MediaCard {
+                    width: parent.width
+                    height: visible ? implicitHeight : 0
+                }
                 RowLayout {
                     width: parent.width
                     Label {
@@ -204,46 +208,10 @@ PanelWindow {
                 }
                 Repeater {
                     model: Notifications.items
-                    delegate: Rectangle {
+                    delegate: NotificationCard {
                         required property var modelData
                         width: content.width
-                        height: message.implicitHeight + 30
-                        radius: 24
-                        color: Theme.surface
-                        Column {
-                            id: message
-                            x: 16
-                            y: 15
-                            width: parent.width - 66
-                            spacing: 5
-                            Label {
-                                text: modelData.appName
-                                font.pixelSize: 11
-                                font.weight: Font.DemiBold
-                            }
-                            Label {
-                                text: modelData.summary
-                                font.weight: Font.DemiBold
-                                wrapMode: Text.WordWrap
-                                width: parent.width
-                            }
-                            Label {
-                                text: modelData.body
-                                font.pixelSize: 12
-                                wrapMode: Text.WordWrap
-                                width: parent.width
-                            }
-                        }
-                        PillButton {
-                            anchors.right: parent.right
-                            anchors.rightMargin: 6
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: "×"
-                            implicitWidth: 38
-                            implicitHeight: 38
-                            Accessible.name: "Dismiss notification"
-                            onClicked: modelData.dismiss()
-                        }
+                        notification: modelData
                     }
                 }
                 RowLayout {
@@ -261,12 +229,9 @@ PanelWindow {
                         onClicked: SystemBridge.action("network-settings")
                     }
                     PillButton {
-                        text: "Lock"
+                        text: "Power"
                         Layout.fillWidth: true
-                        onClicked: {
-                            SystemBridge.action("lock");
-                            ShellState.close();
-                        }
+                        onClicked: ShellState.openPower(root.screen)
                     }
                 }
             }

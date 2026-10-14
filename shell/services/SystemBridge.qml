@@ -30,17 +30,28 @@ QtObject {
             settings: {
                 dark: false,
                 reduced_motion: false,
-                dnd: false
+                dnd: false,
+                favorites: null
+            },
+            power: {
+                lock: false,
+                logout: false,
+                shutdown: false,
+                restart: false,
+                suspend: false
             }
         })
     property var apps: []
     property string error: ""
     property var pending: []
     property bool busy: writer.running
+    property bool needsRefresh: false
     signal launchFinished(bool success, string message)
 
     function refresh() {
-        if (!reader.running)
+        if (reader.running)
+            needsRefresh = true;
+        else
             reader.running = true;
     }
     function refreshApps() {
@@ -72,6 +83,12 @@ QtObject {
         pending = queue;
         drain();
     }
+    function favorite(operation, id) {
+        const queue = pending.slice();
+        queue.push(["prismctl", "favorites", operation, id]);
+        pending = queue;
+        drain();
+    }
     function launch(id) {
         if (launcher.running)
             return false;
@@ -82,6 +99,10 @@ QtObject {
     }
     property Process reader: Process {
         command: ["prismctl", "status"]
+        onExited: if (root.needsRefresh) {
+            root.needsRefresh = false;
+            refreshAgain.restart();
+        }
         stdout: StdioCollector {
             onStreamFinished: {
                 try {
@@ -93,6 +114,10 @@ QtObject {
                 }
             }
         }
+    }
+    property Timer refreshAgain: Timer {
+        interval: 1
+        onTriggered: root.refresh()
     }
     property Process appReader: Process {
         command: ["prismctl", "apps"]

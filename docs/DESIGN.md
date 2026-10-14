@@ -60,5 +60,5 @@ third-party GTK/Qt application theming are explicit later work.
 The browser preview is a review aid, not the operating system. Its hardware
 controls, media player, files, terminal and application contents are simulated
 and labeled. Native code launches installed Linux apps and changes actual
-supported system controls. Native wallpaper customization, power/session actions,
-system tray and wireless selection dialogs are not finished in v0.1.
+supported system controls. The v0.2 native shell includes power/session actions, tray and MPRIS controls.
+Native wallpaper customization and inline wireless selection remain planned.

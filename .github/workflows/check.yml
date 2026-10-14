@@ -24,11 +24,12 @@ jobs:
     runs-on: ubuntu-latest
     container: archlinux:base-devel
     steps:
-      - run: pacman -Syu --noconfirm git nodejs python python-pillow quickshell qt6-declarative
+      - run: pacman -Syu --noconfirm git nodejs python python-pillow quickshell qt6-declarative dbus
       - uses: actions/checkout@v4
       - run: |
           while IFS= read -r path; do /usr/lib/qt6/bin/qmllint -I /usr/lib/qt6/qml "$path"; done < <(find shell -name '*.qml')
           ./scripts/check.sh
+          python tests/native_smoke.py
         shell: bash
   preview-interactions:
     runs-on: ubuntu-latest

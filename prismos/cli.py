@@ -2,7 +2,7 @@ import argparse
 import json
 import sys
 
-from . import apps, settings, system, theme
+from . import apps, favorites, settings, system, theme
 
 
 def main(argv=None):
@@ -10,6 +10,9 @@ def main(argv=None):
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("status")
     sub.add_parser("apps")
+    favorite = sub.add_parser("favorites")
+    favorite.add_argument("operation", choices=("list", "pin", "unpin"))
+    favorite.add_argument("desktop_id", nargs="?")
     act = sub.add_parser("action")
     act.add_argument("name")
     act.add_argument("value", nargs="?")
@@ -25,6 +28,8 @@ def main(argv=None):
             result = system.status()
         elif args.command == "apps":
             result = apps.entries()
+        elif args.command == "favorites":
+            result = favorites.change(args.operation, args.desktop_id)
         elif args.command == "action":
             result = system.action(args.name, args.value)
         elif args.command == "launch":

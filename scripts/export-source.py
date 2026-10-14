@@ -29,14 +29,14 @@ def main():
     args=parser.parse_args()
     target=args.output.resolve();target.mkdir(parents=True,exist_ok=True)
     html=standalone()
-    preview=target/"PrismOS-Preview-v0.1.html";preview.write_text(html)
+    preview=target/"PrismOS-Preview-v0.2.html";preview.write_text(html)
     files=subprocess.check_output(["git","ls-files","-z"],cwd=ROOT).decode().split("\0")
-    archive=target/"PrismOS-Starter-v0.1.zip"
+    archive=target/"BlueberryPie-17-Source-v0.2.zip"
     with zipfile.ZipFile(archive,"w",zipfile.ZIP_DEFLATED) as package:
         for name in filter(None,files):
             file=ROOT/name
             if file.is_file():package.write(file,"PrismOS/"+name)
-        package.writestr("PrismOS/PrismOS-Preview-v0.1.html",html)
+        package.writestr("PrismOS/PrismOS-Preview-v0.2.html",html)
     print(preview)
     print(archive)
 

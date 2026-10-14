@@ -80,9 +80,26 @@ def battery():
     return {"available": False, "value": None, "charging": False}
 
 
+def session_id():
+    value = os.environ.get("XDG_SESSION_ID", "")
+    return value if re.fullmatch(r"[A-Za-z0-9_-]{1,80}", value) else None
+
+
+def power():
+    result = {"logout": bool(session_id()), "lock": bool(shutil.which("hyprlock"))}
+    for name, method in (("shutdown", "CanPowerOff"), ("restart", "CanReboot"), ("suspend", "CanSuspend")):
+        try:
+            reply = run(["busctl", "--system", "call", "org.freedesktop.login1", "/org/freedesktop/login1",
+                         "org.freedesktop.login1.Manager", method], timeout=2)
+            result[name] = reply in ('s "yes"', 's "challenge"')
+        except CommandError:
+            result[name] = False
+    return result
+
+
 def status():
-    readers = {"wifi": wifi, "bluetooth": bluetooth, "volume": volume, "brightness": brightness, "battery": battery}
-    with ThreadPoolExecutor(max_workers=5) as pool:
+    readers = {"wifi": wifi, "bluetooth": bluetooth, "volume": volume, "brightness": brightness, "battery": battery, "power": power}
+    with ThreadPoolExecutor(max_workers=len(readers)) as pool:
         futures = {key: pool.submit(reader) for key, reader in readers.items()}
         result = {key: future.result() for key, future in futures.items()}
     result["settings"] = settings.load()
@@ -126,6 +143,15 @@ def action(name, value=None):
         subprocess.Popen(["nm-connection-editor"], stdin=subprocess.DEVNULL, start_new_session=True)
     elif name == "bluetooth-settings":
         subprocess.Popen(["blueman-manager"], stdin=subprocess.DEVNULL, start_new_session=True)
+    elif name in ("shutdown", "restart", "suspend"):
+        if not power()[name]:
+            raise CommandError("This session does not allow that power action")
+        run(["systemctl", "--no-block", {"shutdown": "poweroff", "restart": "reboot", "suspend": "suspend"}[name]])
+    elif name == "logout":
+        session = session_id()
+        if not session:
+            raise CommandError("No active login session was found")
+        run(["loginctl", "terminate-session", session])
     else:
         raise ValueError("Unknown system action")
     return {"ok": True, "action": name}

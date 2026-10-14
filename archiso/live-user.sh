@@ -6,7 +6,7 @@ if ! id prism >/dev/null 2>&1; then
     printf 'prism:prism\n' | chpasswd
 fi
 install -d -m 700 -o prism -g prism /home/prism/.config/prismos/hypr
-for prism_config_name in hyprland.lua hyprlock.conf; do
+for prism_config_name in hyprland.lua hyprlock.conf hypridle.conf; do
     if [[ ! -e "/home/prism/.config/prismos/hypr/$prism_config_name" ]]; then
         cp -- "/usr/share/prismos/config/hypr/$prism_config_name" /home/prism/.config/prismos/hypr/
     fi

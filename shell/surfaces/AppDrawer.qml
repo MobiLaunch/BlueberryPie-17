@@ -125,6 +125,8 @@ PanelWindow {
             delegate: Button {
                 id: appButton
                 required property var modelData
+                required property int index
+                property bool held: false
                 width: grid.cellWidth
                 height: grid.cellHeight
                 hoverEnabled: true
@@ -167,9 +169,36 @@ PanelWindow {
                         elide: Text.ElideRight
                     }
                 }
-                onClicked: {
+                function openApp() {
                     const p = mapToItem(root.contentItem, width / 2, 36);
                     ShellState.launch(modelData, root.screen, p.x, p.y);
+                }
+                onPressedChanged: if (pressed)
+                    held = false
+                onPressAndHold: {
+                    held = true;
+                    appMenu.open();
+                }
+                onClicked: if (!held)
+                    openApp()
+                Keys.onMenuPressed: appMenu.open()
+                TapHandler {
+                    acceptedButtons: Qt.RightButton
+                    onTapped: appMenu.open()
+                }
+                AppMenu {
+                    id: appMenu
+                    app: appButton.modelData
+                    onLaunchRequested: appButton.openApp()
+                }
+                Rectangle {
+                    x: parent.width / 2 + 21
+                    y: 4
+                    width: 11
+                    height: 11
+                    radius: 6
+                    color: Theme.primaryStrong
+                    visible: Applications.isPinned(appButton.modelData.id)
                 }
             }
             Label {

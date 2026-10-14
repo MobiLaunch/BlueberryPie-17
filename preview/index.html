@@ -80,6 +80,14 @@
       <div class="settings-row"><div><b>Dark theme</b><p>Soft colors after sunset.</p></div><button class="switch" data-setting="dark" role="switch" aria-checked="false" aria-label="Dark theme"><i></i></button></div>
       <div class="settings-row"><div><b>Reduced motion</b><p>Keep the colors, simplify movement.</p></div><button class="switch" data-setting="reduced" role="switch" aria-checked="false" aria-label="Reduced motion"><i></i></button></div>
     </section>
+    <section id="power-panel" class="power-panel modal panel" hidden role="dialog" aria-modal="true" aria-label="Session actions" tabindex="-1">
+      <div class="modal-heading"><h2 id="power-heading">Take a moment.</h2><button class="round-button quiet" data-close="power-panel" aria-label="Close session actions"><span data-icon="close"></span></button></div>
+      <p id="power-description">Choose what happens next.</p>
+      <div class="power-choices"><button class="pill-button" data-power-choice="Lock">Lock</button><button class="pill-button" data-power-choice="Suspend">Suspend</button><button class="pill-button" data-power-choice="Sign out">Sign out</button><button class="pill-button" data-power-choice="Restart">Restart</button><button class="pill-button" data-power-choice="Power off">Power off</button></div>
+      <button id="confirm-power" class="pill-button" hidden>Confirm</button><button id="cancel-power" class="text-button">Cancel</button>
+      <p class="demo-note">Design preview · session actions are simulated</p>
+    </section>
+    <div id="app-context" class="app-context panel" hidden role="menu" aria-label="Application actions"><button id="context-open" role="menuitem">Open</button><button id="context-pin" role="menuitem">Pin to dock</button></div>
     <section id="app-window" class="app-window panel" hidden aria-label="Application preview" role="dialog" aria-modal="true" tabindex="-1">
       <div class="app-titlebar"><div class="app-title"><span id="window-icon"></span><b id="window-title"></b><span class="window-label">PREVIEW</span></div><button class="round-button quiet" id="close-app" aria-label="Close application"><span data-icon="close"></span></button></div>
       <div id="app-content"></div>

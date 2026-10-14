@@ -1,6 +1,7 @@
 pragma Singleton
 import QtQuick
 import Quickshell
+import Quickshell.Hyprland
 
 QtObject {
     id: root
@@ -8,6 +9,7 @@ QtObject {
     property bool shadeOpen: false
     property bool drawerOpen: false
     property bool settingsOpen: false
+    property bool powerOpen: false
     property var launching: null
     property point launchOrigin: Qt.point(200, 200)
     property string toast: ""
@@ -16,15 +18,20 @@ QtObject {
         shadeOpen = false;
         drawerOpen = false;
         settingsOpen = false;
+        powerOpen = false;
+    }
+    function focusedScreen() {
+        const monitor = Hyprland.focusedMonitor;
+        return (monitor ? Quickshell.screens.find(screen => screen.name === monitor.name) : null) || activeScreen || Quickshell.screens[0] || null;
     }
     function toggleShade(screen) {
-        const open = !shadeOpen;
+        const open = !shadeOpen || activeScreen !== screen;
         close();
         activeScreen = screen;
         shadeOpen = open;
     }
     function toggleDrawer(screen) {
-        const open = !drawerOpen;
+        const open = !drawerOpen || activeScreen !== screen;
         close();
         activeScreen = screen;
         drawerOpen = open;
@@ -35,6 +42,21 @@ QtObject {
         close();
         activeScreen = screen;
         settingsOpen = true;
+    }
+    function openPower(screen) {
+        close();
+        activeScreen = screen;
+        powerOpen = true;
+    }
+    property Connections screensConnection: Connections {
+        target: Quickshell
+        function onScreensChanged() {
+            if (!Quickshell.screens.includes(root.activeScreen)) {
+                root.close();
+                root.launching = null;
+                root.activeScreen = Quickshell.screens.length ? Quickshell.screens[0] : null;
+            }
+        }
     }
     function launch(app, screen, x, y) {
         if (SystemBridge.launch(app.id)) {

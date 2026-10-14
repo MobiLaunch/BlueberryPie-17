@@ -23,6 +23,23 @@ runtime and ISO boot qualification remain open and are recorded separately.
 
 ## M1 — Make the desktop dependable on hardware
 
+### v0.2 source slice completed
+
+- Saved favorites, default browser/files/terminal selection, app context menus,
+  narrow-screen dock scrolling and notification badges.
+- Native tray activation/context menus and MPRIS controls/player selection.
+- Notification actions, critical emphasis and bounded in-memory retention.
+- Confirmed lock/suspend/logout/restart/shutdown actions and logind capability checks.
+- Idle lock configuration, session D-Bus bootstrap, focused-monitor shortcuts
+  and monitor unplug recovery.
+- Native offscreen component runtime check in Arch CI and additional adapter tests.
+- Preview favorites persistence and power confirmation flows.
+
+Still open: inline wireless selection/passwords, event-driven network/audio,
+output/microphone pickers, compositor-synchronized launches, third-party theming,
+and actual compositor/hardware/ISO qualification. The list below retains the
+full acceptance scope.
+
 1. Run the packaged session on Arch + Hyprland 0.56/Quickshell 0.3.2.
 2. Fix all QML runtime errors and confirm monitor focus, scale and hotplug.
 3. Complete Wi-Fi selection and inline password flow; pairing/connected devices.

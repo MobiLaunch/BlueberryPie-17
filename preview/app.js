@@ -15,9 +15,10 @@
     {id:'style',name:'Wallpaper & style',icon:'spark',color:'rose'},
   ];
   const icon = name => window.PRISM_ICONS[name] || window.PRISM_ICONS.spark;
-  const state = {palette:'Lilac',dark:false,reduced:matchMedia('(prefers-reduced-motion: reduce)').matches,wifi:true,bluetooth:true,dnd:false,sound:true};
+  const state = {palette:'Lilac',dark:false,reduced:matchMedia('(prefers-reduced-motion: reduce)').matches,wifi:true,bluetooth:true,dnd:false,sound:true,favorites:['browser','files','terminal','music']};
   try { const saved = JSON.parse(localStorage.getItem('prismos-preview') || '{}');
     for (const key of ['palette','dark','reduced']) if (typeof saved[key] === typeof state[key]) state[key] = saved[key];
+    if(Array.isArray(saved.favorites))state.favorites=[...new Set(saved.favorites)].filter(id=>apps.some(app=>app.id===id)).slice(0,8);
   } catch { /* Storage is optional, including in restricted file previews. */ }
   if (!window.PRISM_TOKENS.palettes[state.palette]) state.palette = 'Lilac';
   let panel = 'shade';
@@ -25,13 +26,14 @@
   let launchToken = 0;
   let toastTimeout;
   let playing = false;
-  const panels = ['shade','drawer','appearance'];
+  const panels = ['shade','drawer','appearance','power-panel'];
+  let contextApp=null,contextSource=null,powerChoice=null,holdTimer=null,heldSource=null;
 
   function hydrate(root = document) {
     $$('[data-icon]',root).forEach(el => { el.innerHTML = icon(el.dataset.icon); });
   }
   function persist() {
-    try { localStorage.setItem('prismos-preview',JSON.stringify({palette:state.palette,dark:state.dark,reduced:state.reduced})); } catch {}
+    try { localStorage.setItem('prismos-preview',JSON.stringify({palette:state.palette,dark:state.dark,reduced:state.reduced,favorites:state.favorites})); } catch {}
   }
   function applyTheme() {
     const roles = window.PRISM_TOKENS.palettes[state.palette][state.dark ? 'dark' : 'light'];
@@ -60,6 +62,7 @@
     clearTimeout(toastTimeout); toastTimeout = setTimeout(() => $('#toast').hidden = true,3800);
   }
   function closePanels(restore = true) {
+    $('#app-context').hidden=true;
     panels.forEach(id => { const el = $('#'+id); if (id === 'shade') {el.classList.remove('open');el.inert = true;el.setAttribute('aria-modal','false');el.setAttribute('aria-hidden','true');} else el.hidden = true; });
     $('#modal-backdrop').hidden = true; $('#shade-backdrop').hidden = true;
     document.body.classList.remove('shade-visible');
@@ -81,6 +84,7 @@
       el.focus();
     } else {
       el.hidden = false; $('#modal-backdrop').hidden = false;
+      if(id==='power-panel')resetPower();
       if (id === 'drawer') { $('#app-search').value = ''; renderApps(''); $('#app-search').focus(); }
       else el.focus();
     }
@@ -92,11 +96,26 @@
       const button = document.createElement('button');
       button.className = 'app-choice';button.dataset.app = app.id;
       button.setAttribute('aria-label',app.name);
-      button.innerHTML = '<span class="app-icon '+app.color+'">'+icon(app.icon)+'</span><span>'+app.name+'</span>';
+      button.innerHTML = '<span class="app-icon '+app.color+'">'+icon(app.icon)+'</span><span>'+app.name+'</span>'+(state.favorites.includes(app.id)?'<i class="pin-mark" aria-label="Pinned"></i>':'');
       $('#app-grid').append(button);
     });
     $('#no-apps').hidden = filtered.length > 0;
   }
+  function renderDock(){
+    const dock=$('.dock');
+    dock.querySelectorAll('[data-app]').forEach(el=>el.remove());
+    [...state.favorites,'settings'].filter((id,index,array)=>array.indexOf(id)===index).forEach(id=>{
+      const app=apps.find(item=>item.id===id);if(!app)return;
+      const button=document.createElement('button');button.className='dock-app';button.dataset.app=id;button.setAttribute('aria-label',app.name);
+      button.innerHTML='<span class="app-icon '+app.color+'">'+icon(app.icon)+'</span><span class="dock-tip">'+app.name+'</span>';dock.append(button);
+    });
+  }
+  function showContext(source,x,y){
+    contextApp=apps.find(app=>app.id===source.dataset.app);contextSource=source;if(!contextApp)return;
+    $('#context-pin').textContent=state.favorites.includes(contextApp.id)?'Unpin from dock':'Pin to dock';
+    $('#app-context').hidden=false;$('#app-context').style.left=Math.max(10,Math.min(x,innerWidth-190))+'px';$('#app-context').style.top=Math.max(50,Math.min(y,innerHeight-110))+'px';$('#context-open').focus();
+  }
+  function resetPower(){powerChoice=null;$('#power-heading').textContent='Take a moment.';$('#power-description').textContent='Choose what happens next.';$('.power-choices').hidden=false;$('#confirm-power').hidden=true;}
   function buildPalettes() {
     for (const [name,data] of Object.entries(window.PRISM_TOKENS.palettes)) {
       const dot = document.createElement('button');dot.className = 'palette-dot';dot.dataset.palette = name;
@@ -188,6 +207,18 @@
     $('.file-grid').innerHTML=(folders[name]||[]).map(item=>'<button class="file-card" data-file="'+item+'"><span>'+icon(item.includes('.')?'mail':'folder')+'</span>'+item+'<small>Demo content</small></button>').join('');
   }
   document.addEventListener('click',event => {
+    if(heldSource&&heldSource.contains(event.target)){event.preventDefault();heldSource=null;return;}
+    if(event.target.closest('#context-pin')){
+      const id=contextApp.id;
+      if(state.favorites.includes(id))state.favorites=state.favorites.filter(item=>item!==id);
+      else if(state.favorites.length>=8){toast('Unpin an app before adding another.');return;}
+      else state.favorites.push(id);
+      persist();renderDock();renderApps($('#app-search').value);$('#app-context').hidden=true;return;
+    }
+    if(event.target.closest('#context-open')){const app=contextApp,source=contextSource;$('#app-context').hidden=true;launchApp(app.id,source);return;}
+    $('#app-context').hidden=true;
+    const power=event.target.closest('[data-power-choice]');
+    if(power){powerChoice=power.dataset.powerChoice;$('#power-heading').textContent=powerChoice+' your session?';$('#power-description').textContent=['Restart','Power off','Sign out'].includes(powerChoice)?'Save your work before continuing.':'Ready when you are.';$('.power-choices').hidden=true;$('#confirm-power').textContent='Confirm '+powerChoice;$('#confirm-power').hidden=false;$('#confirm-power').focus();return;}
     const open=event.target.closest('[data-open]'),close=event.target.closest('[data-close]'),toggle=event.target.closest('[data-toggle]'),setting=event.target.closest('[data-setting]'),palette=event.target.closest('[data-palette]'),app=event.target.closest('[data-app]'),folder=event.target.closest('[data-folder]'),file=event.target.closest('[data-file]');
     if(open){openPanel(open.dataset.open);return;}
     if(close){closePanels();return;}
@@ -205,15 +236,19 @@
   $('#modal-backdrop').addEventListener('click',()=>closePanels());
   $('#shade-backdrop').addEventListener('click',()=>closePanels());
   $('#close-app').addEventListener('click',closeApp);
-  $('#power').addEventListener('click',()=>toast('Power actions are not available in this preview.'));
+  $('#power').addEventListener('click',()=>openPanel('power-panel'));
+  $('#confirm-power').addEventListener('click',()=>{const choice=powerChoice;closePanels();toast(choice+' is simulated in this design preview.');});
+  $('#cancel-power').addEventListener('click',()=>{if(powerChoice)resetPower();else closePanels();});
   $('#play-media').addEventListener('click',()=>{playing=!playing;$('.wave').classList.toggle('playing',playing);$('#play-media').textContent=playing?'Ⅱ':'▶';$('#play-media').setAttribute('aria-label',playing?'Pause demo track':'Play demo track');});
   $$('input[type="range"]').forEach(input=>{syncSlider(input);input.addEventListener('input',()=>syncSlider(input));});
   document.addEventListener('keydown',event=>{
+    if(event.key==='Escape'&&!$('#app-context').hidden){$('#app-context').hidden=true;contextSource?.focus();return;}
+    if(event.key==='ContextMenu'||(event.shiftKey&&event.key==='F10')){const source=document.activeElement.closest('[data-app]');if(source){event.preventDefault();const box=source.getBoundingClientRect();showContext(source,box.left,box.bottom);}return;}
     if(event.key==='Escape'){if(panel)closePanels();else closeApp();return;}
     const typing = ['INPUT','TEXTAREA'].includes(document.activeElement.tagName);
     if(event.key==='/'&&!typing){event.preventDefault();openPanel('drawer');return;}
     if(event.key==='Tab'){
-      const scope=panel?$('#'+panel):!$('#app-window').hidden?$('#app-window'):null;
+      const scope=!$('#app-context').hidden?$('#app-context'):panel?$('#'+panel):!$('#app-window').hidden?$('#app-window'):null;
       if(!scope)return;
       const focusable=$$('button:not(:disabled),input,a[href],[tabindex="0"]',scope).filter(el=>el.getClientRects().length);
       if(!focusable.length)return;
@@ -222,11 +257,15 @@
       else if(!event.shiftKey&&(document.activeElement===last||document.activeElement===scope)){event.preventDefault();first.focus();}
     }
   });
+  document.addEventListener('contextmenu',event=>{const source=event.target.closest('[data-app]');if(source){event.preventDefault();showContext(source,event.clientX,event.clientY);}});
+  document.addEventListener('pointerdown',event=>{const source=event.target.closest('[data-app]');if(source&&event.pointerType==='touch'){clearTimeout(holdTimer);holdTimer=setTimeout(()=>{heldSource=source;showContext(source,event.clientX,event.clientY);},550);}});
+  document.addEventListener('pointerup',()=>clearTimeout(holdTimer));
+  document.addEventListener('pointercancel',()=>{clearTimeout(holdTimer);heldSource=null;});
   let gestureStart=null;
   $('.status-bar').addEventListener('pointerdown',event=>{if(event.pointerType==='touch'&&event.clientX>innerWidth*.6)gestureStart={x:event.clientX,y:event.clientY};});
   document.addEventListener('pointerup',event=>{if(gestureStart&&event.clientY-gestureStart.y>45){if(panel!=='shade')openPanel('shade');}gestureStart=null;});
   for(let i=0;i<23;i++){const bar=document.createElement('i');bar.style.height=(5+Math.sin(i*.9)*5+Math.cos(i*2)*3+6)+'px';bar.style.setProperty('--index',i);$('.wave').append(bar);}
-  buildPalettes();hydrate();renderApps('');applyTheme();updateClock();setInterval(updateClock,15000);
+  buildPalettes();hydrate();renderDock();renderApps('');applyTheme();updateClock();setInterval(updateClock,15000);
   $('.wallpaper-art').style.backgroundImage='url("assets/wallpaper.svg")';
   $('#shade-backdrop').hidden=false;document.body.classList.add('shade-visible');$('#shade').focus();
   window.PRISM_PREVIEW={state,openPanel,closePanels,launchApp};
