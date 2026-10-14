@@ -116,3 +116,14 @@ a small native loader, optional F-Droid APK installation and session resume.
 Source CI validates Python and QML syntax and regressions, but does not
 establish a functioning Waydroid session, polkit prompt, successful APK
 install or physical ISO/USB boot. No hardware success has been claimed.
+
+## v0.6 Expressive system coverage (source scope)
+
+Implemented F-Droid display-only discovery, Android package detail handoff,
+shared Linux/Android store results, editable pointer/touchpad/repeat preferences,
+shared input/menu visuals, desktop context menu, consolidated system settings,
+and session-scoped GTK3/GTK4 and QtQuick Material skins. The eight packaged
+GTK palettes are checked by unit tests. CI validates syntax and service
+adapters, not real USB boot or Waydroid/GTK application rendering. Third-party
+apps may not use the session theme. See docs/EXPRESSIVE-COVERAGE.md for the
+remaining work required before claiming full user-facing consistency.
