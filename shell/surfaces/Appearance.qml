@@ -115,6 +115,7 @@ PanelWindow {
                 }
                 Rectangle { width: parent.width; height: 1; color: Theme.outline; opacity: .26 }
                 Label { text: "Display & audio"; font.pixelSize: 21; font.weight: Font.DemiBold }
+                DisplaySettings { width: parent.width }
                 ExpressiveSlider {
                     width: parent.width
                     symbol: "brightness"

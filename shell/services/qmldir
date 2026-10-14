@@ -8,3 +8,4 @@ singleton Wireless 1.0 Wireless.qml
 singleton AudioState 1.0 AudioState.qml
 singleton AndroidState 1.0 AndroidState.qml
 singleton InputState 1.0 InputState.qml
+singleton DisplayState 1.0 DisplayState.qml
