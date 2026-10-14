@@ -52,6 +52,14 @@ class NativeFilesTests(unittest.TestCase):
         self.assertEqual(spawn.call_args.args[0],
                          ["xdg-open", str(self.root/"Hello.txt")])
 
+    def test_symlink_rename_never_renames_target(self):
+        target = self.root / "Hello.txt"
+        link = self.root / "shortcut"
+        link.symlink_to(target)
+        files.rename(str(link), "newshortcut")
+        self.assertTrue(target.is_file())
+        self.assertTrue((self.root / "newshortcut").is_symlink())
+
     @patch("prismos.files.shutil.which", return_value="/usr/bin/gio")
     @patch("prismos.files.subprocess.run")
     def test_trash_uses_gio_and_no_shell(self, invoke, which):
