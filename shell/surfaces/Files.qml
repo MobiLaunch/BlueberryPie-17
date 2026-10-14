@@ -18,6 +18,10 @@ PanelWindow {
     property var bookmarks: []
     property bool showHidden: false
     property bool more: false
+    property var volumes: []
+    property bool hasClipboard: false
+    property string clipboardLabel: ""
+    property bool volumeBusy: driveWriter.running
     property string error: ""
     property string message: ""
     property string operation: ""
@@ -53,6 +57,14 @@ PanelWindow {
                        ["list"].concat(showHidden ? ["--hidden"] : []), "list");
     }
     function refresh() { navigate(currentPath); }
+    function pasteInto(folder) { request(["paste", folder], "paste"); }
+    function stageItem(path, action) { request(["stage", path, "--action", action], "stage"); }
+    function loadDrives() { if (!driveReader.running && !volumeBusy) driveReader.running = true; }
+    function driveAction(item) {
+        if (driveWriter.running) return;
+        driveWriter.command = ["prismctl", "drives", item.mounted ? "unmount" : "mount", item.device];
+        driveWriter.running = true;
+    }
     function openItem(item) {
         if (item.directory) {
             navigate(item.path);
@@ -96,7 +108,8 @@ PanelWindow {
                 more = data.more === true;
             } else {
                 message = data.message || "Done";
-                if (operation === "new" || operation === "rename" || operation === "trash")
+                if (operation === "stage" || operation === "paste") clipboardRefresh.restart();
+                if (operation === "new" || operation === "rename" || operation === "trash" || operation === "paste")
                     afterWrite.restart();
             }
         } catch (e) {
@@ -106,6 +119,8 @@ PanelWindow {
     onOpenedChanged: if (opened) {
         navigate(currentPath);
         if (!favorites.running) favorites.running = true;
+        clipboardRefresh.restart();
+        loadDrives();
     }
     Timer {
         id: afterWrite
@@ -115,6 +130,54 @@ PanelWindow {
     Process {
         id: worker
         stdout: StdioCollector { onStreamFinished: root.consume(text) }
+    }
+    Timer {
+        id: clipboardRefresh
+        interval: 80
+        onTriggered: if (!clipboardReader.running) clipboardReader.running = true
+    }
+    Process {
+        id: clipboardReader
+        command: ["prismctl", "files", "clipboard"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const data = JSON.parse(text);
+                    root.hasClipboard = data.has_item === true;
+                    root.clipboardLabel = data.name || "";
+                } catch (e) { root.hasClipboard = false; }
+            }
+        }
+    }
+    Process {
+        id: driveReader
+        command: ["prismctl", "drives", "list"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const data = JSON.parse(text);
+                    if (data.ok === true) root.volumes = data.items || [];
+                } catch (e) { root.volumes = []; }
+            }
+        }
+    }
+    Process {
+        id: driveWriter
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const data = JSON.parse(text);
+                    if (data.ok === false) root.error = data.error;
+                    else root.message = data.message || "Drive updated";
+                } catch (e) { root.error = "Drive operation failed"; }
+            }
+        }
+        onExited: driveRefresh.restart()
+    }
+    Timer {
+        id: driveRefresh
+        interval: 300
+        onTriggered: root.loadDrives()
     }
     Process {
         id: favorites
@@ -198,6 +261,11 @@ PanelWindow {
                 onClicked: root.prompt("new", "", "")
             }
             PillButton {
+                text: "Paste"
+                enabled: root.hasClipboard && !root.busy
+                onClicked: root.pasteInto(root.currentPath)
+            }
+            PillButton {
                 text: root.showHidden ? "Hide dotfiles" : "Show dotfiles"
                 enabled: !root.busy
                 onClicked: {
@@ -256,6 +324,36 @@ PanelWindow {
                                 onClicked: root.navigate(modelData.path)
                             }
                         }
+                        Label { text: "Removable drives"; font.weight: Font.DemiBold }
+                        Repeater {
+                            model: root.volumes
+                            delegate: Column {
+                                required property var modelData
+                                width: places.width
+                                spacing: 3
+                                PillButton {
+                                    width: parent.width
+                                    text: "◉ " + modelData.label
+                                    implicitHeight: 42
+                                    enabled: modelData.mounted && !root.busy
+                                    onClicked: root.navigate(modelData.mountpoint)
+                                }
+                                PillButton {
+                                    width: parent.width
+                                    implicitHeight: 36
+                                    text: modelData.mounted ? "Safely unmount" : "Mount"
+                                    enabled: !root.volumeBusy
+                                    onClicked: root.driveAction(modelData)
+                                }
+                            }
+                        }
+                        PillButton {
+                            width: places.width
+                            text: "↻ Refresh drives"
+                            implicitHeight: 38
+                            enabled: !root.volumeBusy
+                            onClicked: root.loadDrives()
+                        }
                     }
                 }
             }
@@ -308,13 +406,30 @@ PanelWindow {
                                Theme.primary : area.containsMouse ? Theme.surfaceHigh :
                                "transparent"
                         Behavior on color { ColorAnimation { duration: Theme.fast } }
-                        Label {
-                            x: 14
+                        Rectangle {
+                            x: 8
                             anchors.verticalCenter: parent.verticalCenter
-                            text: modelData.symbol
-                            font.pixelSize: 28
-                            color: root.selectedPath === modelData.path ?
-                                   Theme.onPrimary : Theme.primaryStrong
+                            width: 44
+                            height: 44
+                            radius: 14
+                            color: Theme.surfaceHigh
+                            Image {
+                                anchors.fill: parent
+                                anchors.margins: 2
+                                source: fileRow.modelData.thumbnail || ""
+                                visible: status === Image.Ready && source.toString().length > 0
+                                fillMode: Image.PreserveAspectCrop
+                                asynchronous: true
+                                sourceSize.width: 128
+                                sourceSize.height: 128
+                            }
+                            Label {
+                                anchors.centerIn: parent
+                                visible: !fileRow.modelData.thumbnail
+                                text: fileRow.modelData.symbol
+                                font.pixelSize: 26
+                                color: Theme.primaryStrong
+                            }
                         }
                         Label {
                             x: 60; y: 9
@@ -365,6 +480,20 @@ PanelWindow {
                                 text: "Open"
                                 onTriggered: root.openItem(fileRow.modelData)
                             }
+                            MenuItem {
+                                text: "Copy"
+                                onTriggered: root.stageItem(fileRow.modelData.path, "copy")
+                            }
+                            MenuItem {
+                                text: "Cut"
+                                onTriggered: root.stageItem(fileRow.modelData.path, "cut")
+                            }
+                            MenuItem {
+                                text: "Paste into folder"
+                                enabled: fileRow.modelData.directory && root.hasClipboard
+                                onTriggered: root.pasteInto(fileRow.modelData.path)
+                            }
+                            MenuSeparator {}
                             MenuItem {
                                 text: "Rename"
                                 onTriggered: root.prompt("rename", fileRow.modelData.path,
