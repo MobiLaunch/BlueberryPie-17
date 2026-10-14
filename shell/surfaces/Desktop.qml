@@ -41,6 +41,40 @@ Scope {
             fillMode: Image.PreserveAspectCrop
             opacity: Theme.dark ? .5 : 1
         }
+        // Only the wallpaper layer receives these right-clicks.
+        // Regular application windows keep their own context menus.
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.RightButton
+            onClicked: desktopMenu.popup()
+        }
+        ExpressiveMenu {
+            id: desktopMenu
+            MenuItem {
+                text: "All applications"
+                onTriggered: ShellState.toggleDrawer(root.screen)
+            }
+            MenuItem {
+                text: "Prism Store"
+                onTriggered: ShellState.openStore(root.screen)
+            }
+            MenuSeparator {}
+            MenuItem {
+                text: "Appearance & input"
+                onTriggered: ShellState.openSettings(root.screen)
+            }
+            MenuItem {
+                text: "Quick Settings"
+                onTriggered: ShellState.toggleShade(root.screen)
+            }
+            MenuItem {
+                text: "Refresh desktop"
+                onTriggered: {
+                    SystemBridge.refresh();
+                    SystemBridge.refreshApps();
+                }
+            }
+        }
         Column {
             x: Math.max(40, wallpaper.width * .075)
             y: Math.max(90, wallpaper.height * .14)
