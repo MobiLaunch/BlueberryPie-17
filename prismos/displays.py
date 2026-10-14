@@ -161,4 +161,96 @@ def apply_saved():
         if display and target in display["choices"]:
             apply_rule(display, target)
             count += 1
+    positions = settings.load().get("display_positions") or {}
+    for name, coords in positions.items():
+        display = active.get(name)
+        if display and len(coords) == 2:
+            arranged = {**display, "x": coords[0], "y": coords[1],
+                        "scale": stored.get(name, display["scale"])}
+            apply_rule(arranged, arranged["scale"])
+            count += 1
     return {"ok": True, "applied": count}
+
+
+DIRECTIONS = ("left", "right", "above", "below")
+
+
+def _bounds(monitor):
+    return (monitor["x"], monitor["y"],
+            monitor["x"] + round(monitor["width"] / monitor["scale"]),
+            monitor["y"] + round(monitor["height"] / monitor["scale"]))
+
+
+def proposed_position(current, anchor, relation):
+    """Return a non-overlapping, edge-aligned logical-monitor placement."""
+    if relation not in DIRECTIONS:
+        raise ValueError("Choose Left, Right, Above or Below")
+    x1, y1, x2, y2 = _bounds(anchor)
+    width = round(current["width"] / current["scale"])
+    height = round(current["height"] / current["scale"])
+    if relation == "left":
+        return x1 - width, y1
+    if relation == "right":
+        return x2, y1
+    if relation == "above":
+        return x1, y1 - height
+    return x1, y2
+
+
+def overlaps(a, b):
+    ax1, ay1, ax2, ay2 = _bounds(a)
+    bx1, by1, bx2, by2 = _bounds(b)
+    return ax1 < bx2 and bx1 < ax2 and ay1 < by2 and by1 < ay2
+
+
+def preview_position(name, relation, anchor_name):
+    if (not isinstance(name, str) or not MONITOR.fullmatch(name)
+            or not isinstance(anchor_name, str)
+            or not MONITOR.fullmatch(anchor_name) or name == anchor_name):
+        raise ValueError("Choose two distinct connected monitors")
+    if relation not in DIRECTIONS:
+        raise ValueError("Choose a supported display arrangement")
+    root = runtime_dir()
+    with (root / "display.lock").open("a") as lock:
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            raise ValueError("Another display change is awaiting confirmation") from None
+        available = monitors()
+        selected = next((item for item in available if item["name"] == name), None)
+        anchor = next((item for item in available if item["name"] == anchor_name), None)
+        if not selected or not anchor:
+            raise ValueError("The selected display is disconnected")
+        x, y = proposed_position(selected, anchor, relation)
+        if abs(x) > 40000 or abs(y) > 40000:
+            raise ValueError("The requested monitor position is out of range")
+        moved = {**selected, "x": x, "y": y}
+        if any(overlaps(moved, other) for other in available
+               if other["name"] != name):
+            raise ValueError("This arrangement overlaps another display")
+        if (x, y) == (selected["x"], selected["y"]):
+            emit("confirmed", name=name, x=x, y=y)
+            return 0
+        token = secrets.token_hex(16)
+        pending = root / "display-pending.json"
+        marker = root / ("display-confirm-" + token)
+        pending.write_text(json.dumps({"token": token, "expires": time.time() + TIMEOUT}))
+        pending.chmod(0o600)
+        try:
+            apply_rule(moved, moved["scale"])
+            emit("trial", name=name, token=token, x=x, y=y, seconds=TIMEOUT)
+            until = time.monotonic() + TIMEOUT
+            while time.monotonic() < until:
+                if marker.exists():
+                    saved = dict(settings.load().get("display_positions") or {})
+                    saved[name] = [x, y]
+                    settings.update(display_positions=saved)
+                    emit("confirmed", name=name, x=x, y=y)
+                    return 0
+                time.sleep(.25)
+            apply_rule(selected, selected["scale"])
+            emit("reverted", name=name, x=selected["x"], y=selected["y"])
+            return 0
+        finally:
+            pending.unlink(missing_ok=True)
+            marker.unlink(missing_ok=True)

@@ -9,7 +9,7 @@ from pathlib import Path
 DEFAULTS = {"seed": "#8469cf", "dark": False, "reduced_motion": False, "dnd": False,
             "favorites": None, "android_enabled": False, "onboarding_complete": False,
             "natural_scroll": True, "tap_to_click": True,
-            "pointer_speed": 0.0, "repeat_rate": 25, "display_scales": {}}
+            "pointer_speed": 0.0, "repeat_rate": 25, "display_scales": {}, "display_positions": {}}
 
 
 def directory():
@@ -38,6 +38,15 @@ def load():
                 name: float(scale) for name, scale in list(monitors.items())[:8]
                 if isinstance(name, str) and re.fullmatch(r"[A-Za-z0-9_][A-Za-z0-9_-]{0,39}", name)
                 and type(scale) in (float, int) and scale in (1, 1.25, 1.5, 1.75, 2)
+            }
+        positions = data.get("display_positions")
+        if isinstance(positions, dict):
+            valid["display_positions"] = {
+                name: [int(coords[0]), int(coords[1])]
+                for name, coords in list(positions.items())[:8]
+                if isinstance(name, str) and re.fullmatch(r"[A-Za-z0-9_][A-Za-z0-9_-]{0,39}", name)
+                and isinstance(coords, list) and len(coords) == 2
+                and all(type(c) is int and abs(c) <= 40000 for c in coords)
             }
         seed = data.get("seed")
         if isinstance(seed, str) and re.fullmatch(r"#[0-9a-fA-F]{6}", seed):

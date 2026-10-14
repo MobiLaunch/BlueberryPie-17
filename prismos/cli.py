@@ -18,9 +18,10 @@ def main(argv=None):
     volume.add_argument("operation", choices=("list", "mount", "unmount"))
     volume.add_argument("device", nargs="?")
     disp = sub.add_parser("display")
-    disp.add_argument("operation", choices=("list", "preview", "confirm", "apply"))
+    disp.add_argument("operation", choices=("list", "preview", "arrange", "confirm", "apply"))
     disp.add_argument("name", nargs="?")
     disp.add_argument("value", nargs="?")
+    disp.add_argument("anchor", nargs="?")
     fileargs = sub.add_parser("files")
     fileargs.add_argument("operation", choices=("list", "bookmarks", "open", "mkdir", "rename", "trash", "stage", "paste", "clipboard"))
     fileargs.add_argument("path", nargs="?")
@@ -86,6 +87,8 @@ def main(argv=None):
                 result = displays.status()
             elif args.operation == "preview":
                 return displays.preview(args.name, args.value)
+            elif args.operation == "arrange":
+                return displays.preview_position(args.name, args.value, args.anchor)
             elif args.operation == "confirm":
                 result = displays.confirm(args.name)
             else:

@@ -25,6 +25,14 @@ QtObject {
         previewer.command = ["prismctl", "display", "preview", name, String(scale)];
         previewer.running = true;
     }
+    function arrange(name, relation, neighbor) {
+        if (busy || !neighbor || name === neighbor) return;
+        error = "";
+        notice = "";
+        trialToken = "";
+        previewer.command = ["prismctl", "display", "arrange", name, relation, neighbor];
+        previewer.running = true;
+    }
     function confirm() {
         if (!trialToken || confirmer.running) return;
         confirmer.command = ["prismctl", "display", "confirm", trialToken];
