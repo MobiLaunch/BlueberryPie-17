@@ -69,6 +69,7 @@ def browse(raw=None, hidden=False):
     if not path.is_dir():
         raise ValueError("That folder is no longer available")
     items = []
+    thumbs = 0
     try:
         entries = sorted(path.iterdir(), key=lambda p: (not p.is_dir(), p.name.casefold()))
         for entry in entries:
@@ -83,7 +84,12 @@ def browse(raw=None, hidden=False):
                 continue
             mimetype = "inode/directory" if folder else (
                 mimetypes.guess_type(entry.name)[0] or "application/octet-stream")
+            preview = ""
+            if thumbs < 30 and mimetype.startswith("image/"):
+                thumbs += 1
+                preview = thumbnail(entry, info)
             items.append({
+                "thumbnail": preview,
                 "name": entry.name,
                 "path": str(entry),
                 "directory": folder,
@@ -252,3 +258,31 @@ def paste(folder):
     if state["action"] == "cut":
         _clipboard_file().unlink(missing_ok=True)
     return result
+
+
+def thumbnail(path, info):
+    """Bounded cached local picture thumbnails. Never decodes videos or remote URIs."""
+    try:
+        if not str(mimetypes.guess_type(path.name)[0]).startswith("image/"):
+            return ""
+        if info.st_size > 8 * 1024 * 1024:
+            return ""
+        from PIL import Image, ImageOps, UnidentifiedImageError
+        from hashlib import sha256
+        uri = (str(path) + ":" + str(info.st_mtime_ns) + ":" +
+               str(info.st_size)).encode("utf-8", "surrogateescape")
+        key = sha256(uri).hexdigest()[:40]
+        cache = Path(os.environ.get("XDG_CACHE_HOME", Path.home()/".cache")) / "prismos/thumbs"
+        cache.mkdir(parents=True, exist_ok=True, mode=0o700)
+        output = cache / (key + ".png")
+        if not output.is_file():
+            Image.MAX_IMAGE_PIXELS = 24_000_000
+            with Image.open(path) as opened:
+                opened.thumbnail((144, 144))
+                image = ImageOps.exif_transpose(opened)
+                if image.mode not in ("RGB", "RGBA"):
+                    image = image.convert("RGBA")
+                image.save(output, "PNG")
+        return output.as_uri()
+    except (OSError, ValueError, ImportError, UnidentifiedImageError, RuntimeError):
+        return ""
