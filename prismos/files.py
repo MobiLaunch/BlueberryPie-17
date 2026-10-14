@@ -147,3 +147,108 @@ def trash(raw):
     if result.returncode:
         raise CommandError((result.stderr or "Failed to move to Trash").strip()[:500])
     return {"ok": True, "message": "Moved to Trash"}
+
+
+# Per-user Files clipboard persists between short-lived prismctl commands. Entries
+# hold paths, not file bytes; moving happens only when the user requests Paste.
+import json
+import tempfile
+import time
+
+
+def _exists(path):
+    return path.exists() or path.is_symlink()
+
+
+def _clipboard_file():
+    root = Path(os.environ.get("XDG_RUNTIME_DIR", "")) if os.environ.get("XDG_RUNTIME_DIR") else (
+        Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local/state")))
+    root = root / "prismos"
+    root.mkdir(parents=True, exist_ok=True, mode=0o700)
+    return root / "file-clipboard.json"
+
+
+def clipboard_status():
+    try:
+        path = _clipboard_file()
+        info = json.loads(path.read_text())
+        if info.get("action") not in ("copy", "cut") or not isinstance(info.get("path"), str):
+            raise ValueError("Invalid clipboard state")
+        source = location(info["path"])
+        if time.time() - float(info.get("created", 0)) > 4 * 3600 or not _exists(source):
+            raise ValueError("Clipboard item expired")
+        return {"ok": True, "has_item": True, "action": info["action"],
+                "name": source.name, "path": str(source)}
+    except (OSError, ValueError, TypeError):
+        return {"ok": True, "has_item": False}
+
+
+def stage(raw, action):
+    if action not in ("copy", "cut"):
+        raise ValueError("Choose Copy or Cut")
+    source = location(raw)
+    if not _exists(source) or source == source.parent:
+        raise ValueError("Select a file or folder")
+    state = _clipboard_file()
+    data = json.dumps({"action": action, "path": str(source), "created": time.time()})
+    fd, temporary = tempfile.mkstemp(dir=state.parent, prefix=".clipboard-")
+    try:
+        with os.fdopen(fd, "w") as output:
+            output.write(data)
+        os.chmod(temporary, 0o600)
+        os.replace(temporary, state)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
+    return {"ok": True, "message": ("Ready to move " if action == "cut"
+                                     else "Ready to copy ") + source.name}
+
+
+def transfer(source, folder, move=False):
+    source = location(source)
+    folder = location(folder)
+    if not _exists(source) or source == source.parent:
+        raise ValueError("The selected file or folder is unavailable")
+    if not folder.is_dir():
+        raise ValueError("Choose a destination folder")
+    destination = folder / source.name
+    if _exists(destination):
+        raise ValueError("An item with this name already exists in the destination")
+    # Compare actual directories to prevent recursively copying/moving a parent
+    # into itself, including through aliases and symbolic links.
+    if source.is_dir() and not source.is_symlink():
+        actual_source = source.resolve()
+        actual_folder = folder.resolve()
+        if actual_folder == actual_source or actual_source in actual_folder.parents:
+            raise ValueError("A folder cannot be placed inside itself")
+    if move:
+        # Cross-device moves are handled by GIO with no shell interpolation.
+        # GIO reports failures instead of silently replacing existing names.
+        if not shutil.which("gio"):
+            raise CommandError("GIO is required to move files")
+        result = subprocess.run(["gio", "move", "--no-target-directory", "--",
+                                 str(source), str(destination)], timeout=180,
+                                capture_output=True, text=True, check=False)
+        if result.returncode:
+            raise CommandError((result.stderr or "Move failed").strip()[:500])
+    elif source.is_symlink():
+        destination.symlink_to(os.readlink(source))
+    elif source.is_dir():
+        shutil.copytree(source, destination, symlinks=True)
+    else:
+        # Exclusive-create means a race cannot overwrite an existing file.
+        with source.open("rb") as original, destination.open("xb") as output:
+            shutil.copyfileobj(original, output, length=1024 * 1024)
+        shutil.copystat(source, destination)
+    return {"ok": True, "path": str(destination),
+            "message": ("Moved " if move else "Copied ") + source.name}
+
+
+def paste(folder):
+    state = clipboard_status()
+    if not state["has_item"]:
+        raise ValueError("Copy or cut an item before pasting")
+    result = transfer(state["path"], folder, move=state["action"] == "cut")
+    if state["action"] == "cut":
+        _clipboard_file().unlink(missing_ok=True)
+    return result
