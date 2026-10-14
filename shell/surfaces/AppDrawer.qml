@@ -94,7 +94,7 @@ PanelWindow {
             Accessible.name: "Close app drawer"
             onClicked: ShellState.close()
         }
-        TextField {
+        ExpressiveTextField {
             id: search
             x: 24
             y: 82
@@ -105,12 +105,6 @@ PanelWindow {
             font.family: Theme.font
             font.pixelSize: 16
             leftPadding: 22
-            background: Rectangle {
-                radius: 27
-                color: Theme.surfaceContainer
-                border.width: search.activeFocus ? 2 : 0
-                border.color: Theme.primaryStrong
-            }
             Keys.onEscapePressed: ShellState.close()
             Keys.onReturnPressed: {
                 const matches = grid.model;

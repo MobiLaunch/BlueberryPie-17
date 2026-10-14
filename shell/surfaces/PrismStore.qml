@@ -220,7 +220,7 @@ PanelWindow {
                 }
             }
         }
-        TextField {
+        ExpressiveTextField {
             id: searchField
             x: 26; y: 153
             width: parent.width - 52; height: 50
@@ -229,12 +229,6 @@ PanelWindow {
             font.family: Theme.font
             font.pixelSize: 16
             leftPadding: 20
-            background: Rectangle {
-                radius: 25
-                color: Theme.surfaceContainer
-                border.width: searchField.activeFocus ? 2 : 0
-                border.color: Theme.primaryStrong
-            }
             onAccepted: root.searchNow()
             Keys.onEscapePressed: ShellState.close()
         }

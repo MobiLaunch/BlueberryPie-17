@@ -123,7 +123,7 @@ Rectangle {
                         wrapMode: Text.WordWrap
                         font.pixelSize: 12
                     }
-                    TextField {
+                    ExpressiveTextField {
                         id: password
                         width: parent.width
                         visible: !networkRow.modelData.connected && networkRow.modelData.secured && networkRow.modelData.key !== null
@@ -136,12 +136,6 @@ Rectangle {
                         Accessible.name: "Password for " + networkRow.modelData.ssid
                         font.family: Theme.font
                         color: Theme.onSurface
-                        background: Rectangle {
-                            radius: 16
-                            color: Theme.surface
-                            border.width: password.activeFocus ? 2 : 0
-                            border.color: Theme.primaryStrong
-                        }
                         onAccepted: connectButton.clicked()
                         Component.onDestruction: clear()
                     }
