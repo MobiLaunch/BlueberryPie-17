@@ -103,3 +103,7 @@ state. It exercises default changes, level/mute readback, independent microphone
 unmute, output switching and removed-device rejection. No physical hardware
 monitor is started. Physical sound output/capture, Bluetooth profiles, headset
 hotplug, suspend/resume and per-app routing remain hardware acceptance work.
+
+## v0.5 source slice
+
+New store backend tests validate scoped search, install arguments, IDs and explicit remote setup. Not yet tested: live Flathub catalogue, hardware Waydroid/binder, the store QML surface running under Hyprland, Arch ISO build and USB boot. No hardware or boot success is claimed.

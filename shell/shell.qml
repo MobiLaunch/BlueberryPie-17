@@ -24,6 +24,9 @@ ShellRoot {
         function settings(): void {
             ShellState.openSettings(ShellState.focusedScreen());
         }
+        function store(): void {
+            ShellState.openStore(ShellState.focusedScreen());
+        }
         function power(): void {
             ShellState.openPower(ShellState.focusedScreen());
         }

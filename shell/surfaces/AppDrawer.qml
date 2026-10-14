@@ -80,6 +80,13 @@ PanelWindow {
             font.weight: Font.Bold
         }
         PillButton {
+            x: 248
+            y: 24
+            text: "✦  Prism Store"
+            filled: true
+            onClicked: ShellState.openStore(root.screen)
+        }
+        PillButton {
             anchors.right: parent.right
             anchors.top: parent.top
             anchors.margins: 20

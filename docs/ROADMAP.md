@@ -115,3 +115,11 @@ services can wait until the desktop fundamentals are stable.
 
 **Gate:** shared color/type/motion contracts, keyboard/touch accessibility,
 working permissions and predictable error/retry handling across every app.
+
+## v0.5 — Prism Store and Android integration (source slice)
+
+- Native Flathub search, real Flatpak user installs, launch and uninstall.
+- Android tab with optional Waydroid container launch; no bundled Android images.
+- One-command build.sh wrapper to find real Arch package and assemble ISO.
+
+**Gate:** Full ISO, compositor, Flatpak games and Waydroid on hardware remain unverified.

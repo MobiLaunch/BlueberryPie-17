@@ -11,6 +11,7 @@ QtObject {
     property bool drawerOpen: false
     property bool settingsOpen: false
     property bool powerOpen: false
+    property bool storeOpen: false
     property var launching: null
     property point launchOrigin: Qt.point(200, 200)
     property bool launchReady: false
@@ -23,6 +24,7 @@ QtObject {
         drawerOpen = false;
         settingsOpen = false;
         powerOpen = false;
+        storeOpen = false;
     }
     function cancelLaunch() {
         launching = null;
@@ -60,6 +62,11 @@ QtObject {
         close();
         activeScreen = screen;
         settingsOpen = true;
+    }
+    function openStore(screen) {
+        close();
+        activeScreen = screen;
+        storeOpen = true;
     }
     function openPower(screen) {
         close();

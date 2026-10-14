@@ -29,3 +29,6 @@ vulkan-intel
 vulkan-radeon
 intel-ucode
 amd-ucode
+flatpak
+waydroid
+xdg-desktop-portal-gtk

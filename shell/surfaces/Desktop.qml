@@ -166,7 +166,7 @@ Scope {
         screen: root.screen
         anchors.bottom: true
         margins.bottom: 12
-        implicitWidth: Math.min(root.screen.width - 32, 136 + Applications.dockApps.length * 64)
+        implicitWidth: Math.min(root.screen.width - 32, 194 + Applications.dockApps.length * 64)
         implicitHeight: 76
         exclusiveZone: 92
         WlrLayershell.namespace: "prism-dock"
@@ -255,6 +255,14 @@ Scope {
                         }
                     }
                     PillButton {
+                        text: "✦"
+                        Accessible.name: "Prism Store"
+                        implicitWidth: 52
+                        implicitHeight: 52
+                        filled: true
+                        onClicked: ShellState.openStore(root.screen)
+                    }
+                    PillButton {
                         text: "⚙"
                         Accessible.name: "Appearance settings"
                         implicitWidth: 52
@@ -269,6 +277,9 @@ Scope {
         screen: root.screen
     }
     AppDrawer {
+        screen: root.screen
+    }
+    PrismStore {
         screen: root.screen
     }
     Appearance {

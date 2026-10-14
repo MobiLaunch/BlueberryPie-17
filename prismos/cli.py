@@ -2,7 +2,7 @@ import argparse
 import json
 import sys
 
-from . import apps, audio, favorites, settings, system, theme, wireless
+from . import android, apps, audio, favorites, settings, store, system, theme, wireless
 
 
 def main(argv=None):
@@ -10,6 +10,12 @@ def main(argv=None):
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("status")
     sub.add_parser("apps")
+    software = sub.add_parser("store")
+    software.add_argument("operation", choices=("status", "enable", "search", "install", "remove", "open"))
+    software.add_argument("value", nargs="?")
+    droid = sub.add_parser("android")
+    droid.add_argument("operation", choices=("status", "open", "install"))
+    droid.add_argument("value", nargs="?")
     sound = sub.add_parser("audio")
     sound.add_argument("operation", choices=("list", "select", "volume", "mute"))
     sound.add_argument("--kind", choices=("output", "input"))
@@ -42,6 +48,22 @@ def main(argv=None):
             result = system.status()
         elif args.command == "apps":
             result = apps.entries()
+        elif args.command == "store":
+            if args.operation == "status":
+                result = store.status()
+            elif args.operation == "enable":
+                result = store.enable()
+            elif args.operation == "search":
+                result = store.search(args.value)
+            else:
+                result = store.change(args.operation, args.value)
+        elif args.command == "android":
+            if args.operation == "status":
+                result = android.status()
+            elif args.operation == "open":
+                result = android.open_android()
+            else:
+                result = android.install_apk(args.value)
         elif args.command == "audio":
             result = audio.snapshot() if args.operation == "list" else audio.action(args.operation, args.kind, args.serial, args.node_name, args.value)
         elif args.command == "wifi":
