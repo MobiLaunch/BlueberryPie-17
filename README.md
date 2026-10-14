@@ -360,3 +360,12 @@ are a separate compatibility target.
 
 Source checks and unit tests cover critical data safety behaviors, but ISO
 boot, real USB devices and monitor layout transitions require physical QA.
+
+### Early touchscreen swipe support
+
+A touchscreen gesture surface on empty desktop wallpaper now supports swiping
+up from the lower region to open the app drawer and swiping down from the upper
+region to reveal Quick Settings. It is deliberately constrained to the wallpaper
+so app-local touch gestures and scrolling keep priority. This is not a global
+Android touch gesture implementation, and must be verified on real touch
+hardware and in tablet mode.

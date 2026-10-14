@@ -41,6 +41,28 @@ Scope {
             fillMode: Image.PreserveAspectCrop
             opacity: Theme.dark ? .5 : 1
         }
+        // Touchscreen gesture zone on *empty wallpaper* only. This does not
+        // steal swipes from regular app windows, app toolbars or Quick Settings.
+        Item {
+            anchors.fill: parent
+            DragHandler {
+                id: wallpaperTouch
+                target: null
+                acceptedDevices: PointerDevice.TouchScreen
+                onActiveChanged: {
+                    if (active) return;
+                    const dy = activeTranslation.y;
+                    const dx = activeTranslation.x;
+                    const beganAt = centroid.pressPosition.y;
+                    if (Math.abs(dy) < 105 || Math.abs(dx) > Math.abs(dy) * .6)
+                        return;
+                    if (dy < 0 && beganAt > wallpaper.height * .65)
+                        ShellState.toggleDrawer(root.screen);
+                    else if (dy > 0 && beganAt < wallpaper.height * .35)
+                        ShellState.toggleShade(root.screen);
+                }
+            }
+        }
         // Only the wallpaper layer receives these right-clicks.
         // Regular application windows keep their own context menus.
         MouseArea {

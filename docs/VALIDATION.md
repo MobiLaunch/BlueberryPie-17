@@ -152,3 +152,10 @@ and confirmation rollback. Native Qt lint and the existing UI interaction
 tests run in GitHub Actions. The optional internal drag-and-drop interaction
 is NOT certified on real hardware, and no Arch ISO, USB mount, display-hotplug,
 or touchpad/touchscreen gesture was exercised from this environment.
+
+### v0.8 wallpaper touch gestures
+
+A device-filtered Qt Quick DragHandler captures upward/downward gestures
+originating on empty wallpaper. It does not capture app touches. This remains
+unqualified on physical touchscreen hardware; mouse/touch drag behavior and
+Wayland gesture inhibition still require live testing.
