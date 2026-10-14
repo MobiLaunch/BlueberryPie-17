@@ -87,6 +87,112 @@ PanelWindow {
                     onClicked: SystemBridge.action("reduced_motion")
                 }
                 Rectangle { width: parent.width; height: 1; color: Theme.outline; opacity: .26 }
+                Label { text: "Pointer & keyboard"; font.pixelSize: 21; font.weight: Font.DemiBold }
+                Rectangle {
+                    width: parent.width
+                    height: 82
+                    radius: 25
+                    color: Theme.surfaceContainer
+                    Label {
+                        x: 17; y: 12
+                        text: "Natural scrolling"
+                        font.pixelSize: 17
+                        font.weight: Font.DemiBold
+                    }
+                    Label { x: 17; y: 43; text: "Scroll in the direction content moves"; opacity: .74 }
+                    AndroidToggle {
+                        anchors.right: parent.right
+                        anchors.rightMargin: 18
+                        anchors.verticalCenter: parent.verticalCenter
+                        checked: InputState.values.natural_scroll === true
+                        enabled: !InputState.busy
+                        Accessible.name: "Natural scrolling"
+                        onClicked: InputState.setValue("natural_scroll", checked)
+                    }
+                }
+                Rectangle {
+                    width: parent.width
+                    height: 82
+                    radius: 25
+                    color: Theme.surfaceContainer
+                    Label {
+                        x: 17; y: 12
+                        text: "Tap to click"
+                        font.pixelSize: 17
+                        font.weight: Font.DemiBold
+                    }
+                    Label { x: 17; y: 43; text: "Use a light tap on the touchpad"; opacity: .74 }
+                    AndroidToggle {
+                        anchors.right: parent.right
+                        anchors.rightMargin: 18
+                        anchors.verticalCenter: parent.verticalCenter
+                        checked: InputState.values.tap_to_click === true
+                        enabled: !InputState.busy
+                        Accessible.name: "Tap to click"
+                        onClicked: InputState.setValue("tap_to_click", checked)
+                    }
+                }
+                Rectangle {
+                    width: parent.width
+                    height: 104
+                    radius: 25
+                    color: Theme.surfaceContainer
+                    Label { x: 17; y: 9; text: "Pointer speed"; font.pixelSize: 17; font.weight: Font.DemiBold }
+                    Slider {
+                        id: speed
+                        x: 16; y: 38
+                        width: parent.width - 32
+                        height: 56
+                        from: -1; to: 1; stepSize: .1
+                        value: InputState.values.pointer_speed
+                        enabled: !InputState.busy
+                        Accessible.name: "Pointer speed"
+                        onPressedChanged: if (!pressed) InputState.setValue("pointer_speed", value.toFixed(1))
+                        background: Rectangle {
+                            x: speed.leftPadding
+                            y: speed.topPadding + speed.availableHeight / 2 - height / 2
+                            width: speed.availableWidth; height: 12; radius: 6
+                            color: Theme.surfaceHigh
+                            Rectangle {
+                                width: speed.visualPosition * parent.width
+                                height: parent.height
+                                radius: parent.radius
+                                color: Theme.primaryStrong
+                            }
+                        }
+                        handle: Rectangle {
+                            x: speed.leftPadding + speed.visualPosition * (speed.availableWidth - width)
+                            y: speed.topPadding + speed.availableHeight / 2 - height / 2
+                            width: 26; height: 26; radius: 13
+                            color: Theme.primaryStrong
+                            scale: speed.pressed ? 1.18 : 1
+                            Behavior on scale { NumberAnimation { duration: Theme.fast } }
+                        }
+                    }
+                }
+                Rectangle {
+                    width: parent.width; height: 102; radius: 25
+                    color: Theme.surfaceContainer
+                    Label { x: 17; y: 10; text: "Key repeat speed"; font.pixelSize: 17; font.weight: Font.DemiBold }
+                    Slider {
+                        id: repeatSpeed
+                        x: 16; y: 39
+                        width: parent.width - 32; height: 54
+                        from: 10; to: 60; stepSize: 5
+                        value: InputState.values.repeat_rate
+                        enabled: !InputState.busy
+                        Accessible.name: "Keyboard repeat speed"
+                        onPressedChanged: if (!pressed) InputState.setValue("repeat_rate", Math.round(value))
+                    }
+                }
+                Label {
+                    width: parent.width
+                    wrapMode: Text.WordWrap
+                    visible: InputState.error.length > 0
+                    color: Theme.roles.error
+                    text: InputState.error
+                }
+                Rectangle { width: parent.width; height: 1; color: Theme.outline; opacity: .26 }
                 Label { text: "Android apps"; font.pixelSize: 21; font.weight: Font.DemiBold }
                 Rectangle {
                     width: parent.width
