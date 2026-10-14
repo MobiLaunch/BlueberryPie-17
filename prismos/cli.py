@@ -23,10 +23,11 @@ def main(argv=None):
     disp.add_argument("value", nargs="?")
     disp.add_argument("anchor", nargs="?")
     fileargs = sub.add_parser("files")
-    fileargs.add_argument("operation", choices=("list", "bookmarks", "open", "mkdir", "rename", "trash", "stage", "paste", "clipboard"))
+    fileargs.add_argument("operation", choices=("list", "bookmarks", "open", "mkdir", "rename", "trash", "stage", "paste", "clipboard", "transfer"))
     fileargs.add_argument("path", nargs="?")
     fileargs.add_argument("--name")
     fileargs.add_argument("--action", choices=("copy", "cut"))
+    fileargs.add_argument("--dest")
     fileargs.add_argument("--hidden", action="store_true")
     software = sub.add_parser("store")
     software.add_argument("operation", choices=("status", "enable", "search", "install", "remove", "open"))
@@ -110,6 +111,8 @@ def main(argv=None):
                 result = files.stage(args.path, args.action)
             elif args.operation == "paste":
                 result = files.paste(args.path)
+            elif args.operation == "transfer":
+                result = files.transfer(args.path, args.dest)
             else:
                 result = files.clipboard_status()
         elif args.command == "store":
