@@ -1,0 +1,40 @@
+#!/usr/bin/env python3
+"""PrismOS fixed-action root helper; only invokable after polkit approval."""
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+
+
+def stage(phase, label):
+    print(json.dumps({"phase": phase, "label": label}), flush=True)
+
+
+def command(argv):
+    outcome = subprocess.run(argv, text=True, stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE, timeout=1800, check=False)
+    if outcome.returncode:
+        raise RuntimeError((outcome.stderr or outcome.stdout).strip()[-700:] or
+                           "The requested Android operation failed")
+
+
+def main():
+    if os.geteuid() != 0 or sys.argv[1:] != ["enable"]:
+        print("Only an authorized enable operation is permitted", file=sys.stderr)
+        return 2
+    try:
+        if not Path("/var/lib/waydroid/waydroid.cfg").is_file():
+            stage("downloading", "Downloading official Android system images")
+            command(["/usr/bin/waydroid", "init", "-s", "VANILLA"])
+        stage("container", "Starting the Android container")
+        command(["/usr/bin/systemctl", "enable", "--now", "waydroid-container.service"])
+    except (OSError, RuntimeError, subprocess.TimeoutExpired) as error:
+        print(f"PrismOS Android setup: {error}", file=sys.stderr)
+        return 1
+    stage("container-ready", "Android container is running")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
