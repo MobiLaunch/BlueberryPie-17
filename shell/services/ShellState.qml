@@ -14,6 +14,7 @@ QtObject {
     property bool settingsOpen: false
     property bool powerOpen: false
     property bool storeOpen: false
+    property bool filesOpen: false
     property var launching: null
     property point launchOrigin: Qt.point(200, 200)
     property bool launchReady: false
@@ -45,6 +46,7 @@ QtObject {
         settingsOpen = false;
         powerOpen = false;
         storeOpen = false;
+        filesOpen = false;
     }
     function cancelLaunch() {
         launching = null;
@@ -87,6 +89,11 @@ QtObject {
         close();
         activeScreen = screen;
         storeOpen = true;
+    }
+    function openFiles(screen) {
+        close();
+        activeScreen = screen;
+        filesOpen = true;
     }
     function openPower(screen) {
         close();

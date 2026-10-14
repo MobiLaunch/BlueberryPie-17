@@ -55,6 +55,10 @@ Scope {
                 onTriggered: ShellState.toggleDrawer(root.screen)
             }
             MenuItem {
+                text: "Files"
+                onTriggered: ShellState.openFiles(root.screen)
+            }
+            MenuItem {
                 text: "Prism Store"
                 onTriggered: ShellState.openStore(root.screen)
             }
@@ -289,6 +293,13 @@ Scope {
                         }
                     }
                     PillButton {
+                        text: "▣"
+                        Accessible.name: "Prism Files"
+                        implicitWidth: 52
+                        implicitHeight: 52
+                        onClicked: ShellState.openFiles(root.screen)
+                    }
+                    PillButton {
                         text: "✦"
                         Accessible.name: "Prism Store"
                         implicitWidth: 52
@@ -314,6 +325,9 @@ Scope {
         screen: root.screen
     }
     PrismStore {
+        screen: root.screen
+    }
+    Files {
         screen: root.screen
     }
     Appearance {

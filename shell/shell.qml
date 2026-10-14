@@ -24,6 +24,9 @@ ShellRoot {
         function settings(): void {
             ShellState.openSettings(ShellState.focusedScreen());
         }
+        function files(): void {
+            ShellState.openFiles(ShellState.focusedScreen());
+        }
         function store(): void {
             ShellState.openStore(ShellState.focusedScreen());
         }
