@@ -1,0 +1,4 @@
+singleton Theme 1.0 Theme.qml
+singleton SystemBridge 1.0 SystemBridge.qml
+singleton ShellState 1.0 ShellState.qml
+singleton Notifications 1.0 Notifications.qml

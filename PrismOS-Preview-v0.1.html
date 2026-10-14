@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#e9dff4">
+  <title>PrismOS · Express yourself</title>
+  <style>
+@font-face{font-family:Prism;src:local("Roboto"),local("Arial");font-display:swap}
+:root{--primary:#ccc1eb;--primaryStrong:#422a83;--onPrimary:#19151e;--onPrimaryStrong:white;--secondary:#e4d7c8;--tertiary:#c4f3f0;--surface:#faf9fb;--surfaceContainer:#efeef2;--surfaceHigh:#dfdce4;--onSurface:#19151e;--onSurfaceHigh:#19151e;--outline:#756e87;--fast:160ms;--standard:320ms;--slow:500ms;--spring:cubic-bezier(.22,1.25,.34,1);color-scheme:light}
+.shade:focus,.modal:focus,.app-window:focus{outline:none}
+*{box-sizing:border-box}body{margin:0;font-family:Prism,"Arial",sans-serif;color:var(--onSurface);overflow:hidden}button,input{font:inherit}button{color:inherit;cursor:pointer;border:0;background:none;-webkit-tap-highlight-color:transparent}button:focus-visible,input:focus-visible{outline:3px solid var(--primaryStrong);outline-offset:4px}button svg{pointer-events:none}button:disabled{opacity:.4;cursor:default}[hidden]{display:none!important}svg{width:24px;height:24px;display:block}button{transition:background var(--fast),transform var(--fast) var(--spring),border-radius var(--standard) var(--spring)}button:active{transform:scale(.94)}#desktop{width:100vw;height:100dvh;min-height:500px;position:relative;isolation:isolate;overflow:hidden}.wallpaper{position:absolute;inset:0;z-index:-2;background:#e9dff4}.wallpaper-art{position:absolute;inset:0;background-size:cover;background-position:center;transition:filter var(--standard)}body.dark .wallpaper-art{filter:brightness(.4) saturate(.85)}.status-bar{height:44px;display:flex;align-items:center;gap:18px;padding:0 22px;background:color-mix(in srgb,var(--surface) 80%,transparent);backdrop-filter:blur(22px);position:relative;z-index:40;font-size:13px}.brand{display:flex;gap:8px;align-items:center;padding:4px 0}.brand svg{width:20px;height:20px}.brand b{font-size:16px;letter-spacing:-.4px}.preview-label{font-size:9px;letter-spacing:1.8px;margin-left:14px;opacity:.65}.status-clock{flex:1;font-size:12px;font-weight:600}.status-system{display:flex;align-items:center;gap:12px;height:34px;padding:0 12px;border-radius:20px}.status-system:hover{background:var(--primary)}.status-system svg{width:17px;height:17px}.battery{width:26px;height:14px;border:1.8px solid currentColor;border-radius:5px;position:relative;padding:2px}.battery:after{content:"";position:absolute;right:-4px;top:3px;width:2px;height:5px;background:currentColor;border-radius:2px}.battery i{display:block;width:86%;height:100%;border-radius:2px;background:currentColor}.home-copy{position:absolute;left:6.7%;top:14.3%;color:#3b2b53;transition:opacity var(--standard),transform var(--standard)}body.dark .home-copy{color:#f0e7fa}.home-copy .date{font-size:18px;font-weight:500;letter-spacing:.1px}.giant-clock{font-size:clamp(94px,10.6vw,164px);line-height:1.18;font-weight:800;letter-spacing:-10px;font-variant-numeric:tabular-nums}.giant-clock span{font-weight:500}.home-copy h1{font-size:clamp(28px,2.7vw,42px);font-weight:500;letter-spacing:-1.8px;line-height:1.1;margin:14px 0}.home-copy em{font-style:normal;font-weight:800}.home-copy p{font-size:15px;margin:0;opacity:.8}.home-widgets{position:absolute;left:6.7%;bottom:18%;display:flex;gap:18px;align-items:stretch}.welcome-widget,.media-widget{width:248px;height:256px;border-radius:34px;padding:24px;background:var(--surfaceContainer);box-shadow:0 5px 30px #30174605;transition:background var(--standard)}.welcome-widget{background:var(--primary);color:var(--onPrimary)}.widget-eyebrow{font-size:9px;letter-spacing:2px;font-weight:700;display:flex;align-items:center;gap:9px}.widget-eyebrow svg{width:17px;height:17px}.welcome-widget h2{font-size:28px;line-height:1.05;letter-spacing:-1.1px;margin:19px 0 19px;font-weight:600}.palette-dots{display:flex;gap:8px}.palette-dot{width:25px;height:25px;border-radius:50%;border:3px solid transparent}.palette-dot.selected{border-color:#19151e}.text-button{font-size:12px;display:flex;align-items:center;gap:6px;padding:0;min-height:30px}.text-button svg{width:14px;height:14px}.welcome-widget>.text-button{margin-top:10px;font-weight:600}.media-widget{position:relative;padding:20px;background:var(--secondary);color:var(--onSecondary)}.album-art{height:86px;width:86px;position:absolute;right:17px;top:18px;background:#648478;border-radius:27px;overflow:hidden}.album-flower{height:85px;width:85px;border:18px solid #e2edb4;position:absolute;left:18px;top:15px;border-radius:32% 58% 28% 55%;transform:rotate(25deg)}.media-widget .eyebrow{display:block;max-width:110px;line-height:1.5;margin-top:4px}.eyebrow{font-size:9px;letter-spacing:1.7px;font-weight:700;opacity:.8}.media-widget h3{font-size:24px;font-weight:600;letter-spacing:-.8px;margin:93px 0 3px}.media-widget p{font-size:11px;margin:0;opacity:.8}.media-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:14px}.round-button{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;flex-shrink:0;background:var(--surfaceHigh)}.round-button.quiet{background:transparent}.round-button:hover{background:var(--primary)}.media-bottom .round-button{background:var(--primaryStrong);color:var(--onPrimaryStrong);font-size:16px;width:41px;height:41px}.wave{width:115px;height:23px;display:flex;align-items:center;gap:4px}.wave i{width:3px;border-radius:4px;background:currentColor;height:12px}.wave.playing i{animation:wave 700ms ease-in-out infinite alternate;animation-delay:calc(var(--index)*-65ms)}@keyframes wave{to{height:4px;opacity:.6}}.dock{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);display:flex;gap:8px;align-items:center;padding:10px 15px;border-radius:38px;background:color-mix(in srgb,var(--surface) 86%,transparent);backdrop-filter:blur(26px);box-shadow:0 8px 26px #3b205719;z-index:15}.dock-app{position:relative;width:54px;height:54px;display:grid;place-items:center;border-radius:24px}.dock-app:hover{transform:translateY(-4px)}.all-apps{background:var(--primary)}.all-apps svg{width:25px;height:25px}.dock-divider{height:30px;width:1px;background:color-mix(in srgb,var(--onSurface) 18%,transparent);margin:0 3px}.dock-tip{position:absolute;bottom:calc(100% + 17px);padding:7px 11px;background:var(--surface);border-radius:14px;white-space:nowrap;font-size:11px;opacity:0;transform:translateY(4px);transition:opacity var(--fast),transform var(--fast);pointer-events:none}.dock-app:hover .dock-tip,.dock-app:focus-visible .dock-tip{opacity:1;transform:none}.app-icon{width:50px;height:50px;display:grid;place-items:center;border-radius:21px;color:#19151e}.app-icon svg{width:27px;height:27px}.peach{background:#f4d6bd}.mint{background:#c8e3d4}.lilac{background:#d8c8ed}.butter{background:#efe3b4}.rose{background:#f0c6d1}.panel{background:var(--surfaceContainer);box-shadow:0 14px 60px #2818301a}.shade{position:absolute;z-index:30;right:18px;top:56px;width:390px;padding:14px 19px 12px;border-radius:36px;background:color-mix(in srgb,var(--surfaceContainer) 94%,transparent);backdrop-filter:blur(36px);transform:translateY(-35px) scale(.95);transform-origin:top right;opacity:0;pointer-events:none;transition:transform var(--standard) var(--spring),opacity var(--fast),background var(--standard);max-height:calc(100dvh - 76px);overflow-y:auto;scrollbar-width:none}.shade.open{transform:none;opacity:1;pointer-events:auto}.shade-handle{height:4px;width:30px;border-radius:3px;background:color-mix(in srgb,var(--onSurface) 25%,transparent);margin:0 auto 12px}.shade-heading{display:flex;justify-content:space-between;align-items:center;margin:0 5px 17px}.shade-clock{font-size:39px;font-weight:600;letter-spacing:-1.4px;line-height:1.1}.shade-heading p{font-size:12px;margin:5px 0 0}.shade-heading>.round-button{width:35px;height:35px}.shade-heading svg{width:20px;height:20px}.control-slider{height:48px;position:relative;border-radius:26px;margin-bottom:14px;display:flex;align-items:center;background:var(--surfaceHigh);overflow:hidden;padding:0 15px;--value:72%}.control-slider:before{content:"";position:absolute;inset:0 auto 0 0;width:var(--value);border-radius:26px;background:var(--primary);transition:width 50ms linear}.control-slider>span{position:relative;z-index:1;pointer-events:none}.control-slider>span svg{width:23px;height:23px;color:var(--onPrimary)}.control-slider input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:ew-resize;z-index:2}.control-slider output{position:relative;margin-left:auto;font-size:11px;font-weight:600;pointer-events:none;z-index:1}.control-slider:has(input:focus-visible){outline:3px solid var(--primaryStrong);outline-offset:3px}.control-slider:after{content:"";width:4px;height:30px;border-radius:5px;position:absolute;left:clamp(30px,var(--value),calc(100% - 10px));top:9px;background:var(--primaryStrong);pointer-events:none;transition:height var(--fast),top var(--fast)}.control-slider:active:after{height:38px;top:5px}.quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}.quick-tile{display:flex;align-items:center;gap:10px;text-align:left;height:76px;position:relative;background:var(--surfaceHigh);color:var(--onSurfaceHigh);border-radius:36px;padding:0 16px 0 15px;transition:background var(--fast),border-radius var(--standard) var(--spring),transform var(--fast) var(--spring)}.quick-tile.active{background:var(--primary);color:var(--onPrimary);border-radius:26px}.quick-tile:active{border-radius:18px;transform:scale(.96)}.quick-tile>.tile-icon svg{width:22px;height:22px}.quick-tile>div{min-width:0}.quick-tile b{display:block;font-size:12px;font-weight:600;white-space:nowrap;letter-spacing:-.2px}.quick-tile .tile-status{display:block;font-size:10px;margin-top:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:95px}.tile-arrow{position:absolute;right:11px;top:17px}.tile-arrow svg{width:11px;height:11px}.notification-heading{display:flex;align-items:center;justify-content:space-between;font-size:12px;margin:20px 3px 9px}.notification-heading>.text-button{font-size:10px;min-height:25px;padding:3px 10px;border-radius:14px;background:var(--surfaceHigh)}.notification{display:flex;gap:12px;padding:17px 14px;background:var(--surface);border-radius:25px;position:relative}.notification-icon{width:33px;height:33px;background:var(--tertiary);color:var(--onTertiary);border-radius:50%;display:grid;place-items:center;flex-shrink:0}.notification-icon svg{width:19px;height:19px}.notification-app{font-size:8px;letter-spacing:1px;opacity:.65}.notification h3{font-size:13px;font-weight:600;letter-spacing:-.1px;margin:7px 0 4px}.notification p{font-size:11px;line-height:1.4;margin:0}.dismiss-notification{position:absolute;right:7px;top:9px;padding:5px}.dismiss-notification svg{width:13px;height:13px}.caught-up{text-align:center;font-size:12px;padding:20px 0;opacity:.75}.shade-footer{display:flex;gap:8px;align-items:center;margin-top:17px}.pill-button{border-radius:24px;min-height:46px;padding:0 18px;display:flex;gap:8px;align-items:center;justify-content:center;background:var(--primary);color:var(--onPrimary);font-size:12px;font-weight:600}.pill-button svg{width:19px;height:19px}.edit-button{margin-right:auto;flex:1;font-size:11px;padding:0 12px}.power-button{background:var(--primary);color:var(--onPrimary)}.demo-note{font-size:8px;text-align:center;margin:12px 0 0;opacity:.62;letter-spacing:.3px}.modal-backdrop{position:absolute;inset:44px 0 0;background:#1b142544;backdrop-filter:blur(12px);z-index:45;animation:fade-in var(--fast)}.shade-backdrop{position:absolute;inset:44px 0 0;z-index:25;background:#271b3309}.modal{position:absolute;z-index:50;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:40px;padding:30px;background:var(--surface);animation:modal-in var(--standard) var(--spring);max-height:calc(100dvh - 80px);overflow:auto}.modal-heading{display:flex;justify-content:space-between;align-items:center}.modal-heading h2{font-size:34px;letter-spacing:-1.3px;margin:9px 0 0;font-weight:600}.modal-heading .round-button{width:43px;height:43px}.drawer{width:min(860px,calc(100% - 40px));min-height:500px}.search-field{height:55px;border-radius:29px;background:var(--surfaceContainer);display:flex;align-items:center;gap:14px;padding:0 19px;margin:26px 0}.search-field svg{width:21px;height:21px}.search-field input{background:none;border:0;color:var(--onSurface);font-size:14px;flex:1;min-width:0;outline:0}.search-field:has(input:focus-visible){outline:3px solid var(--primaryStrong);outline-offset:3px}.search-field kbd{font-size:10px;border:1px solid var(--outline);border-radius:6px;padding:2px 6px;opacity:.65}.app-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:20px 10px;margin:30px 0;max-height:390px;overflow:auto}.app-choice{display:flex;flex-direction:column;align-items:center;gap:10px;font-size:11px;min-height:94px;padding:6px;border-radius:26px}.app-choice:hover{background:var(--surfaceContainer)}.app-choice .app-icon{height:60px;width:60px;border-radius:24px}.app-choice svg{height:30px;width:30px}.drawer-footer{display:flex;justify-content:space-between;align-items:center;font-size:11px;padding-top:20px;border-top:1px solid var(--surfaceHigh)}.drawer-footer span{font-size:10px;opacity:.6}.appearance{width:min(550px,calc(100% - 40px))}.style-preview{height:150px;position:relative;background:var(--primary);color:var(--onPrimary);border-radius:30px;margin:24px 0;padding:20px;overflow:hidden}.style-clock{font-size:50px;font-weight:700;letter-spacing:-2px}.style-mini-tiles{display:flex;gap:8px;margin-top:14px}.style-mini-tiles i{display:block;width:75px;height:28px;border-radius:20px;background:var(--surface)}.style-mini-tiles i:nth-child(2){background:var(--secondary)}.style-mini-tiles i:nth-child(3){background:var(--tertiary)}.appearance h3{font-size:14px;font-weight:600;margin:22px 0 14px}.palette-options{display:flex;gap:10px}.palette-option{flex:1;border:2px solid transparent;padding:12px 4px 9px;border-radius:23px;background:var(--surfaceContainer);font-size:10px;display:flex;align-items:center;flex-direction:column;gap:8px}.palette-option.selected{border-color:var(--primaryStrong)}.palette-swatch{height:37px;width:37px;border-radius:50%;display:flex;overflow:hidden;transform:rotate(-25deg)}.palette-swatch i{width:50%;height:100%}.settings-row{display:flex;justify-content:space-between;align-items:center;margin-top:23px;font-size:13px}.settings-row p{font-size:11px;margin:6px 0 0;opacity:.7}.switch{height:30px;width:50px;padding:3px;background:var(--surfaceHigh);border:2px solid var(--outline);border-radius:20px;display:flex;align-items:center}.switch i{height:18px;width:18px;border-radius:50%;background:var(--outline);transition:transform var(--standard) var(--spring),background var(--fast)}.switch.on{background:var(--primaryStrong);border-color:var(--primaryStrong)}.switch.on i{background:var(--onPrimaryStrong);transform:translateX(19px)}.app-window{position:absolute;z-index:48;left:50%;top:50%;transform:translate(-50%,-50%);width:min(850px,calc(100% - 44px));height:min(580px,calc(100dvh - 130px));border-radius:32px;overflow:hidden;background:var(--surface);animation:app-in var(--standard) var(--spring)}.app-titlebar{display:flex;align-items:center;justify-content:space-between;height:62px;padding:0 18px;background:var(--surfaceContainer)}.app-title{display:flex;align-items:center;gap:12px;font-size:13px}.app-title svg{height:20px;width:20px}.window-label{font-size:8px;letter-spacing:1.5px;padding:4px 6px;border-radius:6px;background:var(--surfaceHigh)}.app-titlebar>.round-button{width:35px;height:35px}.app-titlebar>.round-button svg{width:18px;height:18px}#app-content{height:calc(100% - 62px);overflow:auto}.files-app{display:grid;grid-template-columns:180px 1fr;height:100%}.files-sidebar{padding:24px 16px;background:var(--surfaceContainer);display:flex;flex-direction:column;gap:8px}.files-sidebar button{font-size:12px;display:flex;gap:10px;align-items:center;padding:12px;border-radius:18px;text-align:left}.files-sidebar button.selected{background:var(--primary);color:var(--onPrimary)}.files-sidebar svg{height:18px;width:18px}.files-main{padding:26px}.files-main h2{font-size:28px;font-weight:600;letter-spacing:-1px;margin:0 0 26px}.file-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.file-card{padding:14px 8px;background:var(--surfaceContainer);border-radius:24px;text-align:center;font-size:11px;line-height:1.5}.file-card>span{display:grid;place-items:center;height:65px;margin:0 auto 12px;color:var(--primaryStrong)}.file-card svg{width:39px;height:39px}.file-card small{display:block;opacity:.6}.browser-app{padding:25px;height:100%;background:var(--surface)}.browser-address{padding:13px 20px;background:var(--surfaceContainer);border-radius:25px;font-size:12px;color:var(--outline)}.browser-home{text-align:center;padding-top:55px}.browser-home>svg{margin:auto;height:50px;width:50px;color:var(--primaryStrong)}.browser-home h2{font-size:39px;letter-spacing:-1.4px;font-weight:600}.browser-home p{font-size:13px}.terminal-app{height:100%;padding:28px;background:#211b2d;color:#e9dff4;font:13px/1.9 ui-monospace,monospace;white-space:pre-wrap}.terminal-app b{color:#cbe6d7}.terminal-line{display:flex;gap:10px;align-items:center}.terminal-line input{font:inherit;flex:1;min-width:0;color:#e9dff4;border:0;outline:none;background:none}.generic-app{padding:50px;text-align:center}.generic-app>svg{width:58px;height:58px;margin:auto;color:var(--primaryStrong)}.generic-app h2{font-size:35px;font-weight:600;letter-spacing:-1px}.generic-app p{font-size:13px;line-height:1.7}.launch-splash{position:absolute;z-index:60;border-radius:26px;background:var(--primary);color:var(--onPrimary);display:flex;flex-direction:column;gap:24px;align-items:center;justify-content:center;pointer-events:none}.launch-splash svg{width:60px;height:60px}.expressive-loader{width:30px;height:30px;background:var(--primaryStrong);clip-path:polygon(50% 0,65% 13%,85% 10%,88% 30%,100% 50%,85% 65%,90% 85%,70% 88%,50% 100%,35% 87%,15% 90%,12% 70%,0 50%,15% 35%,10% 15%,30% 12%);animation:flower-spin 1300ms linear infinite,flower-morph 700ms ease-in-out infinite alternate}@keyframes flower-spin{to{transform:rotate(360deg)}}@keyframes flower-morph{to{border-radius:50%;clip-path:polygon(50% 0,68% 5%,87% 13%,95% 32%,100% 50%,95% 68%,87% 87%,68% 95%,50% 100%,32% 95%,13% 87%,5% 68%,0 50%,5% 32%,13% 13%,32% 5%)}}.toast{position:absolute;z-index:80;left:50%;bottom:116px;transform:translateX(-50%);background:var(--surface);color:var(--onSurface);padding:15px 24px;border-radius:25px;font-size:12px;box-shadow:0 10px 40px #211b2d20;max-width:calc(100% - 40px);text-align:center;animation:fade-in var(--fast)}@keyframes modal-in{from{opacity:0;transform:translate(-50%,-43%) scale(.94)}}@keyframes app-in{from{opacity:0;transform:translate(-50%,-46%) scale(.95)}}@keyframes fade-in{from{opacity:0}}.closing{pointer-events:none;animation:close-out var(--fast) ease-in forwards}@keyframes close-out{to{opacity:0;transform:translate(-50%,-48%) scale(.97)}}.reduced-motion *,.reduced-motion *:before,.reduced-motion *:after{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important;scroll-behavior:auto!important}.reduced-motion .expressive-loader{animation:none}.reduced-motion .wave i{animation:none}@media(prefers-reduced-motion:reduce){body:not(.motion-override) *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+@media(min-width:1600px){.home-widgets{bottom:21%}.welcome-widget,.media-widget{width:280px;height:270px}.welcome-widget h2{font-size:32px}.shade{width:414px}.quick-tile{height:83px}.quick-tile b{font-size:13px}.shade-clock{font-size:44px}}
+@media(max-height:760px) and (min-width:900px){.home-copy{top:14%}.home-copy .giant-clock{font-size:100px}.home-copy h1{font-size:29px;margin:6px 0}.home-widgets{bottom:16%}.welcome-widget,.media-widget{height:211px;width:226px;padding:18px}.welcome-widget h2{font-size:25px;margin:15px 0}.media-widget h3{margin-top:68px}.media-bottom{margin-top:6px}.media-widget .album-art{width:70px;height:70px}.shade{max-height:calc(100dvh - 68px);top:50px;padding:10px 16px}.quick-tile{height:63px}.quick-grid{gap:6px;margin-bottom:10px}.shade-heading{margin-bottom:12px}.control-slider{height:42px;margin-bottom:10px}.control-slider:after{top:6px}.notification-heading{margin-top:10px}.shade-footer{margin-top:12px}.shade-handle{margin-bottom:9px}.dock{bottom:15px}.demo-note{margin-top:8px}}
+@media(max-width:1000px){.home-copy{left:5%;top:16%}.home-copy .giant-clock{font-size:104px}.home-widgets{left:5%;gap:12px}.welcome-widget{width:224px}.media-widget{display:none}.home-copy h1{font-size:31px}.shade{width:370px;right:12px}.quick-tile{padding-left:13px;gap:8px}.app-grid{grid-template-columns:repeat(5,1fr)}}
+@media(max-width:650px){#desktop{min-height:400px}.status-bar{padding:0 15px;gap:10px}.preview-label{display:none}.status-clock{font-size:11px}.status-system{gap:7px;padding:0 4px}.status-system svg{width:15px;height:15px}.home-copy{top:14%;left:8%}.home-copy .date{font-size:13px}.home-copy .giant-clock{font-size:98px;letter-spacing:-7px}.home-copy h1{font-size:30px;letter-spacing:-1px}.home-copy p{font-size:12px}.home-widgets{left:8%;bottom:19%}.welcome-widget{width:236px;height:221px}.welcome-widget h2{font-size:26px}.dock{bottom:17px;gap:3px;padding:9px 11px}.dock-app{width:46px;height:46px}.dock-app .app-icon{width:42px;height:42px;border-radius:18px}.dock-app .app-icon svg{width:23px;height:23px}.dock-divider{margin:0 2px}.shade{width:calc(100% - 20px);right:10px;top:52px;max-height:calc(100dvh - 62px);padding:13px 18px 12px;border-radius:32px}.shade-backdrop{background:#211b2d33;backdrop-filter:blur(10px)}.shade .quick-tile{height:76px}.quick-tile b{font-size:12px}.shade-footer .edit-button{font-size:10px}.home-copy,.home-widgets{transition:filter var(--standard)}body.shade-visible .home-copy,body.shade-visible .home-widgets{filter:blur(7px)}.drawer,.appearance{width:calc(100% - 20px);padding:23px;border-radius:32px;max-height:calc(100dvh - 62px)}.modal-heading h2{font-size:29px}.app-grid{grid-template-columns:repeat(3,1fr);gap:12px 4px;max-height:calc(100dvh - 360px)}.drawer-footer>span{display:none}.palette-options{gap:6px}.palette-option{padding:10px 2px}.files-app{grid-template-columns:120px 1fr}.files-sidebar{padding:18px 8px}.files-sidebar button{padding:10px 7px;font-size:10px;gap:7px}.files-main{padding:20px 14px}.file-grid{grid-template-columns:repeat(2,1fr);gap:10px}.files-main h2{font-size:24px}.app-window{width:calc(100% - 20px);height:calc(100dvh - 105px)}.generic-app{padding:35px 20px}.terminal-app{padding:20px;font-size:11px}}
+
+</style>
+</head>
+<body>
+  <main id="desktop" aria-label="PrismOS interactive design preview">
+    <div class="wallpaper" aria-hidden="true"><div class="wallpaper-art"></div></div>
+    <header class="status-bar">
+      <button class="brand" data-open="drawer" aria-label="Open all applications"><span data-icon="spark"></span><b>PrismOS</b><span class="preview-label">DESIGN PREVIEW</span></button>
+      <span class="status-clock">13:30</span>
+      <button class="status-system" data-open="shade" aria-label="Open Quick Settings" aria-expanded="true"><span data-icon="wifi"></span><span data-icon="volume"></span><span class="battery"><i></i></span><b>86%</b></button>
+    </header>
+    <section class="home-copy">
+      <div class="date">Wednesday, October 14</div>
+      <div class="giant-clock" aria-label="Current time">13<span>:</span>30</div>
+      <h1>A little more <em>you.</em></h1>
+      <p>Your colors. Your space. Your kind of Linux.</p>
+    </section>
+    <section class="home-widgets" aria-label="Desktop widgets">
+      <article class="welcome-widget">
+        <div class="widget-eyebrow"><span data-icon="spark"></span> HELLO, PRISM</div>
+        <h2>Make room<br>for a little fun.</h2>
+        <div class="palette-dots" aria-label="Choose color palette"></div>
+        <button class="text-button" data-open="appearance">Make it yours <span data-icon="arrow"></span></button>
+      </article>
+      <article class="media-widget">
+        <div class="album-art" aria-hidden="true"><div class="album-flower"></div></div>
+        <span class="eyebrow">YOUR DAILY MIX · DEMO</span>
+        <h3>Soft focus</h3><p>A slower kind of afternoon</p>
+        <div class="media-bottom"><div class="wave" aria-hidden="true"></div><button id="play-media" class="round-button" aria-label="Play demo track">▶</button></div>
+      </article>
+    </section>
+    <nav class="dock" aria-label="Favorite applications">
+      <button class="dock-app all-apps" data-open="drawer" aria-label="All apps"><span data-icon="apps"></span><span class="dock-tip">All apps</span></button>
+      <div class="dock-divider"></div>
+      <button class="dock-app" data-app="browser" aria-label="Browser"><span class="app-icon peach" data-icon="browser"></span><span class="dock-tip">Browser</span></button>
+      <button class="dock-app" data-app="files" aria-label="Files"><span class="app-icon mint" data-icon="folder"></span><span class="dock-tip">Files</span></button>
+      <button class="dock-app" data-app="terminal" aria-label="Terminal"><span class="app-icon lilac" data-icon="terminal"></span><span class="dock-tip">Terminal</span></button>
+      <button class="dock-app" data-app="settings" aria-label="Settings"><span class="app-icon butter" data-icon="settings"></span><span class="dock-tip">Settings</span></button>
+      <button class="dock-app" data-app="music" aria-label="Music"><span class="app-icon rose" data-icon="music"></span><span class="dock-tip">Music</span></button>
+    </nav>
+    <div id="shade-backdrop" class="shade-backdrop" hidden></div>
+    <aside id="shade" class="shade panel open" aria-label="Quick Settings" role="dialog" aria-modal="true" tabindex="-1">
+      <div class="shade-handle" aria-hidden="true"></div>
+      <div class="shade-heading"><div><div class="shade-clock">13:30</div><p class="shade-date">Wed, Oct 14</p></div><button class="round-button quiet" data-close="shade" aria-label="Close Quick Settings"><span data-icon="close"></span></button></div>
+      <div class="brightness control-slider"><span data-icon="brightness"></span><input id="brightness" type="range" min="10" max="100" value="72" aria-label="Display brightness"><output for="brightness">72%</output></div>
+      <div class="quick-grid">
+        <button class="quick-tile active" data-toggle="wifi" aria-pressed="true"><span class="tile-icon" data-icon="wifi"></span><div><b>Wi-Fi</b><span class="tile-status">Prism Network</span></div><span class="tile-arrow" data-icon="arrow"></span></button>
+        <button class="quick-tile active" data-toggle="bluetooth" aria-pressed="true"><span class="tile-icon" data-icon="bluetooth"></span><div><b>Bluetooth</b><span class="tile-status">Connected</span></div><span class="tile-arrow" data-icon="arrow"></span></button>
+        <button class="quick-tile" data-toggle="dnd" aria-pressed="false"><span class="tile-icon" data-icon="dnd"></span><div><b>Do Not Disturb</b><span class="tile-status">Off</span></div></button>
+        <button class="quick-tile" data-toggle="dark" aria-pressed="false"><span class="tile-icon" data-icon="moon"></span><div><b>Dark theme</b><span class="tile-status">Off</span></div></button>
+        <button class="quick-tile active" data-toggle="sound" aria-pressed="true"><span class="tile-icon" data-icon="volume"></span><div><b>Sound</b><span class="tile-status">On</span></div></button>
+        <button class="quick-tile" data-toggle="reduced" aria-pressed="false"><span class="tile-icon" data-icon="motion"></span><div><b>Reduced motion</b><span class="tile-status">Off</span></div></button>
+      </div>
+      <div class="volume control-slider"><span data-icon="volume"></span><input id="volume" type="range" min="0" max="100" value="64" aria-label="Media volume"><output for="volume">64%</output></div>
+      <div class="notification-heading"><b>Notifications</b><button id="clear-notifications" class="text-button">Clear all</button></div>
+      <div id="notifications">
+        <article class="notification"><span class="notification-icon" data-icon="spark"></span><div><span class="notification-app">PRISMOS · NOW</span><h3>Hey, color lover.</h3><p>A fresh palette looks good on you.</p></div><button class="dismiss-notification" aria-label="Dismiss welcome notification"><span data-icon="close"></span></button></article>
+      </div>
+      <div class="shade-footer"><button class="pill-button edit-button" data-open="appearance"><span data-icon="spark"></span>Wallpaper & style</button><button class="round-button" data-app="settings" aria-label="Settings"><span data-icon="settings"></span></button><button class="round-button power-button" id="power" aria-label="Show session menu"><span data-icon="power"></span></button></div>
+      <p class="demo-note">Interactive design preview · controls are simulated</p>
+    </aside>
+    <div id="modal-backdrop" class="modal-backdrop" hidden></div>
+    <section id="drawer" class="drawer modal panel" hidden aria-label="All applications" role="dialog" aria-modal="true" tabindex="-1">
+      <div class="modal-heading"><div><span class="eyebrow">A PLACE FOR EVERYTHING</span><h2>Your apps</h2></div><button class="round-button quiet" data-close="drawer" aria-label="Close all applications"><span data-icon="close"></span></button></div>
+      <label class="search-field"><span data-icon="search"></span><input id="app-search" placeholder="Search your apps" autocomplete="off" aria-label="Search applications"><kbd>/</kbd></label>
+      <div id="app-grid" class="app-grid"></div>
+      <p id="no-apps" hidden>No apps match your search.</p>
+      <div class="drawer-footer">Start something good.<span>Esc to close · Enter to open</span></div>
+    </section>
+    <section id="appearance" class="appearance modal panel" hidden role="dialog" aria-modal="true" aria-label="Wallpaper and style" tabindex="-1">
+      <div class="modal-heading"><div><span class="eyebrow">FEEL RIGHT AT HOME</span><h2>Make it yours.</h2></div><button class="round-button quiet" data-close="appearance" aria-label="Close style settings"><span data-icon="close"></span></button></div>
+      <div class="style-preview"><div class="style-clock">13:30</div><div class="style-mini-tiles"><i></i><i></i><i></i></div></div>
+      <h3>Find your color</h3><div class="palette-options"></div>
+      <div class="settings-row"><div><b>Dark theme</b><p>Soft colors after sunset.</p></div><button class="switch" data-setting="dark" role="switch" aria-checked="false" aria-label="Dark theme"><i></i></button></div>
+      <div class="settings-row"><div><b>Reduced motion</b><p>Keep the colors, simplify movement.</p></div><button class="switch" data-setting="reduced" role="switch" aria-checked="false" aria-label="Reduced motion"><i></i></button></div>
+    </section>
+    <section id="app-window" class="app-window panel" hidden aria-label="Application preview" role="dialog" aria-modal="true" tabindex="-1">
+      <div class="app-titlebar"><div class="app-title"><span id="window-icon"></span><b id="window-title"></b><span class="window-label">PREVIEW</span></div><button class="round-button quiet" id="close-app" aria-label="Close application"><span data-icon="close"></span></button></div>
+      <div id="app-content"></div>
+    </section>
+    <div id="launch-splash" class="launch-splash" hidden aria-hidden="true"><div id="splash-icon"></div><div class="expressive-loader"></div></div>
+    <div id="toast" class="toast" role="status" hidden></div>
+  </main>
+  <script>
+window.PRISM_TOKENS = {"version": 1, "motion": {"fast": 160, "standard": 320, "slow": 500}, "shape": {"tileInactive": 36, "tileActive": 26, "panel": 36, "app": 24}, "palettes": {"Lilac": {"seed": "#8469cf", "light": {"primary": "#ccc1eb", "primaryStrong": "#422a83", "secondary": "#e4d7c8", "tertiary": "#c4f3f0", "surface": "#faf9fb", "surfaceContainer": "#efeef2", "surfaceHigh": "#dfdce4", "outline": "#756e87", "error": "#a8332a", "onPrimary": "#19151e", "onPrimaryStrong": "#ffffff", "onSecondary": "#19151e", "onTertiary": "#19151e", "onSurface": "#19151e", "onSurfaceContainer": "#19151e", "onSurfaceHigh": "#19151e", "onError": "#ffffff", "seed": "#8469cf", "dark": false}, "dark": {"primary": "#bcaee5", "primaryStrong": "#ad9bdf", "secondary": "#d7c4ac", "tertiary": "#9eeae6", "surface": "#16141a", "surfaceContainer": "#24212c", "surfaceHigh": "#35313f", "outline": "#a29daf", "error": "#ffb4ab", "onPrimary": "#19151e", "onPrimaryStrong": "#19151e", "onSecondary": "#19151e", "onTertiary": "#19151e", "onSurface": "#ffffff", "onSurfaceContainer": "#ffffff", "onSurfaceHigh": "#ffffff", "onError": "#19151e", "seed": "#8469cf", "dark": true}}, "Mint": {"seed": "#47846a", "light": {"primary": "#cae2d8", "primaryStrong": "#3d715b", "secondary": "#e0c8e4", "tertiary": "#e7f3c4", "surface": "#f9fbfa", "surfaceContainer": "#eef2f0", "surfaceHigh": "#dce4e1", "outline": "#6e877c", "error": "#a8332a", "onPrimary": "#19151e", "onPrimaryStrong": "#ffffff", "onSecondary": "#19151e", "onTertiary": "#19151e", "onSurface": "#19151e", "onSurfaceContainer": "#19151e", "onSurfaceHigh": "#19151e", "onError": "#ffffff", "seed": "#47846a", "dark": false}, "dark": {"primary": "#b9dacc", "primaryStrong": "#a9d1c0", "secondary": "#d1acd7", "tertiary": "#d7ea9e", "surface": "#141a17", "surfaceContainer": "#212c27", "surfaceHigh": "#313f39", "outline": "#9dafa7", "error": "#ffb4ab", "onPrimary": "#19151e", "onPrimaryStrong": "#19151e", "onSecondary": "#19151e", "onTertiary": "#19151e", "onSurface": "#ffffff", "onSurfaceContainer": "#ffffff", "onSurfaceHigh": "#ffffff", "onError": "#19151e", "seed": "#47846a", "dark": true}}, "Tangerine": {"seed": "#c27443", "light": {"primary": "#ebd1c1", "primaryStrong": "#834d2a", "secondary": "#c8e4db", "tertiary": "#f3c4ef", "surface": "#fbfaf9", "surfaceContainer": "#f2efee", "surfaceHigh": "#e4dfdc", "outline": "#87786e", "error": "#a8332a", "onPrimary": "#19151e", "onPrimaryStrong": "#ffffff", "onSecondary": "#19151e", "onTertiary": "#19151e", "onSurface": "#19151e", "onSurfaceContainer": "#19151e", "onSurfaceHigh": "#19151e", "onError": "#ffffff", "seed": "#c27443", "dark": false}, "dark": {"primary": "#e5c3ae", "primaryStrong": "#dfb59b", "secondary": "#acd7c9", "tertiary": "#ea9ee5", "surface": "#1a1614", "surfaceContainer": "#2c2521", "surfaceHigh": "#3f3631", "outline": "#afa49d", "error": "#ffb4ab", "onPrimary": "#19151e", "onPrimaryStrong": "#19151e", "onSecondary": "#19151e", "onTertiary": "#19151e", "onSurface": "#ffffff", "onSurfaceContainer": "#ffffff", "onSurfaceHigh": "#ffffff", "onError": "#19151e", "seed": "#c27443", "dark": true}}, "Rose": {"seed": "#b85c80", "light": {"primary": "#e6c6d3", "primaryStrong": "#79354f", "secondary": "#cbe4c8", "tertiary": "#d1c4f3", "surface": "#fbf9fa", "surfaceContainer": "#f2eeef", "surfaceHigh": "#e4dce0", "outline": "#876e78", "error": "#a8332a", "onPrimary": "#19151e", "onPrimaryStrong": "#ffffff", "onSecondary": "#19151e", "onTertiary": "#19151e", "onSurface": "#19151e", "onSurfaceContainer": "#19151e", "onSurfaceHigh": "#19151e", "onError": "#ffffff", "seed": "#b85c80", "dark": false}, "dark": {"primary": "#dfb4c5", "primaryStrong": "#d7a3b7", "secondary": "#b1d7ac", "tertiary": "#b49eea", "surface": "#1a1416", "surfaceContainer": "#2c2125", "surfaceHigh": "#3f3137", "outline": "#af9da4", "error": "#ffb4ab", "onPrimary": "#19151e", "onPrimaryStrong": "#19151e", "onSecondary": "#19151e", "onTertiary": "#19151e", "onSurface": "#ffffff", "onSurfaceContainer": "#ffffff", "onSurfaceHigh": "#ffffff", "onError": "#19151e", "seed": "#b85c80", "dark": true}}}};
+
+</script>
+  <script>
+window.PRISM_ICONS = {"wifi": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 8.5a15 15 0 0 1 18 0M6.5 12a9.3 9.3 0 0 1 11 0M10 15.5a3.8 3.8 0 0 1 4 0\"/><circle cx=\"12\" cy=\"19\" r=\".8\" fill=\"currentColor\"/></svg>\n", "bluetooth": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m7 7 10 10-5 4V3l5 4L7 17\"/></svg>\n", "brightness": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"4\"/><path d=\"M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5M17.5 17.5 19 19M5 19l1.5-1.5M17.5 6.5 19 5\"/></svg>\n", "volume": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 9h4l5-4v14l-5-4H3zM16 8a6 6 0 0 1 0 8M19 5a10 10 0 0 1 0 14\"/></svg>\n", "moon": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M20 14.2A8.6 8.6 0 0 1 9.8 4 8.5 8.5 0 1 0 20 14.2Z\"/></svg>\n", "dnd": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M7 12h10\"/></svg>\n", "motion": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 6h7M2 11h5M3 16h7m5-12a8 8 0 1 1 0 16m-2-12 5 4-5 4\"/></svg>\n", "spark": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m12 2 2.6 7.4L22 12l-7.4 2.6L12 22l-2.6-7.4L2 12l7.4-2.6Z\"/></svg>\n", "apps": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"3\" width=\"4\" height=\"4\" rx=\"1.4\"/><rect x=\"3\" y=\"10\" width=\"4\" height=\"4\" rx=\"1.4\"/><rect x=\"3\" y=\"17\" width=\"4\" height=\"4\" rx=\"1.4\"/><rect x=\"10\" y=\"3\" width=\"4\" height=\"4\" rx=\"1.4\"/><rect x=\"10\" y=\"10\" width=\"4\" height=\"4\" rx=\"1.4\"/><rect x=\"10\" y=\"17\" width=\"4\" height=\"4\" rx=\"1.4\"/><rect x=\"17\" y=\"3\" width=\"4\" height=\"4\" rx=\"1.4\"/><rect x=\"17\" y=\"10\" width=\"4\" height=\"4\" rx=\"1.4\"/><rect x=\"17\" y=\"17\" width=\"4\" height=\"4\" rx=\"1.4\"/></svg>\n", "settings": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m9 3 1-1h4l1 3 3 1 2-1 2 4-2 2v3l2 2-2 4-3-1-2 1-1 2h-4l-1-2-3-1-2 1-2-4 2-2v-3L2 9l2-4 3 1 2-1Z\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/></svg>\n", "lock": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"5\" y=\"10\" width=\"14\" height=\"11\" rx=\"3\"/><path d=\"M8 10V7a4 4 0 0 1 8 0v3M12 14v3\"/></svg>\n", "folder": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 7a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z\"/></svg>\n", "browser": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M3 12h18M12 3a18 18 0 0 1 0 18 18 18 0 0 1 0-18Z\"/></svg>\n", "terminal": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"2\" y=\"4\" width=\"20\" height=\"16\" rx=\"4\"/><path d=\"m6 9 4 3-4 3m7 0h4\"/></svg>\n", "music": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M9 18V5l11-2v13M9 9l11-2\"/><ellipse cx=\"6\" cy=\"18\" rx=\"3\" ry=\"2.5\"/><ellipse cx=\"17\" cy=\"16\" rx=\"3\" ry=\"2.5\"/></svg>\n", "calendar": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"5\" width=\"18\" height=\"16\" rx=\"4\"/><path d=\"M7 3v4m10-4v4M3 11h18m-14 5h3m4 0h3\"/></svg>\n", "photo": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"5\"/><circle cx=\"8\" cy=\"8\" r=\"2\"/><path d=\"m3 17 6-6 4 4 3-3 5 5\"/></svg>\n", "mail": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"5\" width=\"18\" height=\"14\" rx=\"4\"/><path d=\"m4 7 8 6 8-6\"/></svg>\n", "search": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"10.5\" cy=\"10.5\" r=\"6.5\"/><path d=\"m16 16 5 5\"/></svg>\n", "arrow": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m8 4 8 8-8 8\"/></svg>\n", "close": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m6 6 12 12M6 18 18 6\"/></svg>\n", "power": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 2v10M6 5a9 9 0 1 0 12 0\"/></svg>\n"};
+
+</script>
+  <script>
+/* PrismOS design review. Local, offline, simulated controls only. */
+(() => {
+  'use strict';
+  const $ = (selector, root = document) => root.querySelector(selector);
+  const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+  const apps = [
+    {id:'browser',name:'Browser',icon:'browser',color:'peach'},
+    {id:'files',name:'Files',icon:'folder',color:'mint'},
+    {id:'terminal',name:'Terminal',icon:'terminal',color:'lilac'},
+    {id:'settings',name:'Settings',icon:'settings',color:'butter'},
+    {id:'music',name:'Music',icon:'music',color:'rose'},
+    {id:'calendar',name:'Calendar',icon:'calendar',color:'mint'},
+    {id:'photos',name:'Photos',icon:'photo',color:'peach'},
+    {id:'mail',name:'Mail',icon:'mail',color:'lilac'},
+    {id:'style',name:'Wallpaper & style',icon:'spark',color:'rose'},
+  ];
+  const icon = name => window.PRISM_ICONS[name] || window.PRISM_ICONS.spark;
+  const state = {palette:'Lilac',dark:false,reduced:matchMedia('(prefers-reduced-motion: reduce)').matches,wifi:true,bluetooth:true,dnd:false,sound:true};
+  try { const saved = JSON.parse(localStorage.getItem('prismos-preview') || '{}');
+    for (const key of ['palette','dark','reduced']) if (typeof saved[key] === typeof state[key]) state[key] = saved[key];
+  } catch { /* Storage is optional, including in restricted file previews. */ }
+  if (!window.PRISM_TOKENS.palettes[state.palette]) state.palette = 'Lilac';
+  let panel = 'shade';
+  let restoreFocus = null;
+  let launchToken = 0;
+  let toastTimeout;
+  let playing = false;
+  const panels = ['shade','drawer','appearance'];
+
+  function hydrate(root = document) {
+    $$('[data-icon]',root).forEach(el => { el.innerHTML = icon(el.dataset.icon); });
+  }
+  function persist() {
+    try { localStorage.setItem('prismos-preview',JSON.stringify({palette:state.palette,dark:state.dark,reduced:state.reduced})); } catch {}
+  }
+  function applyTheme() {
+    const roles = window.PRISM_TOKENS.palettes[state.palette][state.dark ? 'dark' : 'light'];
+    for (const [name,value] of Object.entries(roles)) if (typeof value === 'string') document.documentElement.style.setProperty('--'+name,value);
+    document.documentElement.style.colorScheme = state.dark ? 'dark' : 'light';
+    document.body.classList.toggle('dark',state.dark);
+    document.body.classList.toggle('reduced-motion',state.reduced);
+    document.body.classList.add('motion-override');
+    $$('[data-palette]').forEach(el => { el.classList.toggle('selected',el.dataset.palette === state.palette); el.setAttribute('aria-pressed',String(el.dataset.palette === state.palette)); });
+    for (const key of ['dark','reduced']) {
+      $$('[data-setting="'+key+'"]').forEach(el => { el.classList.toggle('on',state[key]); el.setAttribute('aria-checked',String(state[key])); });
+    }
+    syncTiles(); persist();
+  }
+  function syncTiles() {
+    $$('[data-toggle]').forEach(button => {
+      const key = button.dataset.toggle, active = state[key];
+      button.classList.toggle('active',active);
+      button.setAttribute('aria-pressed',String(active));
+      const text = key === 'wifi' ? (active ? 'Prism Network' : 'Off') : key === 'bluetooth' ? (active ? 'Connected' : 'Off') : key === 'sound' ? (active ? 'On' : 'Muted') : (active ? 'On' : 'Off');
+      $('.tile-status',button).textContent = text;
+    });
+  }
+  function toast(message) {
+    $('#toast').textContent = message; $('#toast').hidden = false;
+    clearTimeout(toastTimeout); toastTimeout = setTimeout(() => $('#toast').hidden = true,3800);
+  }
+  function closePanels(restore = true) {
+    panels.forEach(id => { const el = $('#'+id); if (id === 'shade') {el.classList.remove('open');el.inert = true;el.setAttribute('aria-modal','false');el.setAttribute('aria-hidden','true');} else el.hidden = true; });
+    $('#modal-backdrop').hidden = true; $('#shade-backdrop').hidden = true;
+    document.body.classList.remove('shade-visible');
+    $('[data-open="shade"]').setAttribute('aria-expanded','false');
+    panel = null;
+    if (restore && restoreFocus?.isConnected) restoreFocus.focus();
+  }
+  function openPanel(id) {
+    if (!panels.includes(id)) return;
+    if (panel === id && !$('#'+id).hidden && (id !== 'shade' || $('#shade').classList.contains('open'))) { closePanels(); return; }
+    restoreFocus = document.activeElement;
+    closePanels(false);
+    panel = id;
+    const el = $('#'+id);
+    if (id === 'shade') {
+      el.classList.add('open');el.inert = false;el.setAttribute('aria-modal','true');el.setAttribute('aria-hidden','false');
+      $('#shade-backdrop').hidden = false;document.body.classList.add('shade-visible');
+      $('[data-open="shade"]').setAttribute('aria-expanded','true');
+      el.focus();
+    } else {
+      el.hidden = false; $('#modal-backdrop').hidden = false;
+      if (id === 'drawer') { $('#app-search').value = ''; renderApps(''); $('#app-search').focus(); }
+      else el.focus();
+    }
+  }
+  function renderApps(query) {
+    const filtered = apps.filter(app => app.name.toLowerCase().includes(query.trim().toLowerCase()));
+    $('#app-grid').replaceChildren();
+    filtered.forEach(app => {
+      const button = document.createElement('button');
+      button.className = 'app-choice';button.dataset.app = app.id;
+      button.setAttribute('aria-label',app.name);
+      button.innerHTML = '<span class="app-icon '+app.color+'">'+icon(app.icon)+'</span><span>'+app.name+'</span>';
+      $('#app-grid').append(button);
+    });
+    $('#no-apps').hidden = filtered.length > 0;
+  }
+  function buildPalettes() {
+    for (const [name,data] of Object.entries(window.PRISM_TOKENS.palettes)) {
+      const dot = document.createElement('button');dot.className = 'palette-dot';dot.dataset.palette = name;
+      dot.style.background = data.light.primary;dot.setAttribute('aria-label','Use '+name+' palette');
+      $('.palette-dots').append(dot);
+      const option = document.createElement('button');option.className = 'palette-option';option.dataset.palette = name;
+      option.innerHTML = '<span class="palette-swatch"><i style="background:'+data.light.primary+'"></i><i style="background:'+data.light.tertiary+'"></i></span>'+name;
+      $('.palette-options').append(option);
+    }
+  }
+  function updateClock() {
+    const now = new Date();
+    const time = new Intl.DateTimeFormat('en-US',{hour:'2-digit',minute:'2-digit',hour12:false}).format(now);
+    $('.status-clock').textContent = time;$('.shade-clock').textContent = time;$('.style-clock').textContent = time;
+    $('.giant-clock').textContent = time;
+    $('.date').textContent = new Intl.DateTimeFormat('en-US',{weekday:'long',month:'long',day:'numeric'}).format(now);
+    $('.shade-date').textContent = new Intl.DateTimeFormat('en-US',{weekday:'short',month:'short',day:'numeric'}).format(now);
+  }
+  function syncSlider(input) {
+    input.parentElement.style.setProperty('--value',input.value+'%');
+    $('output',input.parentElement).textContent = input.value+'%';
+    if (input.id === 'brightness') $('.wallpaper-art').style.opacity = .5 + Number(input.value)/200;
+  }
+  function clearNotifications() {
+    $('#notifications').innerHTML = '<div class="caught-up">You’re all caught up.</div>';
+    $('#clear-notifications').disabled = true;
+  }
+  function closeApp() {
+    launchToken++;
+    $('#launch-splash').hidden = true;
+    const el = $('#app-window');
+    if (el.hidden) return;
+    if (state.reduced) {el.hidden = true;return;}
+    el.classList.add('closing');
+    setTimeout(() => {el.hidden = true;el.classList.remove('closing');if(restoreFocus?.isConnected)restoreFocus.focus();},160);
+  }
+  async function launchApp(id, source) {
+    const app = apps.find(item => item.id === id);
+    if (!app) return;
+    const token = ++launchToken;
+    const origin = source.getBoundingClientRect();
+    restoreFocus = source;
+    closePanels(false);
+    $('#app-window').hidden = true;
+    const splash = $('#launch-splash');
+    splash.getAnimations().forEach(animation => animation.cancel());
+    $('#splash-icon').innerHTML = icon(app.icon);
+    const width = Math.min(850,innerWidth-44), height = Math.min(580,innerHeight-130);
+    const target = {left:(innerWidth-width)/2,top:(innerHeight-height)/2,width,height};
+    Object.assign(splash.style,{left:target.left+'px',top:target.top+'px',width:width+'px',height:height+'px'});
+    if (!state.reduced) {
+      splash.hidden = false;
+      const animation = splash.animate([{left:origin.left+'px',top:origin.top+'px',width:origin.width+'px',height:origin.height+'px',borderRadius:'24px',opacity:1},{left:target.left+'px',top:target.top+'px',width:width+'px',height:height+'px',borderRadius:'32px',opacity:1}],{duration:320,easing:'cubic-bezier(.22,1.15,.34,1)'});
+      try {await animation.finished;} catch {return;}
+    }
+    if (token !== launchToken) return;
+    splash.hidden = true;
+    if (id === 'settings' || id === 'style') {openPanel('appearance');return;}
+    $('#window-title').textContent = app.name;$('#window-icon').innerHTML = icon(app.icon);
+    $('#app-window').classList.remove('closing');
+    buildApp(app);$('#app-window').hidden = false;$('#app-window').focus();
+  }
+  function buildApp(app) {
+    const target = $('#app-content');
+    if (app.id === 'files') {
+      target.innerHTML = '<div class="files-app"><nav class="files-sidebar" aria-label="Folders">'+['Home','Documents','Downloads','Pictures'].map((name,i)=>'<button data-folder="'+name+'" class="'+(i===0?'selected':'')+'">'+icon('folder')+name+'</button>').join('')+'</nav><div class="files-main"><h2 id="folder-name">Home</h2><div class="file-grid"></div></div></div>';
+      showFolder('Home');
+    } else if (app.id === 'browser') {
+      target.innerHTML = '<div class="browser-app"><div class="browser-address">prismos://welcome</div><div class="browser-home">'+icon('browser')+'<h2>A colorful start.</h2><p>This is a browser layout preview.</p><p>The native session launches your installed browser.</p><button class="pill-button" style="margin:25px auto 0" data-open="appearance">Find your color</button></div></div>';
+    } else if (app.id === 'terminal') {
+      target.innerHTML = '<div class="terminal-app"><div id="terminal-output"><b>PrismOS</b> 0.1 · design preview\nArch at heart. A little more you.\n\nType help for demo commands.\n</div><form id="terminal-form" class="terminal-line"><b>prism ~ ❯</b><input aria-label="Terminal command" autocomplete="off" spellcheck="false"></form></div>';
+      $('#terminal-form').addEventListener('submit',event => {
+        event.preventDefault();const input=$('input',event.currentTarget),command=input.value.trim();input.value='';
+        const output=$('#terminal-output');
+        if(command==='clear'){output.textContent='';return;}
+        const line=document.createElement('div');line.textContent='prism ~ ❯ '+command;output.append(line);
+        const result=document.createElement('div');
+        result.textContent = command==='help'?'Demo commands: help, clear, uname, neofetch, echo <text>':command==='uname'?'Linux PrismOS (simulated preview)':command==='neofetch'?'✦ PrismOS\nDesktop: Material-inspired Quickshell\nBase: Arch Linux\nPalette: '+state.palette:command.startsWith('echo ')?command.slice(5):command?'Command unavailable in this design preview.':'';
+        output.append(result);target.scrollTop=target.scrollHeight;
+      });
+    } else {
+      target.innerHTML='<div class="generic-app">'+icon(app.icon)+'<h2>'+app.name+', with personality.</h2><p>This is an application design preview.<br>The native shell opens installed Linux applications.</p><button class="pill-button" style="margin:30px auto 0" data-open="appearance">Make it yours</button></div>';
+    }
+  }
+  function showFolder(name) {
+    const folders={Home:['Documents','Downloads','Pictures','Projects','Music','Videos'],Documents:['Getting started.md','Roadmap.md','Design notes.md'],Downloads:['PrismOS-source.zip','Wallpaper.svg'],Pictures:['Lilac skies','Mint morning','Peach sunset']};
+    $('#folder-name').textContent=name;
+    $$('[data-folder]').forEach(el=>el.classList.toggle('selected',el.dataset.folder===name));
+    $('.file-grid').innerHTML=(folders[name]||[]).map(item=>'<button class="file-card" data-file="'+item+'"><span>'+icon(item.includes('.')?'mail':'folder')+'</span>'+item+'<small>Demo content</small></button>').join('');
+  }
+  document.addEventListener('click',event => {
+    const open=event.target.closest('[data-open]'),close=event.target.closest('[data-close]'),toggle=event.target.closest('[data-toggle]'),setting=event.target.closest('[data-setting]'),palette=event.target.closest('[data-palette]'),app=event.target.closest('[data-app]'),folder=event.target.closest('[data-folder]'),file=event.target.closest('[data-file]');
+    if(open){openPanel(open.dataset.open);return;}
+    if(close){closePanels();return;}
+    if(toggle){const key=toggle.dataset.toggle;state[key]=!state[key];applyTheme();if(key==='dnd')toast(state.dnd?'Notifications will be quiet.':'Notifications are back on.');return;}
+    if(setting){const key=setting.dataset.setting;state[key]=!state[key];applyTheme();return;}
+    if(palette){state.palette=palette.dataset.palette;applyTheme();return;}
+    if(app){launchApp(app.dataset.app,app);return;}
+    if(folder){showFolder(folder.dataset.folder);return;}
+    if(file){toast(file.dataset.file+' · sample content');return;}
+    if(event.target.closest('.dismiss-notification'))clearNotifications();
+  });
+  $('#app-search').addEventListener('input',event=>renderApps(event.target.value));
+  $('#app-search').addEventListener('keydown',event=>{if(event.key==='Enter'){$('#app-grid button')?.click();}});
+  $('#clear-notifications').addEventListener('click',clearNotifications);
+  $('#modal-backdrop').addEventListener('click',()=>closePanels());
+  $('#shade-backdrop').addEventListener('click',()=>closePanels());
+  $('#close-app').addEventListener('click',closeApp);
+  $('#power').addEventListener('click',()=>toast('Power actions are not available in this preview.'));
+  $('#play-media').addEventListener('click',()=>{playing=!playing;$('.wave').classList.toggle('playing',playing);$('#play-media').textContent=playing?'Ⅱ':'▶';$('#play-media').setAttribute('aria-label',playing?'Pause demo track':'Play demo track');});
+  $$('input[type="range"]').forEach(input=>{syncSlider(input);input.addEventListener('input',()=>syncSlider(input));});
+  document.addEventListener('keydown',event=>{
+    if(event.key==='Escape'){if(panel)closePanels();else closeApp();return;}
+    const typing = ['INPUT','TEXTAREA'].includes(document.activeElement.tagName);
+    if(event.key==='/'&&!typing){event.preventDefault();openPanel('drawer');return;}
+    if(event.key==='Tab'){
+      const scope=panel?$('#'+panel):!$('#app-window').hidden?$('#app-window'):null;
+      if(!scope)return;
+      const focusable=$$('button:not(:disabled),input,a[href],[tabindex="0"]',scope).filter(el=>el.getClientRects().length);
+      if(!focusable.length)return;
+      const first=focusable[0],last=focusable.at(-1);
+      if(event.shiftKey&&(document.activeElement===first||document.activeElement===scope)){event.preventDefault();last.focus();}
+      else if(!event.shiftKey&&(document.activeElement===last||document.activeElement===scope)){event.preventDefault();first.focus();}
+    }
+  });
+  let gestureStart=null;
+  $('.status-bar').addEventListener('pointerdown',event=>{if(event.pointerType==='touch'&&event.clientX>innerWidth*.6)gestureStart={x:event.clientX,y:event.clientY};});
+  document.addEventListener('pointerup',event=>{if(gestureStart&&event.clientY-gestureStart.y>45){if(panel!=='shade')openPanel('shade');}gestureStart=null;});
+  for(let i=0;i<23;i++){const bar=document.createElement('i');bar.style.height=(5+Math.sin(i*.9)*5+Math.cos(i*2)*3+6)+'px';bar.style.setProperty('--index',i);$('.wave').append(bar);}
+  buildPalettes();hydrate();renderApps('');applyTheme();updateClock();setInterval(updateClock,15000);
+  $('.wallpaper-art').style.backgroundImage='url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIwIDEwODAiPgo8cmVjdCB3aWR0aD0iMTkyMCIgaGVpZ2h0PSIxMDgwIiBmaWxsPSIjZTlkZmY0Ii8+CjxwYXRoIGQ9Ik0wIDY3MFE0MDAgNDUwIDc2MCA4MTBUMTYwMCA3NzBWMTA4MEgwWiIgZmlsbD0iI2QyYmJlOSIvPgo8cGF0aCBkPSJNODAwIDEwODBRNzYwIDUyMCAxMjAwIDUwMFQxOTIwIDE5MFYxMDgwWiIgZmlsbD0iI2NiZTZkNyIvPgo8ZWxsaXBzZSBjeD0iMTU4MCIgY3k9IjE4MCIgcng9IjMzMCIgcnk9IjMxMCIgZmlsbD0iI2Y3ZDhiYSIvPgo8ZWxsaXBzZSBjeD0iMTU4MCIgY3k9IjE4MCIgcng9IjE5MCIgcnk9IjE4MCIgZmlsbD0iI2U5ZGZmNCIvPgo8cG9seWdvbiBwb2ludHM9Ijk2NS4wLDM1MC4wIDk2NC4yLDM1Ny40IDk2Mi4wLDM2NC44IDk1OC40LDM3MS45IDk1My42LDM3OC44IDk0Ny43LDM4NS4yIDk0MS4wLDM5MS4zIDkzMy44LDM5Ny4wIDkyNi40LDQwMi40IDkxOC45LDQwNy40IDkxMS44LDQxMi4xIDkwNS4zLDQxNi43IDg5OS40LDQyMS4zIDg5NC41LDQyNi4wIDg5MC43LDQzMC45IDg4Ny45LDQzNi4xIDg4Ni4xLDQ0MS44IDg4NS40LDQ0OC4wIDg4NS42LDQ1NC43IDg4Ni41LDQ2Mi4xIDg4Ny44LDQ3MC4wIDg4OS41LDQ3OC40IDg5MS4yLDQ4Ny4yIDg5Mi43LDQ5Ni4yIDg5My44LDUwNS4zIDg5NC4yLDUxNC40IDg5My44LDUyMy4xIDg5Mi40LDUzMS40IDg4OS45LDUzOS4wIDg4Ni4zLDU0NS43IDg4MS41LDU1MS41IDg3NS43LDU1Ni4zIDg2OS4wLDU1OS45IDg2MS40LDU2Mi40IDg1My4xLDU2My44IDg0NC40LDU2NC4yIDgzNS4zLDU2My44IDgyNi4yLDU2Mi43IDgxNy4yLDU2MS4yIDgwOC40LDU1OS41IDgwMC4wLDU1Ny44IDc5Mi4xLDU1Ni41IDc4NC43LDU1NS42IDc3OC4wLDU1NS40IDc3MS44LDU1Ni4xIDc2Ni4xLDU1Ny45IDc2MC45LDU2MC43IDc1Ni4wLDU2NC41IDc1MS4zLDU2OS40IDc0Ni43LDU3NS4zIDc0Mi4xLDU4MS44IDczNy40LDU4OC45IDczMi40LDU5Ni40IDcyNy4wLDYwMy44IDcyMS4zLDYxMS4wIDcxNS4yLDYxNy43IDcwOC44LDYyMy42IDcwMS45LDYyOC40IDY5NC44LDYzMi4wIDY4Ny40LDYzNC4yIDY4MC4wLDYzNS4wIDY3Mi42LDYzNC4yIDY2NS4yLDYzMi4wIDY1OC4xLDYyOC40IDY1MS4yLDYyMy42IDY0NC44LDYxNy43IDYzOC43LDYxMS4wIDYzMy4wLDYwMy44IDYyNy42LDU5Ni40IDYyMi42LDU4OC45IDYxNy45LDU4MS44IDYxMy4zLDU3NS4zIDYwOC43LDU2OS40IDYwNC4wLDU2NC41IDU5OS4xLDU2MC43IDU5My45LDU1Ny45IDU4OC4yLDU1Ni4xIDU4Mi4wLDU1NS40IDU3NS4zLDU1NS42IDU2Ny45LDU1Ni41IDU2MC4wLDU1Ny44IDU1MS42LDU1OS41IDU0Mi44LDU2MS4yIDUzMy44LDU2Mi43IDUyNC43LDU2My44IDUxNS42LDU2NC4yIDUwNi45LDU2My44IDQ5OC42LDU2Mi40IDQ5MS4wLDU1OS45IDQ4NC4zLDU1Ni4zIDQ3OC41LDU1MS41IDQ3My43LDU0NS43IDQ3MC4xLDUzOS4wIDQ2Ny42LDUzMS40IDQ2Ni4yLDUyMy4xIDQ2NS44LDUxNC40IDQ2Ni4yLDUwNS4zIDQ2Ny4zLDQ5Ni4yIDQ2OC44LDQ4Ny4yIDQ3MC41LDQ3OC40IDQ3Mi4yLDQ3MC4wIDQ3My41LDQ2Mi4xIDQ3NC40LDQ1NC43IDQ3NC42LDQ0OC4wIDQ3My45LDQ0MS44IDQ3Mi4xLDQzNi4xIDQ2OS4zLDQzMC45IDQ2NS41LDQyNi4wIDQ2MC42LDQyMS4zIDQ1NC43LDQxNi43IDQ0OC4yLDQxMi4xIDQ0MS4xLDQwNy40IDQzMy42LDQwMi40IDQyNi4yLDM5Ny4wIDQxOS4wLDM5MS4zIDQxMi4zLDM4NS4yIDQwNi40LDM3OC44IDQwMS42LDM3MS45IDM5OC4wLDM2NC44IDM5NS44LDM1Ny40IDM5NS4wLDM1MC4wIDM5NS44LDM0Mi42IDM5OC4wLDMzNS4yIDQwMS42LDMyOC4xIDQwNi40LDMyMS4yIDQxMi4zLDMxNC44IDQxOS4wLDMwOC43IDQyNi4yLDMwMy4wIDQzMy42LDI5Ny42IDQ0MS4xLDI5Mi42IDQ0OC4yLDI4Ny45IDQ1NC43LDI4My4zIDQ2MC42LDI3OC43IDQ2NS41LDI3NC4wIDQ2OS4zLDI2OS4xIDQ3Mi4xLDI2My45IDQ3My45LDI1OC4yIDQ3NC42LDI1Mi4wIDQ3NC40LDI0NS4zIDQ3My41LDIzNy45IDQ3Mi4yLDIzMC4wIDQ3MC41LDIyMS42IDQ2OC44LDIxMi44IDQ2Ny4zLDIwMy44IDQ2Ni4yLDE5NC43IDQ2NS44LDE4NS42IDQ2Ni4yLDE3Ni45IDQ2Ny42LDE2OC42IDQ3MC4xLDE2MS4wIDQ3My43LDE1NC4zIDQ3OC41LDE0OC41IDQ4NC4zLDE0My43IDQ5MS4wLDE0MC4xIDQ5OC42LDEzNy42IDUwNi45LDEzNi4yIDUxNS42LDEzNS44IDUyNC43LDEzNi4yIDUzMy44LDEzNy4zIDU0Mi44LDEzOC44IDU1MS42LDE0MC41IDU2MC4wLDE0Mi4yIDU2Ny45LDE0My41IDU3NS4zLDE0NC40IDU4Mi4wLDE0NC42IDU4OC4yLDE0My45IDU5My45LDE0Mi4xIDU5OS4xLDEzOS4zIDYwNC4wLDEzNS41IDYwOC43LDEzMC42IDYxMy4zLDEyNC43IDYxNy45LDExOC4yIDYyMi42LDExMS4xIDYyNy42LDEwMy42IDYzMy4wLDk2LjIgNjM4LjcsODkuMCA2NDQuOCw4Mi4zIDY1MS4yLDc2LjQgNjU4LjEsNzEuNiA2NjUuMiw2OC4wIDY3Mi42LDY1LjggNjgwLjAsNjUuMCA2ODcuNCw2NS44IDY5NC44LDY4LjAgNzAxLjksNzEuNiA3MDguOCw3Ni40IDcxNS4yLDgyLjMgNzIxLjMsODkuMCA3MjcuMCw5Ni4yIDczMi40LDEwMy42IDczNy40LDExMS4xIDc0Mi4xLDExOC4yIDc0Ni43LDEyNC43IDc1MS4zLDEzMC42IDc1Ni4wLDEzNS41IDc2MC45LDEzOS4zIDc2Ni4xLDE0Mi4xIDc3MS44LDE0My45IDc3OC4wLDE0NC42IDc4NC43LDE0NC40IDc5Mi4xLDE0My41IDgwMC4wLDE0Mi4yIDgwOC40LDE0MC41IDgxNy4yLDEzOC44IDgyNi4yLDEzNy4zIDgzNS4zLDEzNi4yIDg0NC40LDEzNS44IDg1My4xLDEzNi4yIDg2MS40LDEzNy42IDg2OS4wLDE0MC4xIDg3NS43LDE0My43IDg4MS41LDE0OC41IDg4Ni4zLDE1NC4zIDg4OS45LDE2MS4wIDg5Mi40LDE2OC42IDg5My44LDE3Ni45IDg5NC4yLDE4NS42IDg5My44LDE5NC43IDg5Mi43LDIwMy44IDg5MS4yLDIxMi44IDg4OS41LDIyMS42IDg4Ny44LDIzMC4wIDg4Ni41LDIzNy45IDg4NS42LDI0NS4zIDg4NS40LDI1Mi4wIDg4Ni4xLDI1OC4yIDg4Ny45LDI2My45IDg5MC43LDI2OS4xIDg5NC41LDI3NC4wIDg5OS40LDI3OC43IDkwNS4zLDI4My4zIDkxMS44LDI4Ny45IDkxOC45LDI5Mi42IDkyNi40LDI5Ny42IDkzMy44LDMwMy4wIDk0MS4wLDMwOC43IDk0Ny43LDMxNC44IDk1My42LDMyMS4yIDk1OC40LDMyOC4xIDk2Mi4wLDMzNS4yIDk2NC4yLDM0Mi42IDk2NS4wLDM1MC4wIiBmaWxsPSIjYmJhMGRkIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgyNzAgNzApIHJvdGF0ZSgtMTIgNjgwIDM1MCkiLz4KPGNpcmNsZSBjeD0iOTUwIiBjeT0iNDIwIiByPSIxNDAiIGZpbGw9IiNlOWRmZjQiLz4KPHBhdGggZD0iTTE1NTAgODIwcTc1LTE3MCAxNzUtMTE1dDE0MCAxODAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzhmYjlhMyIgc3Ryb2tlLXdpZHRoPSI2MCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CjxjaXJjbGUgY3g9IjQxMCIgY3k9Ijk1MCIgcj0iODIiIGZpbGw9IiNmMmNiYWEiLz4KPC9zdmc+Cg==")';
+  $('#shade-backdrop').hidden=false;document.body.classList.add('shade-visible');$('#shade').focus();
+  window.PRISM_PREVIEW={state,openPanel,closePanels,launchApp};
+})();
+
+</script>
+</body>
+</html>

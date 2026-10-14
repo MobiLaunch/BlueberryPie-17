@@ -1,0 +1,46 @@
+name: Source checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  bridge-and-source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: python -m pip install pillow
+      - run: ./scripts/check.sh
+      - run: |
+          python scripts/generate-design.py
+          git diff --exit-code -- design preview/tokens.js preview/icons.js preview/assets/wallpaper.svg
+  native-lint:
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel
+    steps:
+      - run: pacman -Syu --noconfirm git nodejs python python-pillow quickshell qt6-declarative
+      - uses: actions/checkout@v4
+      - run: |
+          while IFS= read -r path; do qmllint -I /usr/lib/qt6/qml "$path"; done < <(find shell -name '*.qml')
+          ./scripts/check.sh
+  preview-interactions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.58.2
+      - run: npx playwright install --with-deps chromium
+      - run: node tests/preview.spec.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: preview-review
+          path: test-results/

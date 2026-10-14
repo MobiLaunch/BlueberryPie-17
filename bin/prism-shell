@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -euo pipefail
+prism_bin_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+prism_source_root="$(dirname -- "$prism_bin_dir")"
+if [[ -d "$prism_source_root/shell" ]]; then
+    prism_shell_dir="$prism_source_root/shell"
+else
+    prism_shell_dir=/usr/share/prismos/shell
+fi
+export PATH="$prism_bin_dir:$PATH"
+if ! command -v qs >/dev/null; then
+    echo 'Quickshell is required. On Arch: sudo pacman -S quickshell' >&2
+    exit 1
+fi
+if [[ "${1:-}" == ipc ]]; then
+    case "${2:-}" in shade|launcher|settings|close) exec qs -p "$prism_shell_dir" ipc call prism "$2";;
+        *) echo 'Usage: prism-shell ipc {shade|launcher|settings|close}' >&2; exit 2;;
+    esac
+fi
+exec qs -p "$prism_shell_dir" "$@"

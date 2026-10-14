@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+if [[ -n "${WAYLAND_DISPLAY:-}" ]]; then
+    echo 'Start the PrismOS session from your login screen or a fresh TTY.' >&2
+    exit 1
+fi
+export XDG_CURRENT_DESKTOP=Hyprland:PrismOS
+export XDG_SESSION_DESKTOP=prismos
+export XDG_SESSION_TYPE=wayland
+prism_config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/prismos/hypr"
+mkdir -p -- "$prism_config_dir"
+for prism_config_name in hyprland.lua hyprlock.conf; do
+    if [[ ! -e "$prism_config_dir/$prism_config_name" ]]; then
+        cp -- "/usr/share/prismos/config/hypr/$prism_config_name" "$prism_config_dir/$prism_config_name"
+    fi
+done
+export PRISM_HYPRLOCK_CONFIG="$prism_config_dir/hyprlock.conf"
+exec Hyprland --config "$prism_config_dir/hyprland.lua"

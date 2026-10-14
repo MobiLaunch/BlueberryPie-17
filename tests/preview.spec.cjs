@@ -1,0 +1,83 @@
+/* Run with node tests/preview.spec.cjs after installing Playwright. */
+const {chromium} = require('playwright');
+const {spawn} = require('node:child_process');
+const {mkdirSync} = require('node:fs');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const root = path.resolve(__dirname,'..');
+const port = Number(process.env.PRISM_PREVIEW_PORT || 8788);
+const url = `http://127.0.0.1:${port}/`;
+const server = spawn('python3',['-m','http.server',String(port),'--bind','127.0.0.1','--directory',path.join(root,'preview')],{stdio:'ignore'});
+const delay = ms => new Promise(resolve=>setTimeout(resolve,ms));
+
+(async()=>{
+  let browser;
+  try {
+    let ready=false;
+    for(let i=0;i<50;i++){try{if((await fetch(url)).ok){ready=true;break;}}catch{}await delay(50);}
+    assert(ready,'Preview server did not start');
+    const remote=Boolean(process.env.PRISM_CDP_URL);
+    browser=remote?await chromium.connectOverCDP(process.env.PRISM_CDP_URL,{noDefaults:true}):await chromium.launch({headless:true});
+    const context=remote?browser.contexts()[0]:await browser.newContext({viewport:{width:1440,height:900},timezoneId:'America/Chicago'});
+    const page=remote?context.pages()[0]:await context.newPage();
+    const errors=[];page.on('pageerror',error=>errors.push(error.message));
+    mkdirSync(path.join(root,'test-results'),{recursive:true});
+    await page.setViewportSize({width:1440,height:900});
+    await page.goto(url);await page.waitForFunction(()=>Boolean(window.PRISM_PREVIEW));
+    assert.equal(await page.title(),'PrismOS · Express yourself');
+    assert(await page.locator('#shade').evaluate(el=>el.classList.contains('open')));
+    await page.screenshot({path:path.join(root,'test-results','desktop.png')});
+    const oldPrimary=await page.evaluate(()=>getComputedStyle(document.documentElement).getPropertyValue('--primary'));
+    await page.getByRole('button',{name:'Wallpaper & style',exact:true}).click();
+    await page.locator('.palette-option[data-palette="Mint"]').click();
+    assert.notEqual(await page.evaluate(()=>getComputedStyle(document.documentElement).getPropertyValue('--primary')),oldPrimary);
+    await page.getByRole('switch',{name:'Dark theme',exact:true}).click();
+    assert(await page.locator('body').evaluate(el=>el.classList.contains('dark')));
+    await page.getByRole('switch',{name:'Reduced motion',exact:true}).click();
+    assert(await page.locator('body').evaluate(el=>el.classList.contains('reduced-motion')));
+    await page.keyboard.press('Escape');
+    await page.getByRole('button',{name:'All apps',exact:true}).click();
+    await page.getByRole('textbox',{name:'Search applications'}).fill('terminal');
+    assert.equal(await page.locator('#app-grid button').count(),1);
+    await page.getByRole('textbox',{name:'Search applications'}).press('Enter');
+    await page.locator('#app-window').waitFor({state:'visible'});
+    assert.equal(await page.locator('#window-title').textContent(),'Terminal');
+    await page.getByRole('textbox',{name:'Terminal command'}).fill('echo <script>safe text</script>');
+    await page.getByRole('textbox',{name:'Terminal command'}).press('Enter');
+    assert((await page.locator('#terminal-output').textContent()).includes('<script>safe text</script>'));
+    await page.keyboard.press('Escape');
+    await page.getByRole('button',{name:'Open Quick Settings'}).click();
+    await page.getByRole('slider',{name:'Display brightness'}).fill('40');
+    assert.equal(await page.locator('output[for="brightness"]').textContent(),'40%');
+    await page.getByRole('button',{name:'Clear all',exact:true}).click();
+    assert.equal(await page.locator('.caught-up').textContent(),'You’re all caught up.');
+    await page.setViewportSize({width:390,height:844});
+    await page.screenshot({path:path.join(root,'test-results','mobile-review.png')});
+    const mobileMetrics=await page.evaluate(()=>({width:innerWidth,scroll:document.documentElement.scrollWidth,desktop:document.querySelector('#desktop').clientWidth,overflow:[...document.querySelectorAll('body *')].filter(el=>{const r=el.getBoundingClientRect();return r.width&&r.right>innerWidth+1;}).slice(0,8).map(el=>({tag:el.tagName,class:el.className,width:el.getBoundingClientRect().width,right:el.getBoundingClientRect().right}))}));
+    assert(mobileMetrics.scroll<=mobileMetrics.width,'Mobile horizontal overflow: '+JSON.stringify(mobileMetrics));
+    const box=await page.locator('#shade').boundingBox();
+    assert(box.x>=0&&box.x+box.width<=390,'Mobile shade exceeds screen');
+    await page.screenshot({path:path.join(root,'test-results','mobile-dark.png')});
+    await page.keyboard.press('Escape');
+    await page.getByRole('button',{name:'All apps',exact:true}).click();
+    await page.getByRole('textbox',{name:'Search applications'}).fill('does not exist');
+    assert.equal(await page.locator('#app-grid button').count(),0);
+    assert(await page.locator('#no-apps').isVisible());
+    await page.keyboard.press('Escape');
+    await page.getByRole('button',{name:'Settings',exact:true}).click();
+    await page.locator('#appearance').waitFor({state:'visible'});
+    await page.locator('.palette-option[data-palette="Lilac"]').click();
+    await page.getByRole('switch',{name:'Dark theme',exact:true}).click();
+    await page.getByRole('switch',{name:'Reduced motion',exact:true}).click();
+    await page.keyboard.press('Escape');
+    await page.getByRole('button',{name:'Open Quick Settings'}).click();
+    await page.screenshot({path:path.join(root,'test-results','mobile.png')});
+    await page.setViewportSize({width:1440,height:900});
+    await page.screenshot({path:path.join(root,'test-results','desktop-final.png')});
+    assert.deepEqual(errors,[],'Unexpected browser JS errors');
+    console.log('PASS: desktop/mobile, palettes, dark/reduced motion, app search/launch, terminal escaping, sliders and notifications');
+  } finally {
+    server.kill();
+    if(browser)await browser.close();
+  }
+})().catch(error=>{console.error(error);process.exitCode=1;server.kill();});

@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=PrismOS
+Comment=An expressive Material-inspired Arch desktop
+Exec=prism-session
+Type=Application
+DesktopNames=Hyprland;PrismOS;

@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+.venv/
+build/
+dist/
+out/
+work/
+src/
+pkg/
+*.pkg.tar.*
+*.iso
+test-results/
+node_modules/
+*.log

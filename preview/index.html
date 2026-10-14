@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#e9dff4">
+  <title>PrismOS · Express yourself</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main id="desktop" aria-label="PrismOS interactive design preview">
+    <div class="wallpaper" aria-hidden="true"><div class="wallpaper-art"></div></div>
+    <header class="status-bar">
+      <button class="brand" data-open="drawer" aria-label="Open all applications"><span data-icon="spark"></span><b>PrismOS</b><span class="preview-label">DESIGN PREVIEW</span></button>
+      <span class="status-clock">13:30</span>
+      <button class="status-system" data-open="shade" aria-label="Open Quick Settings" aria-expanded="true"><span data-icon="wifi"></span><span data-icon="volume"></span><span class="battery"><i></i></span><b>86%</b></button>
+    </header>
+    <section class="home-copy">
+      <div class="date">Wednesday, October 14</div>
+      <div class="giant-clock" aria-label="Current time">13<span>:</span>30</div>
+      <h1>A little more <em>you.</em></h1>
+      <p>Your colors. Your space. Your kind of Linux.</p>
+    </section>
+    <section class="home-widgets" aria-label="Desktop widgets">
+      <article class="welcome-widget">
+        <div class="widget-eyebrow"><span data-icon="spark"></span> HELLO, PRISM</div>
+        <h2>Make room<br>for a little fun.</h2>
+        <div class="palette-dots" aria-label="Choose color palette"></div>
+        <button class="text-button" data-open="appearance">Make it yours <span data-icon="arrow"></span></button>
+      </article>
+      <article class="media-widget">
+        <div class="album-art" aria-hidden="true"><div class="album-flower"></div></div>
+        <span class="eyebrow">YOUR DAILY MIX · DEMO</span>
+        <h3>Soft focus</h3><p>A slower kind of afternoon</p>
+        <div class="media-bottom"><div class="wave" aria-hidden="true"></div><button id="play-media" class="round-button" aria-label="Play demo track">▶</button></div>
+      </article>
+    </section>
+    <nav class="dock" aria-label="Favorite applications">
+      <button class="dock-app all-apps" data-open="drawer" aria-label="All apps"><span data-icon="apps"></span><span class="dock-tip">All apps</span></button>
+      <div class="dock-divider"></div>
+      <button class="dock-app" data-app="browser" aria-label="Browser"><span class="app-icon peach" data-icon="browser"></span><span class="dock-tip">Browser</span></button>
+      <button class="dock-app" data-app="files" aria-label="Files"><span class="app-icon mint" data-icon="folder"></span><span class="dock-tip">Files</span></button>
+      <button class="dock-app" data-app="terminal" aria-label="Terminal"><span class="app-icon lilac" data-icon="terminal"></span><span class="dock-tip">Terminal</span></button>
+      <button class="dock-app" data-app="settings" aria-label="Settings"><span class="app-icon butter" data-icon="settings"></span><span class="dock-tip">Settings</span></button>
+      <button class="dock-app" data-app="music" aria-label="Music"><span class="app-icon rose" data-icon="music"></span><span class="dock-tip">Music</span></button>
+    </nav>
+    <div id="shade-backdrop" class="shade-backdrop" hidden></div>
+    <aside id="shade" class="shade panel open" aria-label="Quick Settings" role="dialog" aria-modal="true" tabindex="-1">
+      <div class="shade-handle" aria-hidden="true"></div>
+      <div class="shade-heading"><div><div class="shade-clock">13:30</div><p class="shade-date">Wed, Oct 14</p></div><button class="round-button quiet" data-close="shade" aria-label="Close Quick Settings"><span data-icon="close"></span></button></div>
+      <div class="brightness control-slider"><span data-icon="brightness"></span><input id="brightness" type="range" min="10" max="100" value="72" aria-label="Display brightness"><output for="brightness">72%</output></div>
+      <div class="quick-grid">
+        <button class="quick-tile active" data-toggle="wifi" aria-pressed="true"><span class="tile-icon" data-icon="wifi"></span><div><b>Wi-Fi</b><span class="tile-status">Prism Network</span></div><span class="tile-arrow" data-icon="arrow"></span></button>
+        <button class="quick-tile active" data-toggle="bluetooth" aria-pressed="true"><span class="tile-icon" data-icon="bluetooth"></span><div><b>Bluetooth</b><span class="tile-status">Connected</span></div><span class="tile-arrow" data-icon="arrow"></span></button>
+        <button class="quick-tile" data-toggle="dnd" aria-pressed="false"><span class="tile-icon" data-icon="dnd"></span><div><b>Do Not Disturb</b><span class="tile-status">Off</span></div></button>
+        <button class="quick-tile" data-toggle="dark" aria-pressed="false"><span class="tile-icon" data-icon="moon"></span><div><b>Dark theme</b><span class="tile-status">Off</span></div></button>
+        <button class="quick-tile active" data-toggle="sound" aria-pressed="true"><span class="tile-icon" data-icon="volume"></span><div><b>Sound</b><span class="tile-status">On</span></div></button>
+        <button class="quick-tile" data-toggle="reduced" aria-pressed="false"><span class="tile-icon" data-icon="motion"></span><div><b>Reduced motion</b><span class="tile-status">Off</span></div></button>
+      </div>
+      <div class="volume control-slider"><span data-icon="volume"></span><input id="volume" type="range" min="0" max="100" value="64" aria-label="Media volume"><output for="volume">64%</output></div>
+      <div class="notification-heading"><b>Notifications</b><button id="clear-notifications" class="text-button">Clear all</button></div>
+      <div id="notifications">
+        <article class="notification"><span class="notification-icon" data-icon="spark"></span><div><span class="notification-app">PRISMOS · NOW</span><h3>Hey, color lover.</h3><p>A fresh palette looks good on you.</p></div><button class="dismiss-notification" aria-label="Dismiss welcome notification"><span data-icon="close"></span></button></article>
+      </div>
+      <div class="shade-footer"><button class="pill-button edit-button" data-open="appearance"><span data-icon="spark"></span>Wallpaper & style</button><button class="round-button" data-app="settings" aria-label="Settings"><span data-icon="settings"></span></button><button class="round-button power-button" id="power" aria-label="Show session menu"><span data-icon="power"></span></button></div>
+      <p class="demo-note">Interactive design preview · controls are simulated</p>
+    </aside>
+    <div id="modal-backdrop" class="modal-backdrop" hidden></div>
+    <section id="drawer" class="drawer modal panel" hidden aria-label="All applications" role="dialog" aria-modal="true" tabindex="-1">
+      <div class="modal-heading"><div><span class="eyebrow">A PLACE FOR EVERYTHING</span><h2>Your apps</h2></div><button class="round-button quiet" data-close="drawer" aria-label="Close all applications"><span data-icon="close"></span></button></div>
+      <label class="search-field"><span data-icon="search"></span><input id="app-search" placeholder="Search your apps" autocomplete="off" aria-label="Search applications"><kbd>/</kbd></label>
+      <div id="app-grid" class="app-grid"></div>
+      <p id="no-apps" hidden>No apps match your search.</p>
+      <div class="drawer-footer">Start something good.<span>Esc to close · Enter to open</span></div>
+    </section>
+    <section id="appearance" class="appearance modal panel" hidden role="dialog" aria-modal="true" aria-label="Wallpaper and style" tabindex="-1">
+      <div class="modal-heading"><div><span class="eyebrow">FEEL RIGHT AT HOME</span><h2>Make it yours.</h2></div><button class="round-button quiet" data-close="appearance" aria-label="Close style settings"><span data-icon="close"></span></button></div>
+      <div class="style-preview"><div class="style-clock">13:30</div><div class="style-mini-tiles"><i></i><i></i><i></i></div></div>
+      <h3>Find your color</h3><div class="palette-options"></div>
+      <div class="settings-row"><div><b>Dark theme</b><p>Soft colors after sunset.</p></div><button class="switch" data-setting="dark" role="switch" aria-checked="false" aria-label="Dark theme"><i></i></button></div>
+      <div class="settings-row"><div><b>Reduced motion</b><p>Keep the colors, simplify movement.</p></div><button class="switch" data-setting="reduced" role="switch" aria-checked="false" aria-label="Reduced motion"><i></i></button></div>
+    </section>
+    <section id="app-window" class="app-window panel" hidden aria-label="Application preview" role="dialog" aria-modal="true" tabindex="-1">
+      <div class="app-titlebar"><div class="app-title"><span id="window-icon"></span><b id="window-title"></b><span class="window-label">PREVIEW</span></div><button class="round-button quiet" id="close-app" aria-label="Close application"><span data-icon="close"></span></button></div>
+      <div id="app-content"></div>
+    </section>
+    <div id="launch-splash" class="launch-splash" hidden aria-hidden="true"><div id="splash-icon"></div><div class="expressive-loader"></div></div>
+    <div id="toast" class="toast" role="status" hidden></div>
+  </main>
+  <script src="tokens.js"></script>
+  <script src="icons.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
