@@ -47,7 +47,7 @@ PanelWindow {
                         width: (card.width - 92) / 3
                         height: 6
                         radius: 3
-                        color: index <= root.step ? Theme.primaryStrong : Theme.surfaceHigh
+                        color: index <= root.step ? Theme.primary : Theme.surfaceContainerHigh
                         Behavior on color { ColorAnimation { duration: Theme.fast } }
                     }
                 }
@@ -59,7 +59,7 @@ PanelWindow {
                     anchors.fill: parent
                     spacing: 15
                     visible: root.step === 0
-                    Label { text: "✦"; font.pixelSize: 64; color: Theme.primaryStrong }
+                    Label { text: "✦"; font.pixelSize: 64; color: Theme.primary }
                     Label { text: "Welcome to PrismOS"; font.pixelSize: 34; font.weight: Font.Bold }
                     Label {
                         width: parent.width
@@ -120,7 +120,7 @@ PanelWindow {
                         width: parent.width
                         height: 100
                         radius: 28
-                        color: Theme.surfaceHigh
+                        color: Theme.surfaceContainerHigh
                         Label {
                             x: 17; y: 15
                             text: "Enable Android apps"
@@ -152,7 +152,7 @@ PanelWindow {
                         text: root.error
                         visible: root.error.length > 0
                         wrapMode: Text.WordWrap
-                        color: Theme.roles.error
+                        color: Theme.error
                     }
                 }
             }

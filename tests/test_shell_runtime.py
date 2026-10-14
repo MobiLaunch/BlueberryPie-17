@@ -43,6 +43,42 @@ class ShellRuntimeTests(unittest.TestCase):
         harness = self.boot(onboarded=False)
         self.assertEqual(harness.problems(), [])
 
+    def test_no_text_is_elided_on_any_surface(self):
+        harness = self.boot()
+        self.assertEqual(harness.truncated_texts(), [], "desktop")
+        for surface in SURFACES:
+            with self.subTest(surface=surface):
+                harness.ipc(surface)
+                harness.pump(600)
+                self.assertEqual(harness.truncated_texts(), [], surface)
+                harness.ipc("close")
+                harness.pump(200)
+
+    def test_dock_is_sized_to_its_content(self):
+        harness = self.boot()
+        dock = next(w for w in harness.visible_items() if w.metaObject().className().startswith("QQuickFlickable")
+                    and w.property("contentWidth") and w.parentItem().height() == 76)
+        self.assertLessEqual(dock.property("contentWidth"), dock.width() + 0.5,
+                             "dock buttons would be clipped")
+
+    def test_notifications_are_grouped_and_dismissible(self):
+        from qml_runtime import stubs
+        harness = self.boot()
+        server = stubs.NotificationServer.instances[0]
+        first = server.post(appName="Messages", summary="Ava", body="Lunch?")
+        server.post(appName="Messages", summary="Noah", body="Photo")
+        server.post(appName="Calendar", summary="Review")
+        harness.ipc("shade")
+        harness.pump(600)
+        self.assertEqual(len(server.tracked.values), 3)
+        texts = {item.property("text") for item in harness.visible_items() if item.property("text")}
+        self.assertIn("Messages · 2", texts)
+        self.assertIn("Review", texts)
+        first.dismiss()
+        harness.pump(300)
+        self.assertEqual(len(server.tracked.values), 2)
+        self.assertEqual(harness.problems(), [])
+
     def test_every_surface_opens_without_qml_errors(self):
         harness = self.boot()
         for surface in SURFACES:

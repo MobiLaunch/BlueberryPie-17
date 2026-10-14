@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import "."
 import "../services"
 
 Column {
@@ -54,9 +55,9 @@ Column {
                 displayText: "Scale " + (currentIndex >= 0 ? model[currentIndex] : screenCard.modelData.scale) + "×"
                 background: Rectangle {
                     radius: 24
-                    color: Theme.surfaceHigh
+                    color: Theme.surfaceContainerHigh
                     border.width: scalePicker.activeFocus ? 2 : 0
-                    border.color: Theme.primaryStrong
+                    border.color: Theme.primary
                 }
                 onActivated: index => DisplayState.preview(
                     screenCard.modelData.name, model[index])
@@ -129,7 +130,7 @@ Column {
         width: parent.width
         height: 114
         radius: 25
-        color: Theme.primary
+        color: Theme.primaryContainer
         visible: DisplayState.trialToken.length > 0
         Column {
             anchors.fill: parent
@@ -139,11 +140,11 @@ Column {
                 text: "Keep these display settings?"
                 font.pixelSize: 16
                 font.weight: Font.DemiBold
-                color: Theme.onPrimary
+                color: Theme.onPrimaryContainer
             }
             Label {
                 text: "Reverting automatically in " + DisplayState.seconds + " seconds"
-                color: Theme.onPrimary
+                color: Theme.onPrimaryContainer
                 font.pixelSize: 12
             }
             PillButton {
@@ -163,7 +164,7 @@ Column {
         width: parent.width
         visible: DisplayState.error.length > 0 || DisplayState.notice.length > 0
         text: DisplayState.error || DisplayState.notice
-        color: DisplayState.error ? Theme.roles.error : Theme.primaryStrong
+        color: DisplayState.error ? Theme.error : Theme.primary
         wrapMode: Text.WordWrap
         font.pixelSize: 13
     }

@@ -19,7 +19,8 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 os.environ.setdefault("QT_QUICK_BACKEND", "software")
 os.environ.setdefault("QT_QUICK_CONTROLS_STYLE", "Material")
 
-from PySide6.QtCore import QCoreApplication, QEvent, QMetaObject, QObject, Qt, QTimer, QUrl, qInstallMessageHandler  # noqa: E402
+from PySide6.QtCore import QCoreApplication, QEvent, QMetaObject, QObject, QPoint, Qt, QTimer, QUrl, qInstallMessageHandler  # noqa: E402
+from PySide6.QtTest import QTest  # noqa: E402
 from PySide6.QtGui import QGuiApplication  # noqa: E402
 from PySide6.QtQml import QQmlComponent, QQmlEngine  # noqa: E402
 from PySide6.QtQuick import QQuickView  # noqa: E402
@@ -53,8 +54,27 @@ class Harness:
         self.view.resize(width, height)
         self.view.setSource(QUrl.fromLocalFile(str(ROOT/"tests/qml_runtime/Desk.qml")))
         self.view.show()
+        self.park_cursor()
         self.shell = None
         self._component = None
+
+    def park_cursor(self):
+        """Keep the synthetic pointer away from controls so nothing reports hover."""
+        QTest.mouseMove(self.view, QPoint(self.view.width() - 3, self.view.height() - 3))
+        self.pump(50)
+
+    def hover(self, x, y):
+        QTest.mouseMove(self.view, QPoint(int(x), int(y)))
+        self.pump(80)
+
+    def click(self, x, y, button=Qt.LeftButton):
+        QTest.mouseClick(self.view, button, Qt.NoModifier, QPoint(int(x), int(y)))
+        self.pump(120)
+
+    def scene_pos(self, item):
+        """Center of an item in desk coordinates."""
+        point = item.mapToScene(item.boundingRect().center())
+        return point.x(), point.y()
 
     # -- environment ------------------------------------------------------
     def _prepare_environment(self, files_home):
@@ -98,6 +118,8 @@ class Harness:
         self._component = QQmlComponent(self.engine, QUrl.fromLocalFile(str(self.shell_dir/entry)))
         component = self._component
         self.shell = component.create()
+        self.pump(200)
+        self.park_cursor()
         if self.shell is None:
             raise RuntimeError("Shell failed to load:\n" + "\n".join(e.toString() for e in component.errors()))
         return self.shell
@@ -130,6 +152,25 @@ class Harness:
         Path(path).parent.mkdir(parents=True, exist_ok=True)
         image.save(str(path))
         return path
+
+    def visible_items(self, root=None):
+        """Yield every effectively visible QQuickItem under the desk."""
+        stack = [root or self.view.rootObject()]
+        while stack:
+            item = stack.pop()
+            for child in item.childItems():
+                if child.isVisible() and child.opacity() > 0.02 and child.width() > 0 and child.height() > 0:
+                    yield child
+                    stack.append(child)
+
+    def truncated_texts(self):
+        """Text that is visibly elided or clipped, as (text, width, implicit width)."""
+        found = []
+        for item in self.visible_items():
+            if item.metaObject().className().startswith(("QQuickText", "Label")) or item.property("truncated") is not None:
+                if item.property("truncated") is True:
+                    found.append((item.property("text"), item.width(), item.property("implicitWidth")))
+        return found
 
     def find(self, name):
         """First QML object whose objectName matches."""

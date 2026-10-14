@@ -6,6 +6,24 @@ QtObject {
     id: root
     readonly property var items: server.trackedNotifications
     readonly property int limit: 50
+    // Newest first, grouped by sending app. Rebuilt whenever the tracked set changes.
+    readonly property var groups: {
+        const byApp = {};
+        const order = [];
+        for (const note of items.values.slice().reverse()) {
+            const key = note.appName || "Other";
+            if (!byApp[key]) {
+                byApp[key] = {
+                    app: key,
+                    items: []
+                };
+                order.push(key);
+            }
+            byApp[key].items.push(note);
+        }
+        return order.map(key => byApp[key]);
+    }
+    readonly property int count: items.values.length
     property NotificationServer server: NotificationServer {
         bodySupported: true
         bodyMarkupSupported: false

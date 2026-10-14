@@ -6,7 +6,7 @@ Item {
     implicitWidth: 48
     implicitHeight: 48
     property real phase: 0
-    property color color: Theme.primaryStrong
+    property color color: Theme.primary
     Canvas {
         id: canvas
         anchors.fill: parent

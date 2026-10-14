@@ -7,7 +7,7 @@ Rectangle {
     signal closeRequested
     implicitHeight: content.implicitHeight + 32
     radius: 28
-    color: Theme.surfaceHigh
+    color: Theme.surfaceContainerHigh
     Column {
         id: content
         x: 16
@@ -61,7 +61,7 @@ Rectangle {
             visible: text.length > 0
             wrapMode: Text.WordWrap
             font.pixelSize: 12
-            color: Theme.roles.error
+            color: Theme.error
             Accessible.role: Accessible.AlertMessage
         }
         RowLayout {

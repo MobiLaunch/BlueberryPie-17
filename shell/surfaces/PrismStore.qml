@@ -254,7 +254,7 @@ PanelWindow {
         Label {
             x: 28; y: 267; width: parent.width - 56
             visible: !root.busy && (root.error.length > 0 || root.notice.length > 0)
-            color: root.error.length ? Theme.roles.error : Theme.primaryStrong
+            color: root.error.length ? Theme.error : Theme.primary
             text: root.error.length ? root.error : root.notice
             elide: Text.ElideRight
         }
@@ -278,12 +278,12 @@ PanelWindow {
                     x: 14
                     anchors.verticalCenter: parent.verticalCenter
                     width: 68; height: 68; radius: 24
-                    color: resultRow.modelData.kind === "android" ? Theme.secondary : Theme.primary
+                    color: resultRow.modelData.kind === "android" ? Theme.secondaryContainer : Theme.primaryContainer
                     Label {
                         anchors.centerIn: parent
                         font.pixelSize: 26
                         text: resultRow.modelData.kind === "android" ? "◈" : "✦"
-                        color: Theme.onPrimary
+                        color: Theme.onPrimaryContainer
                     }
                 }
                 Label {
@@ -299,7 +299,7 @@ PanelWindow {
                     text: resultRow.modelData.source + " · " +
                           (resultRow.modelData.kind === "android" ? "Android" : "Linux")
                     font.pixelSize: 12
-                    color: Theme.primaryStrong
+                    color: Theme.primary
                     elide: Text.ElideRight
                 }
                 Label {

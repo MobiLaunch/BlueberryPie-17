@@ -309,9 +309,10 @@ class Notification(QObject):
     trackedChanged = Signal()
     closed = Signal()
 
-    def __init__(self, server, appName="", summary="", body="", urgency=1, actions=(), desktopEntry="", parent=None):
+    def __init__(self, server, appName="", summary="", body="", urgency=1, actions=(), desktopEntry="", appIcon="", parent=None):
         super().__init__(parent)
         self.server = server
+        self._icon = appIcon
         self._app, self._summary, self._body = appName, summary, body
         self._urgency, self._desktop = urgency, desktopEntry
         self._actions = [NotificationAction(text, self) for text in actions]
@@ -322,6 +323,7 @@ class Notification(QObject):
     body = Property(str, lambda s: s._body, constant=True)
     urgency = Property(int, lambda s: s._urgency, constant=True)
     desktopEntry = Property(str, lambda s: s._desktop, constant=True)
+    appIcon = Property(str, lambda s: s._icon, constant=True)
     actions = Property("QVariantList", lambda s: list(s._actions), constant=True)
 
     def _set_tracked(self, value):

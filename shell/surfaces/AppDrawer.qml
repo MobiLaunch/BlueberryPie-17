@@ -144,7 +144,7 @@ PanelWindow {
                         width: 64
                         height: 64
                         radius: 24
-                        color: index % 3 === 0 ? Theme.primary : index % 3 === 1 ? Theme.secondary : Theme.tertiary
+                        color: index % 3 === 0 ? Theme.primaryContainer : index % 3 === 1 ? Theme.secondaryContainer : Theme.tertiaryContainer
                         scale: appButton.down ? .9 : 1
                         Behavior on scale {
                             NumberAnimation {
@@ -198,7 +198,7 @@ PanelWindow {
                     width: 11
                     height: 11
                     radius: 6
-                    color: Theme.primaryStrong
+                    color: Theme.primary
                     visible: Applications.isPinned(appButton.modelData.id)
                 }
             }

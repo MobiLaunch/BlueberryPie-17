@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls
+import "."
 import QtQuick.Layouts
 import "../services"
 
@@ -12,7 +13,7 @@ Rectangle {
     signal closeRequested
     implicitHeight: content.implicitHeight + 32
     radius: 28
-    color: Theme.surfaceHigh
+    color: Theme.surfaceContainerHigh
     onKindChanged: reset()
     onVisibleChanged: if (!visible)
         reset()
@@ -69,7 +70,7 @@ Rectangle {
             width: parent.width
             visible: Wireless.error.length > 0
             text: Wireless.error
-            color: Theme.roles.error
+            color: Theme.error
             wrapMode: Text.WordWrap
             font.pixelSize: 12
             Accessible.role: Accessible.AlertMessage

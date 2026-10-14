@@ -7,7 +7,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
-from prismos.theme import PALETTES, palette
+from prismos.theme import PALETTES, legacy_tokens, palette
 
 icons = {
     "wifi": '<path d="M3 8.5a15 15 0 0 1 18 0M6.5 12a9.3 9.3 0 0 1 11 0M10 15.5a3.8 3.8 0 0 1 4 0"/><circle cx="12" cy="19" r=".8" fill="#19151e"/>',
@@ -34,6 +34,47 @@ icons = {
     "arrow": '<path d="m8 4 8 8-8 8"/>',
     "close": '<path d="m6 6 12 12M6 18 18 6"/>',
     "power": '<path d="M12 2v10M6 5a9 9 0 1 0 12 0"/>',
+    "wifi_off": '<path d="M3 8.5a15 15 0 0 1 4-2.6M21 8.5a15 15 0 0 0-8.2-3.4M6.5 12a9.3 9.3 0 0 1 3-1.8M17.5 12a9.3 9.3 0 0 0-2.4-1.5M10 15.5a3.8 3.8 0 0 1 4 0"/><circle cx="12" cy="19" r=".8" fill="#19151e"/><path d="m3 3 18 18"/>',
+    "bluetooth_off": '<path d="m7 7 10 10-5 4v-9M12 3v5.5l5-1.5-5-4M7 17l3-2.6"/><path d="m3 3 18 18"/>',
+    "battery": '<rect x="2" y="7" width="17" height="10" rx="3"/><path d="M22 10.5v3"/><rect class="level" x="4.5" y="9.5" width="12" height="5" rx="1.2" fill="#19151e" stroke="none"/>',
+    "battery_charging": '<rect x="2" y="7" width="17" height="10" rx="3"/><path d="M22 10.5v3M11 8.5 8.5 12.5h4.5L10.5 16"/>',
+    "notifications": '<path d="M6 17V11a6 6 0 0 1 12 0v6l1.5 2h-15zM10 21a2 2 0 0 0 4 0"/>',
+    "notifications_off": '<path d="M8 6.2A6 6 0 0 1 18 11v4.5M6 17V11a6 6 0 0 1 .4-2.2L4.5 19H19M10 21a2 2 0 0 0 4 0"/><path d="m3 3 18 18"/>',
+    "airplane": '<path d="M12 3c.8 0 1.5.9 1.5 2v5l8 4.5v2l-8-2v4l2 1.5v1.5L12 20.5 8.5 21.5V20l2-1.5v-4l-8 2v-2l8-4.5V5c0-1.100.7-2 1.500-2Z"/>',
+    "flashlight": '<path d="M7 3h10v4l-2 3v11H9V10L7 7zM7 7h10M12 13v3"/>',
+    "screenshot": '<path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><rect x="8" y="9" width="8" height="6" rx="1.5"/>',
+    "cast": '<path d="M3 17a4 4 0 0 1 4 4M3 13a8 8 0 0 1 8 8M3 9a12 12 0 0 1 12 12M3 6V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3"/>',
+    "location": '<path d="M12 21s7-6.100 7-11.500A7 7 0 0 0 5 9.500C5 15 12 21 12 21Z"/><circle cx="12" cy="9.500" r="2.500"/>',
+    "edit": '<path d="m4 20 1-4L16.500 4.500a2.100 2.100 0 0 1 3 3L8 19zM14 7l3 3"/>',
+    "back": '<path d="m15 4-8 8 8 8"/>',
+    "check": '<path d="m5 12.500 4.500 4.500L19 7.500"/>',
+    "chevron_down": '<path d="m5 9 7 7 7-7"/>',
+    "chevron_up": '<path d="m5 15 7-7 7 7"/>',
+    "more": '<circle cx="12" cy="5" r="1.300" fill="#19151e"/><circle cx="12" cy="12" r="1.300" fill="#19151e"/><circle cx="12" cy="19" r="1.300" fill="#19151e"/>',
+    "palette": '<path d="M12 3a9 9 0 0 0 0 18c1.500 0 2-1 1.500-2s-.5-2.500 1.500-2.500H17a4 4 0 0 0 4-4C21 6.500 17 3 12 3Z"/><circle cx="7.500" cy="11" r="1" fill="#19151e"/><circle cx="10.500" cy="7" r="1" fill="#19151e"/><circle cx="15.500" cy="7.500" r="1" fill="#19151e"/>',
+    "display": '<rect x="3" y="4" width="18" height="12" rx="3"/><path d="M8 20h8M12 16v4"/>',
+    "info": '<circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><circle cx="12" cy="7.500" r=".9" fill="#19151e"/>',
+    "apps_grid": '<rect x="4" y="4" width="6" height="6" rx="2"/><rect x="14" y="4" width="6" height="6" rx="2"/><rect x="4" y="14" width="6" height="6" rx="2"/><rect x="14" y="14" width="6" height="6" rx="2"/>',
+    "store": '<path d="M4 9 5.500 4h13L20 9M4 9v10a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9M4 9a2.700 2.700 0 0 0 5.300 0 2.700 2.700 0 0 0 5.400 0A2.700 2.700 0 0 0 20 9M10 20v-5h4v5"/>',
+    "recents": '<rect x="3" y="6" width="12" height="13" rx="3"/><path d="M18 8.500a3 3 0 0 1 3 3V16M18 4.500a3 3 0 0 1 3 3"/>',
+    "keyboard": '<rect x="2" y="6" width="20" height="12" rx="3"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/>',
+    "mouse": '<rect x="6" y="3" width="12" height="18" rx="6"/><path d="M12 7v3"/>',
+    "storage": '<rect x="3" y="4" width="18" height="6" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/><path d="M7 7h.01M7 17h.01"/>',
+    "usb": '<path d="M12 21V8m0 0-3 3m3-3 3 3M9 11v3M15 11v2h-3M12 3l2 3h-4zM12 21a2 2 0 1 0 .01 0"/>',
+    "android": '<path d="M5 16V11a7 7 0 0 1 14 0v5a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2ZM8 3.500l1.500 2.500M16 3.500 14.500 6"/><circle cx="9.500" cy="11" r=".9" fill="#19151e"/><circle cx="14.500" cy="11" r=".9" fill="#19151e"/>',
+    "volume_off": '<path d="M3 9h4l5-4v14l-5-4H3zM16 9.500l5 5M21 9.500l-5 5"/>',
+    "microphone_off": '<rect x="8" y="2" width="8" height="13" rx="4"/><path d="M5 10v2a7 7 0 0 0 11 5.700M19 10v2M12 19v3m-4 0h8"/><path d="m3 3 18 18"/>',
+    "play": '<path d="M8 5.500v13l11-6.500z"/>',
+    "pause": '<path d="M8 5v14M16 5v14"/>',
+    "skip_next": '<path d="m6 5.500 9 6.500-9 6.500zM18 5v14"/>',
+    "skip_previous": '<path d="m18 5.500-9 6.500 9 6.500zM6 5v14"/>',
+    "trash": '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
+    "home": '<path d="m3 11 9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+    "refresh": '<path d="M20 12a8 8 0 1 1-2.400-5.700M20 4v5h-5"/>',
+    "plus": '<path d="M12 5v14M5 12h14"/>',
+    "restart": '<path d="M20 12a8 8 0 1 1-2.400-5.700M20 4v5h-5"/>',
+    "sleep": '<path d="M20 14.200A8.600 8.600 0 0 1 9.800 4 8.500 8.500 0 1 0 20 14.200Z"/>',
+    "logout": '<path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4M15 8l4 4-4 4M19 12H9"/>',
 }
 
 
@@ -44,10 +85,13 @@ def generate():
         svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#19151e" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">{paths}</svg>\n'
         (target/f"{name}.svg").write_text(svg)
     preview_icons = {name:(target/f"{name}.svg").read_text().replace("#19151e", "currentColor") for name in icons}
+    # Native shell recolors these at runtime (QML data-URI SVG); no shader effects needed.
+    (ROOT/"shell/components/IconData.js").write_text(".pragma library\n// Generated by scripts/generate-design.py. Do not edit.\nvar paths = "+json.dumps({name:paths for name,paths in icons.items()}, indent=1)+";\n")
     (ROOT/"preview/icons.js").write_text("window.PRISM_ICONS = "+json.dumps(preview_icons)+";\n")
     data = {"version": 1, "motion": {"fast":160, "standard":320, "slow":500},
             "shape": {"tileInactive":36, "tileActive":26, "panel":36, "app":24},
-            "palettes": {name:{"seed":seed, "light":palette(seed), "dark":palette(seed, True)} for name, seed in PALETTES.items()}}
+            "palettes": {name:{"seed":seed, "light":legacy_tokens(palette(seed)), "dark":legacy_tokens(palette(seed, True))} for name, seed in PALETTES.items()},
+            "material": {name:{"light":palette(seed), "dark":palette(seed, True)} for name, seed in PALETTES.items()}}
     (ROOT/"design/tokens.json").write_text(json.dumps(data, indent=2)+"\n")
     # Keep the review preview usable when opened directly through file://.
     (ROOT/"preview/tokens.js").write_text("window.PRISM_TOKENS = "+json.dumps(data)+";\n")

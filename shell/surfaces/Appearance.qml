@@ -226,19 +226,19 @@ PanelWindow {
                             x: speed.leftPadding
                             y: speed.topPadding + speed.availableHeight / 2 - height / 2
                             width: speed.availableWidth; height: 12; radius: 6
-                            color: Theme.surfaceHigh
+                            color: Theme.surfaceContainerHigh
                             Rectangle {
                                 width: speed.visualPosition * parent.width
                                 height: parent.height
                                 radius: parent.radius
-                                color: Theme.primaryStrong
+                                color: Theme.primary
                             }
                         }
                         handle: Rectangle {
                             x: speed.leftPadding + speed.visualPosition * (speed.availableWidth - width)
                             y: speed.topPadding + speed.availableHeight / 2 - height / 2
                             width: 26; height: 26; radius: 13
-                            color: Theme.primaryStrong
+                            color: Theme.primary
                             scale: speed.pressed ? 1.18 : 1
                             Behavior on scale { NumberAnimation { duration: Theme.fast } }
                         }
@@ -263,7 +263,7 @@ PanelWindow {
                     width: parent.width
                     wrapMode: Text.WordWrap
                     visible: InputState.error.length > 0
-                    color: Theme.roles.error
+                    color: Theme.error
                     text: InputState.error
                 }
                 Rectangle { width: parent.width; height: 1; color: Theme.outline; opacity: .26 }
@@ -301,7 +301,7 @@ PanelWindow {
                     ExpressiveLoader {
                         width: 32; height: 32
                         visible: AndroidState.busy
-                        color: Theme.primaryStrong
+                        color: Theme.primary
                     }
                     Label {
                         width: parent.width - (AndroidState.busy ? 44 : 0)
@@ -315,7 +315,7 @@ PanelWindow {
                     width: parent.width
                     visible: AndroidState.error.length > 0
                     wrapMode: Text.WordWrap
-                    color: Theme.roles.error
+                    color: Theme.error
                     text: AndroidState.error
                 }
                 Row {

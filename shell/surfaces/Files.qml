@@ -404,7 +404,7 @@ PanelWindow {
                     text: root.busy ? "Loading…" : root.error ? root.error :
                           root.message ? root.message :
                           root.filtered.length + " items" + (root.more ? " · more in folder" : "")
-                    color: root.error ? Theme.roles.error : Theme.onSurface
+                    color: root.error ? Theme.error : Theme.onSurface
                     font.pixelSize: 12
                     width: parent.width - 34
                     elide: Text.ElideRight
@@ -438,7 +438,7 @@ PanelWindow {
                         height: 64
                         radius: 20
                         color: root.selectedPath === modelData.path ?
-                               Theme.primary : area.containsMouse ? Theme.surfaceHigh :
+                               Theme.primaryContainer : area.containsMouse ? Theme.surfaceContainerHigh :
                                "transparent"
                         Behavior on color { ColorAnimation { duration: Theme.fast } }
                         DragHandler {
@@ -466,7 +466,7 @@ PanelWindow {
                             width: 44
                             height: 44
                             radius: 14
-                            color: Theme.surfaceHigh
+                            color: Theme.surfaceContainerHigh
                             Image {
                                 anchors.fill: parent
                                 anchors.margins: 2
@@ -482,7 +482,7 @@ PanelWindow {
                                 visible: !fileRow.modelData.thumbnail
                                 text: fileRow.modelData.symbol
                                 font.pixelSize: 26
-                                color: Theme.primaryStrong
+                                color: Theme.primary
                             }
                         }
                         Label {
@@ -491,7 +491,7 @@ PanelWindow {
                             text: modelData.name
                             elide: Text.ElideRight
                             color: root.selectedPath === modelData.path ?
-                                   Theme.onPrimary : Theme.onSurface
+                                   Theme.onPrimaryContainer : Theme.onSurface
                             font.pixelSize: 15
                             font.weight: Font.DemiBold
                         }
@@ -500,7 +500,7 @@ PanelWindow {
                             width: parent.width - 136
                             text: modelData.directory ? "Folder" : modelData.size
                             color: root.selectedPath === modelData.path ?
-                                   Theme.onPrimary : Theme.onSurface
+                                   Theme.onPrimaryContainer : Theme.onSurface
                             opacity: .7
                             font.pixelSize: 12
                         }
