@@ -6,19 +6,25 @@ import Quickshell.Wayland
 import "../components"
 import "../services"
 
-// Native Material-inspired software center. Flatpak calls are isolated in prismctl.
+// Linux Flatpak titles and Android F-Droid titles share the same native catalog.
+// APK downloads and approvals happen only inside the F-Droid Android client.
 PanelWindow {
     id: root
     property bool opened: ShellState.storeOpen && ShellState.activeScreen === screen
-    property bool configured: false
-    property bool flatpakAvailable: false
-    property string tab: "Games"
-    property string task: ""
+    property bool linuxAvailable: false
+    property bool linuxConfigured: false
+    property var linuxItems: []
+    property var androidItems: []
+    property string category: "Games"
+    property string sourceFilter: "All"
     property string notice: ""
-    property var items: []
-    property var followArgs: []
-    property string followTask: ""
-    property bool busy: worker.running
+    property string error: ""
+    property string linuxOperation: ""
+    property bool busy: linuxStatus.running || linuxSearch.running || androidSearch.running ||
+                        linuxWriter.running || androidDetails.running
+    property var results: sourceFilter === "Linux" ? linuxItems :
+                          sourceFilter === "Android" ? androidItems :
+                          linuxItems.concat(androidItems)
 
     anchors { top: true; left: true; right: true; bottom: true }
     exclusionMode: ExclusionMode.Ignore
@@ -27,78 +33,146 @@ PanelWindow {
     color: "transparent"
     visible: opened || card.opacity > .01
 
-    function request(args, kind) {
-        if (worker.running)
-            return;
-        task = kind;
+    function refresh() {
+        error = "";
         notice = "";
-        worker.command = ["prismctl"].concat(args);
-        worker.running = true;
+        if (!linuxStatus.running) linuxStatus.running = true;
+        searchNow();
     }
-    function queue(args, kind) {
-        followArgs = args;
-        followTask = kind;
-    }
-    function lookUp() {
-        if (!configured)
-            return;
-        request(["store", "search", searchField.text.trim() || (tab === "Games" ? "game" : "editor")], "search");
-    }
-    function activateTab(name) {
-        tab = name;
-        searchField.text = name === "Games" ? "game" : "editor";
-        lookUp();
-    }
-    function handleReply(output) {
-        try {
-            const data = JSON.parse(output);
-            if (data.ok === false) {
-                notice = data.error || "Request failed";
-                return;
-            }
-            if (task === "status" || task === "enable") {
-                flatpakAvailable = data.available === true;
-                configured = data.configured === true;
-                if (configured && tab !== "Android")
-                    queue(["store", "search", searchField.text || "game"], "search");
-            } else if (task === "search") {
-                items = data.items || [];
-
-            } else if (task === "install" || task === "remove") {
-                notice = task === "install" ? "Installed — ready to play!" : "Application removed";
-                SystemBridge.refreshApps();
-                queue(["store", "search", searchField.text || "game"], "search");
-            } else if (task === "open") {
-                notice = "Opening application…";
-            }
-        } catch (e) {
-            notice = "The software service returned an invalid response";
+    function searchNow() {
+        error = "";
+        const term = searchField.text.trim() || (category === "Games" ? "game" : "app");
+        if (linuxConfigured && !linuxSearch.running) {
+            linuxSearch.command = ["prismctl", "store", "search", term];
+            linuxSearch.running = true;
+        }
+        if (AndroidState.enabled && !androidSearch.running) {
+            androidSearch.command = ["prismctl", "fdroid", "search", term];
+            androidSearch.running = true;
+        } else if (!AndroidState.enabled) {
+            androidItems = [];
         }
     }
+    function writeLinux(operation, appid) {
+        if (busy) return;
+        error = "";
+        linuxOperation = operation;
+        linuxWriter.command = appid ?
+            ["prismctl", "store", operation, appid] :
+            ["prismctl", "store", operation];
+        linuxWriter.running = true;
+    }
+    function showAndroid(item) {
+        if (!AndroidState.ready || !AndroidState.fdroidInstalled) {
+            ShellState.openSettings(screen);
+            return;
+        }
+        if (busy) return;
+        error = "";
+        androidDetails.command = ["prismctl", "fdroid", "details", item.id];
+        androidDetails.running = true;
+    }
+    function switchCategory(name) {
+        category = name;
+        searchField.text = name === "Games" ? "game" : "app";
+        searchNow();
+    }
     onOpenedChanged: if (opened) {
-        tab = "Games";
-        items = [];
+        category = "Games";
+        sourceFilter = "All";
         searchField.text = "game";
-        request(["store", "status"], "status");
+        refresh();
+    }
+
+    Process {
+        id: linuxStatus
+        command: ["prismctl", "store", "status"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const state = JSON.parse(text);
+                    if (state.ok === false) { root.error = state.error; return; }
+                    const wasConfigured = root.linuxConfigured;
+                    root.linuxAvailable = state.available === true;
+                    root.linuxConfigured = state.configured === true;
+                    if (!wasConfigured && root.linuxConfigured)
+                        startLinux.restart();
+                } catch (e) { root.error = "Could not load Linux software sources"; }
+            }
+        }
     }
     Timer {
-        id: followUp
-        interval: 80
-        onTriggered: {
-            if (root.followArgs.length && !worker.running) {
-                const args = root.followArgs, nextTask = root.followTask;
-                root.followArgs = [];
-                root.followTask = "";
-                root.request(args, nextTask);
+        id: startLinux
+        interval: 70
+        onTriggered: if (!linuxSearch.running && root.linuxConfigured) {
+            linuxSearch.command = ["prismctl", "store", "search",
+                                   searchField.text.trim() || "game"];
+            linuxSearch.running = true;
+        }
+    }
+    Process {
+        id: linuxSearch
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const state = JSON.parse(text);
+                    if (state.ok === false) { root.error = state.error; return; }
+                    root.linuxItems = (state.items || []).map(app => ({
+                        id: app.id, name: app.name, description: app.description,
+                        installed: app.installed === true, kind: "linux",
+                        source: "Flathub"
+                    }));
+                } catch (e) { root.error = "Could not read Flathub listings"; }
             }
         }
     }
     Process {
-        id: worker
+        id: androidSearch
         stdout: StdioCollector {
-            onStreamFinished: root.handleReply(text)
+            onStreamFinished: {
+                try {
+                    const state = JSON.parse(text);
+                    if (state.ok === false) { root.error = state.error; return; }
+                    root.androidItems = state.items || [];
+                } catch (e) { root.error = "Could not read F-Droid listings"; }
+            }
         }
-        onExited: if (root.followArgs.length) followUp.restart()
+    }
+    Process {
+        id: linuxWriter
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const state = JSON.parse(text);
+                    if (state.ok === false) { root.error = state.error; return; }
+                    root.notice = root.linuxOperation === "enable" ? "Flathub is connected" :
+                                  root.linuxOperation === "install" ? "Application installed" :
+                                  root.linuxOperation === "remove" ? "Application removed" :
+                                  "Opening application";
+                } catch (e) { root.error = "Software operation failed"; }
+            }
+        }
+        onExited: {
+            SystemBridge.refreshApps();
+            refreshAfterWrite.restart();
+        }
+    }
+    Timer {
+        id: refreshAfterWrite
+        interval: 100
+        onTriggered: root.refresh()
+    }
+    Process {
+        id: androidDetails
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const state = JSON.parse(text);
+                    if (state.ok === false) { root.error = state.error; return; }
+                    root.notice = "Continue in F-Droid to review and install";
+                } catch (e) { root.error = "Could not open the F-Droid listing"; }
+            }
+        }
     }
     Rectangle {
         anchors.fill: parent
@@ -111,135 +185,187 @@ PanelWindow {
         id: card
         anchors.centerIn: parent
         width: Math.min(1020, root.width - 32)
-        height: Math.min(760, root.height - 64)
+        height: Math.min(800, root.height - 52)
         radius: 40
         color: Theme.surface
         opacity: root.opened ? 1 : 0
-        scale: root.opened ? 1 : .94
+        scale: root.opened ? 1 : .95
         Behavior on opacity { NumberAnimation { duration: Theme.fast } }
         Behavior on scale { NumberAnimation { duration: Theme.standard; easing.type: Easing.OutBack } }
         MouseArea { anchors.fill: parent; onClicked: {} }
         Label {
-            x: 26; y: 24; text: "✦  Prism Store"
-            font.pixelSize: 30; font.weight: Font.Bold
+            x: 28; y: 18
+            text: "✦  Prism Store"
+            font.pixelSize: 30
+            font.weight: Font.Bold
+        }
+        Label {
+            x: 30; y: 61
+            text: "Linux and Android, all in one place"
+            opacity: .68
         }
         PillButton {
-            anchors.top: parent.top; anchors.right: parent.right; anchors.margins: 20
-            text: "×"; Accessible.name: "Close Prism Store"
-            onClicked: ShellState.close()
+            anchors.top: parent.top; anchors.right: parent.right; anchors.margins: 18
+            text: "×"; Accessible.name: "Close Prism Store"; onClicked: ShellState.close()
         }
         Row {
-            x: 26; y: 82; spacing: 10
+            x: 27; y: 96; spacing: 8
             Repeater {
                 model: ["Games", "Apps"]
                 delegate: PillButton {
                     required property string modelData
                     text: modelData
-                    filled: root.tab === modelData
-                    enabled: !root.busy
-                    onClicked: root.activateTab(modelData)
+                    filled: root.category === modelData
+                    onClicked: root.switchCategory(modelData)
                 }
             }
         }
         TextField {
             id: searchField
-            x: 26; y: 144; width: parent.width - 52; height: 50
-            visible: root.configured
-            placeholderText: "Search Flathub games and apps"
+            x: 26; y: 153
+            width: parent.width - 52; height: 50
+            placeholderText: "Find Linux and Android games or apps"
             color: Theme.onSurface
             font.family: Theme.font
             font.pixelSize: 16
             leftPadding: 20
-            background: Rectangle { color: Theme.surfaceContainer; radius: 25 }
-            onAccepted: root.lookUp()
+            background: Rectangle {
+                radius: 25
+                color: Theme.surfaceContainer
+                border.width: searchField.activeFocus ? 2 : 0
+                border.color: Theme.primaryStrong
+            }
+            onAccepted: root.searchNow()
             Keys.onEscapePressed: ShellState.close()
         }
+        Row {
+            x: 28; y: 213; spacing: 8
+            Repeater {
+                model: ["All", "Linux", "Android"]
+                delegate: PillButton {
+                    required property string modelData
+                    text: modelData
+                    filled: root.sourceFilter === modelData
+                    implicitHeight: 38
+                    onClicked: root.sourceFilter = modelData
+                }
+            }
+        }
+        Row {
+            x: 28; y: 265; spacing: 12
+            visible: root.busy
+            ExpressiveLoader { width: 26; height: 26 }
+            Label { text: "Finding your next favorite…"; opacity: .75 }
+        }
         Label {
-            x: 30; y: 205; width: parent.width - 60
-            text: root.busy ? "Working…" : root.notice
-            color: Theme.primaryStrong
-            visible: root.busy || root.notice.length > 0
+            x: 28; y: 267; width: parent.width - 56
+            visible: !root.busy && (root.error.length > 0 || root.notice.length > 0)
+            color: root.error.length ? Theme.roles.error : Theme.primaryStrong
+            text: root.error.length ? root.error : root.notice
             elide: Text.ElideRight
         }
         ListView {
             id: results
-            x: 26; y: 240
+            x: 26; y: 301
             width: parent.width - 52
-            height: Math.max(80, parent.height - 264)
+            height: Math.max(90, parent.height - 320)
             clip: true
             spacing: 10
-            visible: root.configured
-            model: root.items
+            model: root.results
             ScrollBar.vertical: ScrollBar {}
             delegate: Rectangle {
                 id: resultRow
                 required property var modelData
                 width: results.width
-                height: 100
-                radius: 26
+                height: 106
+                radius: 28
                 color: Theme.surfaceContainer
                 Rectangle {
-                    x: 14; anchors.verticalCenter: parent.verticalCenter
-                    width: 64; height: 64; radius: 22
-                    color: Theme.primary
+                    x: 14
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 68; height: 68; radius: 24
+                    color: resultRow.modelData.kind === "android" ? Theme.secondary : Theme.primary
                     Label {
-                        anchors.centerIn: parent; text: "✦"
-                        color: Theme.onPrimary; font.pixelSize: 28
+                        anchors.centerIn: parent
+                        font.pixelSize: 26
+                        text: resultRow.modelData.kind === "android" ? "◈" : "✦"
+                        color: Theme.onPrimary
                     }
                 }
                 Label {
-                    x: 94; y: 15; width: Math.max(80, parent.width - 260)
-                    text: modelData.name
+                    x: 94; y: 10
+                    width: Math.max(80, parent.width - 258)
+                    text: resultRow.modelData.name
                     font.pixelSize: 17; font.weight: Font.DemiBold
                     elide: Text.ElideRight
                 }
                 Label {
-                    x: 94; y: 42; width: Math.max(80, parent.width - 260)
-                    text: modelData.description || modelData.id
+                    x: 94; y: 37
+                    width: Math.max(80, parent.width - 260)
+                    text: resultRow.modelData.source + " · " +
+                          (resultRow.modelData.kind === "android" ? "Android" : "Linux")
+                    font.pixelSize: 12
+                    color: Theme.primaryStrong
+                    elide: Text.ElideRight
+                }
+                Label {
+                    x: 94; y: 59
+                    width: Math.max(80, parent.width - 255)
+                    text: resultRow.modelData.description || "Open-source software"
                     maximumLineCount: 2
                     wrapMode: Text.WordWrap
                     elide: Text.ElideRight
                     opacity: .75
                 }
                 PillButton {
-                    anchors.right: parent.right; anchors.rightMargin: 14
+                    anchors.right: parent.right; anchors.rightMargin: 12
                     anchors.verticalCenter: parent.verticalCenter
                     filled: true
                     enabled: !root.busy
-                    text: resultRow.modelData.installed ? "Open" : "Install"
-                    onClicked: root.request(["store", resultRow.modelData.installed ? "open" : "install", resultRow.modelData.id], resultRow.modelData.installed ? "open" : "install")
-                }
-                PillButton {
-                    anchors.right: parent.right; anchors.rightMargin: 110
-                    anchors.verticalCenter: parent.verticalCenter
-                    visible: resultRow.modelData.installed
-                    enabled: !root.busy
-                    text: "Remove"
-                    Accessible.name: "Uninstall " + resultRow.modelData.name
-                    onClicked: root.request(["store", "remove", resultRow.modelData.id], "remove")
+                    text: resultRow.modelData.kind === "android" ?
+                          (AndroidState.ready && AndroidState.fdroidInstalled ?
+                            "View in F-Droid" : "Set up") :
+                          (resultRow.modelData.installed ? "Open" : "Install")
+                    onClicked: {
+                        if (resultRow.modelData.kind === "android")
+                            root.showAndroid(resultRow.modelData);
+                        else
+                            root.writeLinux(resultRow.modelData.installed ? "open" : "install",
+                                            resultRow.modelData.id);
+                    }
                 }
             }
             Label {
                 anchors.centerIn: parent
+                width: Math.min(parent.width - 40, 340)
+                horizontalAlignment: Text.AlignHCenter
+                wrapMode: Text.WordWrap
                 visible: results.count === 0 && !root.busy
-                text: "Search to discover games and apps"
+                text: root.sourceFilter === "Android" && !AndroidState.enabled ?
+                      "Enable Android apps in Settings to browse F-Droid." :
+                      root.sourceFilter === "Linux" && !root.linuxConfigured ?
+                      "Connect Flathub to explore Linux apps and games." :
+                      "No matches yet. Try another search."
             }
         }
-        Column {
-            x: 30; y: 235; width: parent.width - 60; spacing: 18
-            visible: !root.configured
-            Label {
-                text: root.flatpakAvailable ? "Connect to Flathub" : "Flatpak is not installed"
-                font.pixelSize: 24; font.weight: Font.DemiBold
-            }
-            Label {
-                width: parent.width; wrapMode: Text.WordWrap
-                text: root.flatpakAvailable ? "Enable Flathub for this user to install real Linux games and apps. No repository changes happen until you select Enable." : "Install Flatpak using: sudo pacman -S flatpak"
+        Row {
+            x: 28
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 10
+            spacing: 8
+            visible: !root.linuxConfigured || !AndroidState.enabled
+            PillButton {
+                text: root.linuxAvailable ? "Connect Flathub" : "Flatpak unavailable"
+                visible: !root.linuxConfigured
+                enabled: root.linuxAvailable && !root.busy
+                implicitHeight: 36
+                onClicked: root.writeLinux("enable", "")
             }
             PillButton {
-                text: "Enable Flathub"; filled: true
-                enabled: root.flatpakAvailable && !root.busy
-                onClicked: root.request(["store", "enable"], "enable")
+                text: "Set up Android in Settings"
+                visible: !AndroidState.enabled
+                implicitHeight: 36
+                onClicked: ShellState.openSettings(root.screen)
             }
         }
     }
