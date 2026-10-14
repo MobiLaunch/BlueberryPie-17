@@ -22,12 +22,20 @@ def main():
         data = root/"data/applications"; data.mkdir(parents=True)
         (data/"fixture.desktop").write_text("[Desktop Entry]\nType=Application\nName=Fixture\nExec=true\n")
         runtime = root/"runtime"; runtime.mkdir(mode=0o700)
+        # Quickshell scans only inside its config root. Keep the fixture and
+        # shared modules together, as they are in the installed shell.
+        shell = root/"shell"
+        shutil.copytree(ROOT/"shell", shell)
+        fixture = shell/"smoke.qml"
+        fixture.write_text((ROOT/"tests/native-smoke.qml").read_text()
+                           .replace('"../shell/components"', '"components"')
+                           .replace('"../shell/services"', '"services"'))
         env = {**os.environ, "PATH":str(ROOT/"bin")+":"+os.environ["PATH"],
                "XDG_CONFIG_HOME":str(root/"config"), "XDG_DATA_HOME":str(root/"data"),
                "XDG_DATA_DIRS":str(root/"empty-data"), "XDG_CACHE_HOME":str(root/"cache"),
                "XDG_STATE_HOME":str(root/"state"), "XDG_RUNTIME_DIR":str(runtime),
                "QT_QPA_PLATFORM":"offscreen", "QT_QUICK_BACKEND":"software"}
-        result = subprocess.run(["dbus-run-session","--","qs","-p",str(ROOT/"tests/native-smoke.qml")],
+        result = subprocess.run(["dbus-run-session","--","qs","-p",str(fixture)],
                                 env=env, capture_output=True, text=True, timeout=20)
         log = result.stdout+result.stderr
         if result.returncode or "PRISM_NATIVE_SMOKE_OK" not in log or re.search(r"ReferenceError|TypeError|Cannot assign|Binding loop detected|PRISM_NATIVE_SMOKE_FAILED", log):
