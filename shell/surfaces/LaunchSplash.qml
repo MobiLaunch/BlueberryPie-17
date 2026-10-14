@@ -21,7 +21,8 @@ PanelWindow {
     WlrLayershell.namespace: "prism-launch"
     color: "transparent"
     visible: opened || splash.opacity > .01
-    // The launch splash is an initial shell transition, not a compositor surface morph.
+    // Fade when a matching Hyprland window opens/focuses, with a bounded fallback.
+    // This still animates a shell surface rather than morphing the app's surface.
     // Keep it non-interactive; the real application receives input immediately.
     mask: Region {}
     onOpenedChanged: if (opened) {
@@ -60,6 +61,9 @@ PanelWindow {
                 font.weight: Font.DemiBold
                 anchors.horizontalCenter: parent.horizontalCenter
                 opacity: splash.progress
+                width: Math.min(500, splash.width - 48)
+                elide: Text.ElideRight
+                horizontalAlignment: Text.AlignHCenter
             }
             ExpressiveLoader {
                 anchors.horizontalCenter: parent.horizontalCenter

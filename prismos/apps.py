@@ -40,6 +40,7 @@ def entries():
                 if not data.get("Name") or not (data.get("Exec") or data.getboolean("DBusActivatable", fallback=False)):
                     continue
                 result.append({"id": desktop_id, "name": data["Name"], "icon": data.get("Icon", "application-x-executable"),
+                               "startupClass": data.get("StartupWMClass", ""),
                                "description": data.get("Comment", ""), "path": str(path.resolve())})
             except (configparser.Error, OSError, UnicodeError, ValueError, KeyError):
                 continue

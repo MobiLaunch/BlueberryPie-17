@@ -26,8 +26,13 @@
   let launchToken = 0;
   let toastTimeout;
   let playing = false;
-  const panels = ['shade','drawer','appearance','power-panel'];
+  const panels = ['shade','drawer','appearance','power-panel','connections'];
   let contextApp=null,contextSource=null,powerChoice=null,holdTimer=null,heldSource=null;
+  let connectionKind='wifi',selectedNetwork=null,connectionToken=0,connectionBusy=false;
+  const networks=[{id:'prism',name:'Prism Network',signal:96,secured:true,connected:true,saved:true},
+    {id:'blueberry',name:'Blueberry Studio',signal:82,secured:true,connected:false,saved:false},
+    {id:'cafe',name:'Cafe: Open',signal:54,secured:false,connected:false,saved:false}];
+  const devices=[{id:'buds',name:'Blue buds',paired:true,connected:true},{id:'keyboard',name:'Studio keyboard',paired:true,connected:false},{id:'speaker',name:'New speaker',paired:false,connected:false}];
 
   function hydrate(root = document) {
     $$('[data-icon]',root).forEach(el => { el.innerHTML = icon(el.dataset.icon); });
@@ -51,10 +56,11 @@
   function syncTiles() {
     $$('[data-toggle]').forEach(button => {
       const key = button.dataset.toggle, active = state[key];
-      button.classList.toggle('active',active);
+      const tile=button.closest('.quick-tile');
+      tile.classList.toggle('active',active);
       button.setAttribute('aria-pressed',String(active));
-      const text = key === 'wifi' ? (active ? 'Prism Network' : 'Off') : key === 'bluetooth' ? (active ? 'Connected' : 'Off') : key === 'sound' ? (active ? 'On' : 'Muted') : (active ? 'On' : 'Off');
-      $('.tile-status',button).textContent = text;
+      const text = key === 'wifi' ? (active ? networks.find(n=>n.connected)?.name || 'Not connected' : 'Off') : key === 'bluetooth' ? (active ? devices.some(d=>d.connected)?'Connected':'On' : 'Off') : key === 'sound' ? (active ? 'On' : 'Muted') : (active ? 'On' : 'Off');
+      $('.tile-status',tile).textContent = text;
     });
   }
   function toast(message) {
@@ -62,6 +68,8 @@
     clearTimeout(toastTimeout); toastTimeout = setTimeout(() => $('#toast').hidden = true,3800);
   }
   function closePanels(restore = true) {
+    connectionToken++;connectionBusy=false;selectedNetwork=null;
+    $('#connection-list').replaceChildren();
     $('#app-context').hidden=true;
     panels.forEach(id => { const el = $('#'+id); if (id === 'shade') {el.classList.remove('open');el.inert = true;el.setAttribute('aria-modal','false');el.setAttribute('aria-hidden','true');} else el.hidden = true; });
     $('#modal-backdrop').hidden = true; $('#shade-backdrop').hidden = true;
@@ -69,6 +77,45 @@
     $('[data-open="shade"]').setAttribute('aria-expanded','false');
     panel = null;
     if (restore && restoreFocus?.isConnected) restoreFocus.focus();
+  }
+  function openConnections(kind){
+    connectionKind=kind;openPanel('connections');renderConnections();
+  }
+  function renderConnections(){
+    $('#connection-title').textContent=connectionKind==='wifi'?'Wi-Fi':'Bluetooth';
+    $('#connection-radio').textContent=state[connectionKind]?'Turn off':'Turn on';
+    $('#connection-radio').disabled=connectionBusy;$('#scan-connections').disabled=connectionBusy||!state[connectionKind];
+    $('#connection-status').textContent=connectionBusy?'Just a moment…':state[connectionKind]?'Choose what you want to connect.':'Turn on '+(connectionKind==='wifi'?'Wi-Fi':'Bluetooth')+' to find connections.';
+    const list=$('#connection-list');list.replaceChildren();if(!state[connectionKind])return;
+    const items=connectionKind==='wifi'?networks:devices;
+    items.forEach(item=>{
+      const row=document.createElement('article');row.className='connection-row';row.dataset.connection=item.id;
+      const choice=document.createElement('button');choice.className='connection-choice'+(item.connected||selectedNetwork===item.id?' selected':'');
+      choice.disabled=connectionBusy;choice.innerHTML=icon(connectionKind==='wifi'?'wifi':'bluetooth');
+      const label=document.createElement('span'),name=document.createElement('b'),status=document.createElement('small');
+      name.textContent=item.name;status.textContent=connectionKind==='wifi'?item.signal+'% · '+(item.connected?'Connected':item.saved?'Saved':item.secured?'WPA2':'Open network'):(item.connected?'Connected':item.paired?'Paired':'Ready to pair');
+      label.append(name,status);choice.append(label);row.append(choice);list.append(row);
+      if(connectionKind==='bluetooth'){
+        choice.setAttribute('aria-label',(item.connected?'Disconnect ':item.paired?'Connect ':'Pair ')+item.name);
+        choice.addEventListener('click',()=>{if(!item.paired){toast('Pairing codes are handled by Bluetooth settings in the native session.');return;}simulateConnection(()=>item.connected=!item.connected);});return;
+      }
+      choice.setAttribute('aria-label','Select '+item.name);
+      choice.addEventListener('click',()=>{selectedNetwork=selectedNetwork===item.id?null:item.id;renderConnections();const input=$('[data-connection="'+item.id+'"] input');input?.focus();});
+      if(selectedNetwork!==item.id)return;
+      const form=document.createElement('form'),error=document.createElement('p');error.className='connection-error';error.setAttribute('role','alert');
+      if(item.secured&&!item.connected){const field=document.createElement('label');field.textContent='Password for '+item.name;const input=document.createElement('input');input.type='password';input.maxLength=64;input.autocomplete='off';input.setAttribute('aria-label','Password for '+item.name);input.placeholder=item.saved?'Leave empty to use saved password':'Network password';field.append(input);form.append(field);}
+      const submit=document.createElement('button');submit.className='pill-button';submit.type='submit';submit.textContent=item.connected?'Disconnect':'Connect';submit.disabled=connectionBusy;
+      form.append(error,submit);row.append(form);
+      form.addEventListener('submit',event=>{event.preventDefault();if(connectionBusy)return;const input=$('input',form);const length=input?.value.length||0;
+        if(item.secured&&!item.connected&&((!item.saved&&length<8)||(length>0&&length<8))){error.textContent='Use at least 8 characters.';input.focus();return;}
+        form.reset();const disconnect=item.connected;
+        simulateConnection(()=>{if(disconnect)item.connected=false;else{networks.forEach(n=>n.connected=false);item.connected=true;item.saved=true;}});
+      });
+    });
+  }
+  function simulateConnection(change){
+    const token=++connectionToken;connectionBusy=true;renderConnections();
+    setTimeout(()=>{if(token!==connectionToken)return;change();connectionBusy=false;selectedNetwork=null;renderConnections();syncTiles();$('#connection-status').textContent='Connection updated · preview';},state.reduced?0:450);
   }
   function openPanel(id) {
     if (!panels.includes(id)) return;
@@ -186,7 +233,7 @@
     } else if (app.id === 'browser') {
       target.innerHTML = '<div class="browser-app"><div class="browser-address">prismos://welcome</div><div class="browser-home">'+icon('browser')+'<h2>A colorful start.</h2><p>This is a browser layout preview.</p><p>The native session launches your installed browser.</p><button class="pill-button" style="margin:25px auto 0" data-open="appearance">Find your color</button></div></div>';
     } else if (app.id === 'terminal') {
-      target.innerHTML = '<div class="terminal-app"><div id="terminal-output"><b>PrismOS</b> 0.1 · design preview\nArch at heart. A little more you.\n\nType help for demo commands.\n</div><form id="terminal-form" class="terminal-line"><b>prism ~ ❯</b><input aria-label="Terminal command" autocomplete="off" spellcheck="false"></form></div>';
+      target.innerHTML = '<div class="terminal-app"><div id="terminal-output"><b>PrismOS</b> 0.3 · design preview\nArch at heart. A little more you.\n\nType help for demo commands.\n</div><form id="terminal-form" class="terminal-line"><b>prism ~ ❯</b><input aria-label="Terminal command" autocomplete="off" spellcheck="false"></form></div>';
       $('#terminal-form').addEventListener('submit',event => {
         event.preventDefault();const input=$('input',event.currentTarget),command=input.value.trim();input.value='';
         const output=$('#terminal-output');
@@ -217,6 +264,8 @@
     }
     if(event.target.closest('#context-open')){const app=contextApp,source=contextSource;$('#app-context').hidden=true;launchApp(app.id,source);return;}
     $('#app-context').hidden=true;
+    const connections=event.target.closest('[data-connections]');
+    if(connections){openConnections(connections.dataset.connections);return;}
     const power=event.target.closest('[data-power-choice]');
     if(power){powerChoice=power.dataset.powerChoice;$('#power-heading').textContent=powerChoice+' your session?';$('#power-description').textContent=['Restart','Power off','Sign out'].includes(powerChoice)?'Save your work before continuing.':'Ready when you are.';$('.power-choices').hidden=true;$('#confirm-power').textContent='Confirm '+powerChoice;$('#confirm-power').hidden=false;$('#confirm-power').focus();return;}
     const open=event.target.closest('[data-open]'),close=event.target.closest('[data-close]'),toggle=event.target.closest('[data-toggle]'),setting=event.target.closest('[data-setting]'),palette=event.target.closest('[data-palette]'),app=event.target.closest('[data-app]'),folder=event.target.closest('[data-folder]'),file=event.target.closest('[data-file]');
@@ -239,6 +288,8 @@
   $('#power').addEventListener('click',()=>openPanel('power-panel'));
   $('#confirm-power').addEventListener('click',()=>{const choice=powerChoice;closePanels();toast(choice+' is simulated in this design preview.');});
   $('#cancel-power').addEventListener('click',()=>{if(powerChoice)resetPower();else closePanels();});
+  $('#connection-radio').addEventListener('click',()=>{state[connectionKind]=!state[connectionKind];if(!state[connectionKind]){(connectionKind==='wifi'?networks:devices).forEach(item=>item.connected=false);}selectedNetwork=null;syncTiles();renderConnections();});
+  $('#scan-connections').addEventListener('click',()=>simulateConnection(()=>{}));
   $('#play-media').addEventListener('click',()=>{playing=!playing;$('.wave').classList.toggle('playing',playing);$('#play-media').textContent=playing?'Ⅱ':'▶';$('#play-media').setAttribute('aria-label',playing?'Pause demo track':'Play demo track');});
   $$('input[type="range"]').forEach(input=>{syncSlider(input);input.addEventListener('input',()=>syncSlider(input));});
   document.addEventListener('keydown',event=>{

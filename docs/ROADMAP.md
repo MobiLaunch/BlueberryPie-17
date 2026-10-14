@@ -35,10 +35,24 @@ runtime and ISO boot qualification remain open and are recorded separately.
 - Native offscreen component runtime check in Arch CI and additional adapter tests.
 - Preview favorites persistence and power confirmation flows.
 
-Still open: inline wireless selection/passwords, event-driven network/audio,
-output/microphone pickers, compositor-synchronized launches, third-party theming,
-and actual compositor/hardware/ISO qualification. The list below retains the
-full acceptance scope.
+### v0.3 connectivity and launch slice completed
+
+- Split radio/detail actions on Wi-Fi and Bluetooth tiles.
+- Nearby network discovery, signal/security labels, saved profile reuse, masked
+  password entry within the selected row, connect/disconnect and bounded refresh.
+- Private stdin/password-file transport, revalidated selections, secret cleanup,
+  failed-new-profile cleanup and preservation of existing profiles.
+- Bluetooth device state, paired-device connect/disconnect and explicit Blueman
+  handoff for PIN/confirmation pairing.
+- NetworkManager event refresh with polling recovery; editing pauses list refresh.
+- Launch readiness from matching Hyprland open/focus events, already-running app
+  support, a minimum entrance interval, cancellation and bounded fallback.
+- Wireless preview interactions and native offscreen stdin/launch-state coverage.
+
+Still open: native Bluetooth pairing agent, hidden/enterprise setup in the shell,
+full event-driven BlueZ/PipeWire services, output/microphone pickers, actual app
+surface morphs, third-party theming and compositor/hardware/ISO qualification.
+The list below retains the full acceptance scope.
 
 1. Run the packaged session on Arch + Hyprland 0.56/Quickshell 0.3.2.
 2. Fix all QML runtime errors and confirm monitor focus, scale and hotplug.
@@ -58,8 +72,8 @@ full acceptance scope.
 2. Compare Quick Settings proportions, tile density, spacing, icon weight,
    brightness track, header, page indicators, footer and edit mode directly.
 3. Support tile resize/reorder and compact/expanded shade states.
-4. Synchronize icon-to-window animation with actual toplevel arrival, including
-   slow launches, already-running apps, errors, cancellation and app close.
+4. Extend event-aware splash readiness to actual app-surface geometry/morphs and
+   app-close animation; validate slow launches, already-running apps and errors.
 5. Add touch drag physics, dismiss gestures and desktop-friendly overscroll.
 6. Replace initial tonal generator with a licensed Material HCT adapter.
 7. Add wallpaper picker/extraction, themed symbolic icons and font variants.

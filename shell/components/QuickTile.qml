@@ -8,6 +8,8 @@ Button {
     property string subtitle: ""
     property string symbol: "spark"
     property bool activated: false
+    property bool hasDetails: false
+    signal detailsRequested
     implicitWidth: 168
     implicitHeight: 78
     hoverEnabled: true
@@ -52,7 +54,7 @@ Button {
         Column {
             x: 49
             y: 15
-            width: parent.width - 59
+            width: parent.width - (root.hasDetails ? 88 : 59)
             spacing: 3
             Label {
                 width: parent.width
@@ -69,6 +71,27 @@ Button {
                 elide: Text.ElideRight
                 color: root.activated ? Theme.onPrimary : Theme.onSurfaceHigh
             }
+        }
+        Button {
+            visible: root.hasDetails
+            anchors.right: parent.right
+            anchors.rightMargin: 5
+            anchors.verticalCenter: parent.verticalCenter
+            width: 32
+            height: 48
+            Accessible.name: root.title + " devices and connections"
+            background: Rectangle {
+                radius: 16
+                color: Theme.surfaceContainer
+                opacity: .5
+            }
+            contentItem: Label {
+                text: "›"
+                font.pixelSize: 24
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+            onClicked: root.detailsRequested()
         }
     }
 }

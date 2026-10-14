@@ -2,7 +2,7 @@ import argparse
 import json
 import sys
 
-from . import apps, favorites, settings, system, theme
+from . import apps, favorites, settings, system, theme, wireless
 
 
 def main(argv=None):
@@ -10,6 +10,14 @@ def main(argv=None):
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("status")
     sub.add_parser("apps")
+    wifi = sub.add_parser("wifi")
+    wifi.add_argument("operation", choices=("list", "scan", "connect", "disconnect"))
+    wifi.add_argument("--bssid")
+    wifi.add_argument("--interface")
+    wifi.add_argument("--password-stdin", action="store_true")
+    bluetooth = sub.add_parser("bluetooth")
+    bluetooth.add_argument("operation", choices=("list", "scan", "connect", "disconnect"))
+    bluetooth.add_argument("address", nargs="?")
     favorite = sub.add_parser("favorites")
     favorite.add_argument("operation", choices=("list", "pin", "unpin"))
     favorite.add_argument("desktop_id", nargs="?")
@@ -28,6 +36,24 @@ def main(argv=None):
             result = system.status()
         elif args.command == "apps":
             result = apps.entries()
+        elif args.command == "wifi":
+            if args.operation in ("list", "scan"):
+                result = wireless.wifi_list(args.operation == "scan")
+            elif args.operation == "disconnect":
+                result = wireless.wifi_disconnect(args.interface)
+            else:
+                password = ""
+                if args.password_stdin:
+                    # One bounded JSON line over a private pipe, never an argv secret.
+                    try:
+                        value = json.loads(sys.stdin.readline(1024))
+                        password = value["password"]
+                    except (ValueError, KeyError, TypeError):
+                        raise ValueError("Invalid password input") from None
+                result = wireless.wifi_connect(args.bssid, args.interface, password)
+        elif args.command == "bluetooth":
+            result = (wireless.bluetooth_list(args.operation == "scan") if args.operation in ("list", "scan")
+                      else wireless.bluetooth_action(args.operation, args.address))
         elif args.command == "favorites":
             result = favorites.change(args.operation, args.desktop_id)
         elif args.command == "action":

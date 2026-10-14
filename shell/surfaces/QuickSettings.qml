@@ -12,6 +12,15 @@ PanelWindow {
     property bool opened: ShellState.shadeOpen && ShellState.activeScreen === screen
     property string clockText: Qt.formatTime(new Date(), "hh:mm")
     property string dateText: Qt.formatDate(new Date(), "ddd, MMM d")
+    property string connectionKind: ""
+    onConnectionKindChanged: Wireless.watchedKind = connectionKind
+    function showConnections(kind) {
+        connectionKind = kind;
+        Wireless.error = "";
+        Wireless.notice = "";
+        Wireless.operation = "";
+        Wireless.refresh(kind);
+    }
     Timer {
         interval: 1000
         running: root.opened
@@ -37,8 +46,12 @@ PanelWindow {
     WlrLayershell.keyboardFocus: opened ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
     color: "transparent"
     visible: opened || card.opacity > .01
-    onOpenedChanged: if (opened)
-        card.forceActiveFocus()
+    onOpenedChanged: {
+        if (opened)
+            card.forceActiveFocus();
+        else
+            connectionKind = "";
+    }
     HyprlandFocusGrab {
         active: root.opened
         windows: [root]
@@ -126,6 +139,8 @@ PanelWindow {
                         title: "Wi-Fi"
                         subtitle: SystemBridge.snapshot.wifi.available ? SystemBridge.snapshot.wifi.label : "Unavailable"
                         symbol: "wifi"
+                        hasDetails: true
+                        onDetailsRequested: root.showConnections("wifi")
                         activated: SystemBridge.snapshot.wifi.enabled
                         enabled: SystemBridge.snapshot.wifi.available
                         onClicked: SystemBridge.action("wifi")
@@ -135,6 +150,8 @@ PanelWindow {
                         title: "Bluetooth"
                         subtitle: SystemBridge.snapshot.bluetooth.available ? (activated ? "On" : "Off") : "Unavailable"
                         symbol: "bluetooth"
+                        hasDetails: true
+                        onDetailsRequested: root.showConnections("bluetooth")
                         activated: SystemBridge.snapshot.bluetooth.enabled
                         enabled: SystemBridge.snapshot.bluetooth.available
                         onClicked: SystemBridge.action("bluetooth")
@@ -172,6 +189,13 @@ PanelWindow {
                         activated: Theme.reducedMotion
                         onClicked: SystemBridge.action("reduced_motion")
                     }
+                }
+                WirelessPanel {
+                    width: parent.width
+                    kind: root.connectionKind || "wifi"
+                    visible: root.connectionKind.length > 0
+                    height: visible ? implicitHeight : 0
+                    onCloseRequested: root.connectionKind = ""
                 }
                 ExpressiveSlider {
                     width: parent.width
@@ -226,7 +250,7 @@ PanelWindow {
                     PillButton {
                         text: "Network"
                         Layout.fillWidth: true
-                        onClicked: SystemBridge.action("network-settings")
+                        onClicked: root.showConnections("wifi")
                     }
                     PillButton {
                         text: "Power"

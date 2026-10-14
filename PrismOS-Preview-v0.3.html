@@ -16,6 +16,23 @@
 @media(max-width:1000px){.home-copy{left:5%;top:16%}.home-copy .giant-clock{font-size:104px}.home-widgets{left:5%;gap:12px}.welcome-widget{width:224px}.media-widget{display:none}.home-copy h1{font-size:31px}.shade{width:370px;right:12px}.quick-tile{padding-left:13px;gap:8px}.app-grid{grid-template-columns:repeat(5,1fr)}}
 @media(max-width:650px){#desktop{min-height:400px}.status-bar{padding:0 15px;gap:10px}.preview-label{display:none}.status-clock{font-size:11px}.status-system{gap:7px;padding:0 4px}.status-system svg{width:15px;height:15px}.home-copy{top:14%;left:8%}.home-copy .date{font-size:13px}.home-copy .giant-clock{font-size:98px;letter-spacing:-7px}.home-copy h1{font-size:30px;letter-spacing:-1px}.home-copy p{font-size:12px}.home-widgets{left:8%;bottom:19%}.welcome-widget{width:236px;height:221px}.welcome-widget h2{font-size:26px}.dock{bottom:17px;gap:3px;padding:9px 11px}.dock-app{width:46px;height:46px}.dock-app .app-icon{width:42px;height:42px;border-radius:18px}.dock-app .app-icon svg{width:23px;height:23px}.dock-divider{margin:0 2px}.shade{width:calc(100% - 20px);right:10px;top:52px;max-height:calc(100dvh - 62px);padding:13px 18px 12px;border-radius:32px}.shade-backdrop{background:#211b2d33;backdrop-filter:blur(10px)}.shade .quick-tile{height:76px}.quick-tile b{font-size:12px}.shade-footer .edit-button{font-size:10px}.home-copy,.home-widgets{transition:filter var(--standard)}body.shade-visible .home-copy,body.shade-visible .home-widgets{filter:blur(7px)}.drawer,.appearance{width:calc(100% - 20px);padding:23px;border-radius:32px;max-height:calc(100dvh - 62px)}.modal-heading h2{font-size:29px}.app-grid{grid-template-columns:repeat(3,1fr);gap:12px 4px;max-height:calc(100dvh - 360px)}.drawer-footer>span{display:none}.palette-options{gap:6px}.palette-option{padding:10px 2px}.files-app{grid-template-columns:120px 1fr}.files-sidebar{padding:18px 8px}.files-sidebar button{padding:10px 7px;font-size:10px;gap:7px}.files-main{padding:20px 14px}.file-grid{grid-template-columns:repeat(2,1fr);gap:10px}.files-main h2{font-size:24px}.app-window{width:calc(100% - 20px);height:calc(100dvh - 105px)}.generic-app{padding:35px 20px}.terminal-app{padding:20px;font-size:11px}}
 
+/* Connection details share the shade's color and motion roles. */
+.quick-tile.split-tile{padding:0;gap:0;overflow:hidden}
+.tile-main{display:flex;align-items:center;gap:9px;flex:1;min-width:0;height:100%;padding:13px 0 13px 13px;text-align:left}
+.tile-main>span:last-child{min-width:0;flex:1}.tile-main b,.tile-main .tile-status{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tile-details{width:30px;min-width:30px;height:48px;border-radius:20px;margin-right:4px;background:color-mix(in srgb,var(--surfaceContainer) 50%,transparent);display:grid;place-items:center}
+.tile-details svg{width:14px;height:14px}.tile-details:focus-visible,.tile-main:focus-visible{outline-offset:-4px}
+.connections{width:min(450px,calc(100% - 20px));max-height:calc(100dvh - 70px);overflow:auto}
+.connection-toolbar{display:flex;gap:8px}.connection-toolbar button{flex:1;justify-content:center;font-size:12px}
+#connection-status{font-size:12px;min-height:18px;line-height:1.5}
+.connection-list{display:grid;gap:10px}.connection-row{background:var(--surfaceHigh);border-radius:24px;padding:8px}
+.connection-choice{width:100%;padding:10px;display:flex;align-items:center;gap:12px;text-align:left;border-radius:18px}
+.connection-choice.selected{background:var(--primary);color:var(--onPrimary)}.connection-choice>span{min-width:0;flex:1}.connection-choice b{display:block;font-size:14px;overflow-wrap:anywhere}.connection-choice small{display:block;font-size:11px;opacity:.8;margin-top:5px}
+.connection-row form{padding:8px;display:grid;gap:10px}.connection-row label{display:grid;gap:7px;font-size:12px}
+.connection-row input{width:100%;min-width:0;background:var(--surface);color:var(--onSurface);border:0;border-radius:16px;padding:14px}
+.connection-row .pill-button{width:100%;justify-content:center}.connection-error{font-size:12px;color:var(--error);line-height:1.5;margin:0}
+.connection-row .connection-action{margin-top:5px}.connections .modal-heading h2{font-size:30px}
+
 </style>
 </head>
 <body>
@@ -61,8 +78,8 @@
       <div class="shade-heading"><div><div class="shade-clock">13:30</div><p class="shade-date">Wed, Oct 14</p></div><button class="round-button quiet" data-close="shade" aria-label="Close Quick Settings"><span data-icon="close"></span></button></div>
       <div class="brightness control-slider"><span data-icon="brightness"></span><input id="brightness" type="range" min="10" max="100" value="72" aria-label="Display brightness"><output for="brightness">72%</output></div>
       <div class="quick-grid">
-        <button class="quick-tile active" data-toggle="wifi" aria-pressed="true"><span class="tile-icon" data-icon="wifi"></span><div><b>Wi-Fi</b><span class="tile-status">Prism Network</span></div><span class="tile-arrow" data-icon="arrow"></span></button>
-        <button class="quick-tile active" data-toggle="bluetooth" aria-pressed="true"><span class="tile-icon" data-icon="bluetooth"></span><div><b>Bluetooth</b><span class="tile-status">Connected</span></div><span class="tile-arrow" data-icon="arrow"></span></button>
+        <div class="quick-tile active split-tile"><button class="tile-main" data-toggle="wifi" aria-pressed="true" aria-label="Toggle Wi-Fi"><span class="tile-icon" data-icon="wifi"></span><span><b>Wi-Fi</b><span class="tile-status">Prism Network</span></span></button><button class="tile-details" data-connections="wifi" aria-label="Wi-Fi devices and connections"><span data-icon="arrow"></span></button></div>
+        <div class="quick-tile active split-tile"><button class="tile-main" data-toggle="bluetooth" aria-pressed="true" aria-label="Toggle Bluetooth"><span class="tile-icon" data-icon="bluetooth"></span><span><b>Bluetooth</b><span class="tile-status">Connected</span></span></button><button class="tile-details" data-connections="bluetooth" aria-label="Bluetooth devices and connections"><span data-icon="arrow"></span></button></div>
         <button class="quick-tile" data-toggle="dnd" aria-pressed="false"><span class="tile-icon" data-icon="dnd"></span><div><b>Do Not Disturb</b><span class="tile-status">Off</span></div></button>
         <button class="quick-tile" data-toggle="dark" aria-pressed="false"><span class="tile-icon" data-icon="moon"></span><div><b>Dark theme</b><span class="tile-status">Off</span></div></button>
         <button class="quick-tile active" data-toggle="sound" aria-pressed="true"><span class="tile-icon" data-icon="volume"></span><div><b>Sound</b><span class="tile-status">On</span></div></button>
@@ -97,6 +114,13 @@
       <div class="power-choices"><button class="pill-button" data-power-choice="Lock">Lock</button><button class="pill-button" data-power-choice="Suspend">Suspend</button><button class="pill-button" data-power-choice="Sign out">Sign out</button><button class="pill-button" data-power-choice="Restart">Restart</button><button class="pill-button" data-power-choice="Power off">Power off</button></div>
       <button id="confirm-power" class="pill-button" hidden>Confirm</button><button id="cancel-power" class="text-button">Cancel</button>
       <p class="demo-note">Design preview · session actions are simulated</p>
+    </section>
+    <section id="connections" class="connections modal panel" hidden role="dialog" aria-modal="true" aria-label="Wireless connections" tabindex="-1">
+      <div class="modal-heading"><div><span class="eyebrow">A LITTLE MORE CONNECTED</span><h2 id="connection-title">Wi-Fi</h2></div><button class="round-button quiet" data-open="shade" aria-label="Back to Quick Settings"><span data-icon="close"></span></button></div>
+      <div class="connection-toolbar"><button id="connection-radio" class="pill-button">Turn off</button><button id="scan-connections" class="pill-button">Refresh</button></div>
+      <p id="connection-status" role="status"></p>
+      <div id="connection-list" class="connection-list"></div>
+      <p class="demo-note">Interactive design preview · connections are simulated</p>
     </section>
     <div id="app-context" class="app-context panel" hidden role="menu" aria-label="Application actions"><button id="context-open" role="menuitem">Open</button><button id="context-pin" role="menuitem">Pin to dock</button></div>
     <section id="app-window" class="app-window panel" hidden aria-label="Application preview" role="dialog" aria-modal="true" tabindex="-1">
@@ -143,8 +167,13 @@ window.PRISM_ICONS = {"wifi": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox
   let launchToken = 0;
   let toastTimeout;
   let playing = false;
-  const panels = ['shade','drawer','appearance','power-panel'];
+  const panels = ['shade','drawer','appearance','power-panel','connections'];
   let contextApp=null,contextSource=null,powerChoice=null,holdTimer=null,heldSource=null;
+  let connectionKind='wifi',selectedNetwork=null,connectionToken=0,connectionBusy=false;
+  const networks=[{id:'prism',name:'Prism Network',signal:96,secured:true,connected:true,saved:true},
+    {id:'blueberry',name:'Blueberry Studio',signal:82,secured:true,connected:false,saved:false},
+    {id:'cafe',name:'Cafe: Open',signal:54,secured:false,connected:false,saved:false}];
+  const devices=[{id:'buds',name:'Blue buds',paired:true,connected:true},{id:'keyboard',name:'Studio keyboard',paired:true,connected:false},{id:'speaker',name:'New speaker',paired:false,connected:false}];
 
   function hydrate(root = document) {
     $$('[data-icon]',root).forEach(el => { el.innerHTML = icon(el.dataset.icon); });
@@ -168,10 +197,11 @@ window.PRISM_ICONS = {"wifi": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox
   function syncTiles() {
     $$('[data-toggle]').forEach(button => {
       const key = button.dataset.toggle, active = state[key];
-      button.classList.toggle('active',active);
+      const tile=button.closest('.quick-tile');
+      tile.classList.toggle('active',active);
       button.setAttribute('aria-pressed',String(active));
-      const text = key === 'wifi' ? (active ? 'Prism Network' : 'Off') : key === 'bluetooth' ? (active ? 'Connected' : 'Off') : key === 'sound' ? (active ? 'On' : 'Muted') : (active ? 'On' : 'Off');
-      $('.tile-status',button).textContent = text;
+      const text = key === 'wifi' ? (active ? networks.find(n=>n.connected)?.name || 'Not connected' : 'Off') : key === 'bluetooth' ? (active ? devices.some(d=>d.connected)?'Connected':'On' : 'Off') : key === 'sound' ? (active ? 'On' : 'Muted') : (active ? 'On' : 'Off');
+      $('.tile-status',tile).textContent = text;
     });
   }
   function toast(message) {
@@ -179,6 +209,8 @@ window.PRISM_ICONS = {"wifi": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox
     clearTimeout(toastTimeout); toastTimeout = setTimeout(() => $('#toast').hidden = true,3800);
   }
   function closePanels(restore = true) {
+    connectionToken++;connectionBusy=false;selectedNetwork=null;
+    $('#connection-list').replaceChildren();
     $('#app-context').hidden=true;
     panels.forEach(id => { const el = $('#'+id); if (id === 'shade') {el.classList.remove('open');el.inert = true;el.setAttribute('aria-modal','false');el.setAttribute('aria-hidden','true');} else el.hidden = true; });
     $('#modal-backdrop').hidden = true; $('#shade-backdrop').hidden = true;
@@ -186,6 +218,45 @@ window.PRISM_ICONS = {"wifi": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox
     $('[data-open="shade"]').setAttribute('aria-expanded','false');
     panel = null;
     if (restore && restoreFocus?.isConnected) restoreFocus.focus();
+  }
+  function openConnections(kind){
+    connectionKind=kind;openPanel('connections');renderConnections();
+  }
+  function renderConnections(){
+    $('#connection-title').textContent=connectionKind==='wifi'?'Wi-Fi':'Bluetooth';
+    $('#connection-radio').textContent=state[connectionKind]?'Turn off':'Turn on';
+    $('#connection-radio').disabled=connectionBusy;$('#scan-connections').disabled=connectionBusy||!state[connectionKind];
+    $('#connection-status').textContent=connectionBusy?'Just a moment…':state[connectionKind]?'Choose what you want to connect.':'Turn on '+(connectionKind==='wifi'?'Wi-Fi':'Bluetooth')+' to find connections.';
+    const list=$('#connection-list');list.replaceChildren();if(!state[connectionKind])return;
+    const items=connectionKind==='wifi'?networks:devices;
+    items.forEach(item=>{
+      const row=document.createElement('article');row.className='connection-row';row.dataset.connection=item.id;
+      const choice=document.createElement('button');choice.className='connection-choice'+(item.connected||selectedNetwork===item.id?' selected':'');
+      choice.disabled=connectionBusy;choice.innerHTML=icon(connectionKind==='wifi'?'wifi':'bluetooth');
+      const label=document.createElement('span'),name=document.createElement('b'),status=document.createElement('small');
+      name.textContent=item.name;status.textContent=connectionKind==='wifi'?item.signal+'% · '+(item.connected?'Connected':item.saved?'Saved':item.secured?'WPA2':'Open network'):(item.connected?'Connected':item.paired?'Paired':'Ready to pair');
+      label.append(name,status);choice.append(label);row.append(choice);list.append(row);
+      if(connectionKind==='bluetooth'){
+        choice.setAttribute('aria-label',(item.connected?'Disconnect ':item.paired?'Connect ':'Pair ')+item.name);
+        choice.addEventListener('click',()=>{if(!item.paired){toast('Pairing codes are handled by Bluetooth settings in the native session.');return;}simulateConnection(()=>item.connected=!item.connected);});return;
+      }
+      choice.setAttribute('aria-label','Select '+item.name);
+      choice.addEventListener('click',()=>{selectedNetwork=selectedNetwork===item.id?null:item.id;renderConnections();const input=$('[data-connection="'+item.id+'"] input');input?.focus();});
+      if(selectedNetwork!==item.id)return;
+      const form=document.createElement('form'),error=document.createElement('p');error.className='connection-error';error.setAttribute('role','alert');
+      if(item.secured&&!item.connected){const field=document.createElement('label');field.textContent='Password for '+item.name;const input=document.createElement('input');input.type='password';input.maxLength=64;input.autocomplete='off';input.setAttribute('aria-label','Password for '+item.name);input.placeholder=item.saved?'Leave empty to use saved password':'Network password';field.append(input);form.append(field);}
+      const submit=document.createElement('button');submit.className='pill-button';submit.type='submit';submit.textContent=item.connected?'Disconnect':'Connect';submit.disabled=connectionBusy;
+      form.append(error,submit);row.append(form);
+      form.addEventListener('submit',event=>{event.preventDefault();if(connectionBusy)return;const input=$('input',form);const length=input?.value.length||0;
+        if(item.secured&&!item.connected&&((!item.saved&&length<8)||(length>0&&length<8))){error.textContent='Use at least 8 characters.';input.focus();return;}
+        form.reset();const disconnect=item.connected;
+        simulateConnection(()=>{if(disconnect)item.connected=false;else{networks.forEach(n=>n.connected=false);item.connected=true;item.saved=true;}});
+      });
+    });
+  }
+  function simulateConnection(change){
+    const token=++connectionToken;connectionBusy=true;renderConnections();
+    setTimeout(()=>{if(token!==connectionToken)return;change();connectionBusy=false;selectedNetwork=null;renderConnections();syncTiles();$('#connection-status').textContent='Connection updated · preview';},state.reduced?0:450);
   }
   function openPanel(id) {
     if (!panels.includes(id)) return;
@@ -303,7 +374,7 @@ window.PRISM_ICONS = {"wifi": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox
     } else if (app.id === 'browser') {
       target.innerHTML = '<div class="browser-app"><div class="browser-address">prismos://welcome</div><div class="browser-home">'+icon('browser')+'<h2>A colorful start.</h2><p>This is a browser layout preview.</p><p>The native session launches your installed browser.</p><button class="pill-button" style="margin:25px auto 0" data-open="appearance">Find your color</button></div></div>';
     } else if (app.id === 'terminal') {
-      target.innerHTML = '<div class="terminal-app"><div id="terminal-output"><b>PrismOS</b> 0.1 · design preview\nArch at heart. A little more you.\n\nType help for demo commands.\n</div><form id="terminal-form" class="terminal-line"><b>prism ~ ❯</b><input aria-label="Terminal command" autocomplete="off" spellcheck="false"></form></div>';
+      target.innerHTML = '<div class="terminal-app"><div id="terminal-output"><b>PrismOS</b> 0.3 · design preview\nArch at heart. A little more you.\n\nType help for demo commands.\n</div><form id="terminal-form" class="terminal-line"><b>prism ~ ❯</b><input aria-label="Terminal command" autocomplete="off" spellcheck="false"></form></div>';
       $('#terminal-form').addEventListener('submit',event => {
         event.preventDefault();const input=$('input',event.currentTarget),command=input.value.trim();input.value='';
         const output=$('#terminal-output');
@@ -334,6 +405,8 @@ window.PRISM_ICONS = {"wifi": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox
     }
     if(event.target.closest('#context-open')){const app=contextApp,source=contextSource;$('#app-context').hidden=true;launchApp(app.id,source);return;}
     $('#app-context').hidden=true;
+    const connections=event.target.closest('[data-connections]');
+    if(connections){openConnections(connections.dataset.connections);return;}
     const power=event.target.closest('[data-power-choice]');
     if(power){powerChoice=power.dataset.powerChoice;$('#power-heading').textContent=powerChoice+' your session?';$('#power-description').textContent=['Restart','Power off','Sign out'].includes(powerChoice)?'Save your work before continuing.':'Ready when you are.';$('.power-choices').hidden=true;$('#confirm-power').textContent='Confirm '+powerChoice;$('#confirm-power').hidden=false;$('#confirm-power').focus();return;}
     const open=event.target.closest('[data-open]'),close=event.target.closest('[data-close]'),toggle=event.target.closest('[data-toggle]'),setting=event.target.closest('[data-setting]'),palette=event.target.closest('[data-palette]'),app=event.target.closest('[data-app]'),folder=event.target.closest('[data-folder]'),file=event.target.closest('[data-file]');
@@ -356,6 +429,8 @@ window.PRISM_ICONS = {"wifi": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox
   $('#power').addEventListener('click',()=>openPanel('power-panel'));
   $('#confirm-power').addEventListener('click',()=>{const choice=powerChoice;closePanels();toast(choice+' is simulated in this design preview.');});
   $('#cancel-power').addEventListener('click',()=>{if(powerChoice)resetPower();else closePanels();});
+  $('#connection-radio').addEventListener('click',()=>{state[connectionKind]=!state[connectionKind];if(!state[connectionKind]){(connectionKind==='wifi'?networks:devices).forEach(item=>item.connected=false);}selectedNetwork=null;syncTiles();renderConnections();});
+  $('#scan-connections').addEventListener('click',()=>simulateConnection(()=>{}));
   $('#play-media').addEventListener('click',()=>{playing=!playing;$('.wave').classList.toggle('playing',playing);$('#play-media').textContent=playing?'Ⅱ':'▶';$('#play-media').setAttribute('aria-label',playing?'Pause demo track':'Play demo track');});
   $$('input[type="range"]').forEach(input=>{syncSlider(input);input.addEventListener('input',()=>syncSlider(input));});
   document.addEventListener('keydown',event=>{

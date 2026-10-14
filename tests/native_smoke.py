@@ -26,6 +26,7 @@ def main():
         # shared modules together, as they are in the installed shell.
         shell = root/"shell"
         shutil.copytree(ROOT/"shell", shell)
+        shutil.copytree(ROOT/"design", root/"design")
         fixture = shell/"smoke.qml"
         fixture.write_text((ROOT/"tests/native-smoke.qml").read_text()
                            .replace('"../shell/components"', '"components"')
@@ -41,7 +42,7 @@ def main():
         if result.returncode or "PRISM_NATIVE_SMOKE_OK" not in log or re.search(r"ReferenceError|TypeError|Cannot assign|Binding loop detected|PRISM_NATIVE_SMOKE_FAILED", log):
             print(log)
             raise SystemExit("Native component runtime check failed")
-        print("PASS: real Quickshell components, settings/favorites bridge, media and notification surfaces load offscreen")
+        print("PASS: real Quickshell components, wireless panels/private stdin, launch readiness, favorites, media and notifications load offscreen")
 
 
 if __name__ == "__main__":main()

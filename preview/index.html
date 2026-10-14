@@ -50,8 +50,8 @@
       <div class="shade-heading"><div><div class="shade-clock">13:30</div><p class="shade-date">Wed, Oct 14</p></div><button class="round-button quiet" data-close="shade" aria-label="Close Quick Settings"><span data-icon="close"></span></button></div>
       <div class="brightness control-slider"><span data-icon="brightness"></span><input id="brightness" type="range" min="10" max="100" value="72" aria-label="Display brightness"><output for="brightness">72%</output></div>
       <div class="quick-grid">
-        <button class="quick-tile active" data-toggle="wifi" aria-pressed="true"><span class="tile-icon" data-icon="wifi"></span><div><b>Wi-Fi</b><span class="tile-status">Prism Network</span></div><span class="tile-arrow" data-icon="arrow"></span></button>
-        <button class="quick-tile active" data-toggle="bluetooth" aria-pressed="true"><span class="tile-icon" data-icon="bluetooth"></span><div><b>Bluetooth</b><span class="tile-status">Connected</span></div><span class="tile-arrow" data-icon="arrow"></span></button>
+        <div class="quick-tile active split-tile"><button class="tile-main" data-toggle="wifi" aria-pressed="true" aria-label="Toggle Wi-Fi"><span class="tile-icon" data-icon="wifi"></span><span><b>Wi-Fi</b><span class="tile-status">Prism Network</span></span></button><button class="tile-details" data-connections="wifi" aria-label="Wi-Fi devices and connections"><span data-icon="arrow"></span></button></div>
+        <div class="quick-tile active split-tile"><button class="tile-main" data-toggle="bluetooth" aria-pressed="true" aria-label="Toggle Bluetooth"><span class="tile-icon" data-icon="bluetooth"></span><span><b>Bluetooth</b><span class="tile-status">Connected</span></span></button><button class="tile-details" data-connections="bluetooth" aria-label="Bluetooth devices and connections"><span data-icon="arrow"></span></button></div>
         <button class="quick-tile" data-toggle="dnd" aria-pressed="false"><span class="tile-icon" data-icon="dnd"></span><div><b>Do Not Disturb</b><span class="tile-status">Off</span></div></button>
         <button class="quick-tile" data-toggle="dark" aria-pressed="false"><span class="tile-icon" data-icon="moon"></span><div><b>Dark theme</b><span class="tile-status">Off</span></div></button>
         <button class="quick-tile active" data-toggle="sound" aria-pressed="true"><span class="tile-icon" data-icon="volume"></span><div><b>Sound</b><span class="tile-status">On</span></div></button>
@@ -86,6 +86,13 @@
       <div class="power-choices"><button class="pill-button" data-power-choice="Lock">Lock</button><button class="pill-button" data-power-choice="Suspend">Suspend</button><button class="pill-button" data-power-choice="Sign out">Sign out</button><button class="pill-button" data-power-choice="Restart">Restart</button><button class="pill-button" data-power-choice="Power off">Power off</button></div>
       <button id="confirm-power" class="pill-button" hidden>Confirm</button><button id="cancel-power" class="text-button">Cancel</button>
       <p class="demo-note">Design preview · session actions are simulated</p>
+    </section>
+    <section id="connections" class="connections modal panel" hidden role="dialog" aria-modal="true" aria-label="Wireless connections" tabindex="-1">
+      <div class="modal-heading"><div><span class="eyebrow">A LITTLE MORE CONNECTED</span><h2 id="connection-title">Wi-Fi</h2></div><button class="round-button quiet" data-open="shade" aria-label="Back to Quick Settings"><span data-icon="close"></span></button></div>
+      <div class="connection-toolbar"><button id="connection-radio" class="pill-button">Turn off</button><button id="scan-connections" class="pill-button">Refresh</button></div>
+      <p id="connection-status" role="status"></p>
+      <div id="connection-list" class="connection-list"></div>
+      <p class="demo-note">Interactive design preview · connections are simulated</p>
     </section>
     <div id="app-context" class="app-context panel" hidden role="menu" aria-label="Application actions"><button id="context-open" role="menuitem">Open</button><button id="context-pin" role="menuitem">Pin to dock</button></div>
     <section id="app-window" class="app-window panel" hidden aria-label="Application preview" role="dialog" aria-modal="true" tabindex="-1">

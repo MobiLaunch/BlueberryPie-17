@@ -36,7 +36,7 @@ requires a frozen Pixel reference and side-by-side geometry/motion measurements.
 | Slider | Thumb grows on press; writes commit when dragging ends |
 | Shade | Short downward entrance with mild spring overshoot |
 | Drawer | Upward entrance with a low-amplitude spring |
-| App launch | Origin expansion in preview; short native splash plus compositor opening |
+| App launch | Origin expansion; native splash waits for matching open/focus events, with minimum movement and a bounded fallback |
 | Loading | Rotating/morphing six-to-eight-lobed shape; static reduced-motion variant |
 | Reduced motion | Remove overshoot, movement loops and long transitions |
 
@@ -60,5 +60,7 @@ third-party GTK/Qt application theming are explicit later work.
 The browser preview is a review aid, not the operating system. Its hardware
 controls, media player, files, terminal and application contents are simulated
 and labeled. Native code launches installed Linux apps and changes actual
-supported system controls. The v0.2 native shell includes power/session actions, tray and MPRIS controls.
-Native wallpaper customization and inline wireless selection remain planned.
+supported system controls. The v0.3 native shell includes power/session actions,
+tray, MPRIS and inline wireless selection/passwords. PIN pairing uses Blueman and
+advanced network configuration uses NetworkManager's editor. Native wallpaper
+customization and actual app-surface morphs remain planned.

@@ -147,6 +147,8 @@ QtObject {
         }
         onExited: {
             root.refresh();
+            if (Wireless.watchedKind)
+                Wireless.refresh(Wireless.watchedKind, false, false);
             nextWrite.restart();
         }
     }
@@ -179,5 +181,26 @@ QtObject {
         interval: 1
         running: true
         onTriggered: root.refreshApps()
+    }
+    property Process networkEvents: Process {
+        command: ["nmcli", "monitor"]
+        running: true
+        stdout: SplitParser {
+            onRead: networkDebounce.restart()
+        }
+        // Retry service restarts without a rapid respawn loop when nmcli is absent.
+        onExited: networkRetry.restart()
+    }
+    property Timer networkRetry: Timer {
+        interval: 30000
+        onTriggered: networkEvents.running = true
+    }
+    property Timer networkDebounce: Timer {
+        interval: 300
+        onTriggered: {
+            root.refresh();
+            if (Wireless.watchedKind === "wifi")
+                Wireless.refresh("wifi", false, false);
+        }
     }
 }

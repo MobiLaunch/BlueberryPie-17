@@ -9,14 +9,14 @@ PrismOS is a new Arch Linux desktop project inspired by Android 17 and Material
 3 Expressive: playful color, tactile rounded controls, emphasized typography,
 and motion that connects an action to its result.
 
-The v0.2 source release includes a native **Qt Quick / Quickshell** shell, an
+The v0.3 source release includes a native **Qt Quick / Quickshell** shell, an
 interactive offline design preview, real Linux system adapters, and an Arch
 package/live-ISO staging pipeline. This is a development foundation. A bootable
 ISO and hardware qualification have not been completed in this release.
 
 ## Try the look immediately
 
-Open `PrismOS-Preview-v0.2.html` directly for the complete standalone preview, or
+Open `PrismOS-Preview-v0.3.html` directly for the complete standalone preview, or
 open `preview/index.html` alongside its local assets. Neither needs external dependencies.
 Alternatively:
 
@@ -34,19 +34,22 @@ controls and app contents are explicitly simulated. Native controls use Linux.
 | Area | First implementation |
 | --- | --- |
 | Native shell | Wallpaper, top bar, saved dock favorites, app badges, system tray, searchable app drawer, appearance panel |
-| Quick Settings | Wi-Fi, Bluetooth, Do Not Disturb, dark theme, sound, brightness, reduced motion |
+| Quick Settings | Split Wi-Fi/Bluetooth tiles, inline network/password and device panels, Do Not Disturb, dark theme, sound, brightness, reduced motion |
 | System controls | NetworkManager, BlueZ, WirePlumber/PipeWire, brightnessctl; no shell evaluation |
 | Color | Four palettes, custom seed, optional wallpaper sampling, contrast-checked semantic roles |
-| Motion | Tile shape response, slider feedback, shade/drawer transitions, morphing loader, launch splash |
+| Motion | Tile shape response, slider feedback, shade/drawer transitions, morphing loader, launch splash that ends on matching Hyprland window arrival/focus |
 | Notifications | Action buttons, urgency, 50-item retention cap, plain-text cards, dismissal and quiet mode |
 | Media | MPRIS metadata/artwork, capability-guarded playback controls and player selection |
 | Session | Confirmed power actions, idle locking, per-monitor shortcuts and unplug recovery |
 | Arch integration | Dedicated session, PKGBUILD, complete upstream releng profile staging |
 
-Native launch currently combines a short icon-origin **splash** with the
-compositor's window-open animation. It does not morph the actual application
-surface from its icon. The browser preview demonstrates the intended end-state
-motion; synchronized native surface transitions belong to the next milestone.
+Native launch combines an icon-origin **splash** with the compositor's window-open
+animation. It listens for matching `openwindow`/`activewindow` events using the
+desktop ID and `StartupWMClass`, including an already-running application. It
+waits briefly for the entrance animation, fades on arrival, and times out after
+eight seconds for background apps or unmatched IDs. Cancellation and launch
+errors clear it. It does not morph the actual application surface from its icon;
+that remains a later compositor integration milestone.
 
 ## Run the native shell on Arch
 
@@ -94,6 +97,21 @@ favorites are saved; missing apps reappear in the dock if reinstalled. The dock
 scrolls on narrow screens. The tray supports activation and app menus.
 Quick Settings shows a media card when a compatible MPRIS player is available.
 
+Use the arrow on the Wi-Fi or Bluetooth tile for connections; the tile body toggles
+the radio. Wi-Fi offers nearby networks, signal/security labels, saved-profile
+reuse, an inline masked password field and disconnect. New open, WPA-PSK and
+WPA3 SAE networks are supported; enterprise/legacy/hidden networks use Advanced
+network settings. Pairing PINs and confirmation use Blueman. Once paired, devices
+can connect/disconnect from the shell. Refresh performs a bounded scan.
+
+Wi-Fi passwords go to the bridge through stdin and to NetworkManager using a
+temporary private password file, removed on success or handled failure. They
+never enter process arguments or PrismOS settings. New failed profiles are
+removed; existing profiles are retained. NetworkManager owns saved network
+configuration. Credential reuse and reconnect still require hardware validation.
+Network events refresh status promptly, with periodic recovery polling. Automatic
+network-list refresh pauses while a row is expanded, so typing is not interrupted.
+
 Power actions require confirmation and are disabled when unavailable for the
 current login session. Idle locking uses `hypridle` after ten minutes and before
 sleep. If you previously ran v0.1, add the new hypridle startup line from the
@@ -118,7 +136,7 @@ when upgrading. Native hardware qualification remains open.
 ./bin/prismctl theme --seed '#47846a'
 ```
 
-Wallpaper sampling changes the shell palette. The v0.2 desktop still uses the
+Wallpaper sampling changes the shell palette. The v0.3 desktop still uses the
 bundled vector wallpaper; a wallpaper picker is planned. The initial tonal
 algorithm is HSL-based with contrast checks, **not** Google's HCT/Monet system.
 Third-party Linux applications retain their own themes in this milestone.

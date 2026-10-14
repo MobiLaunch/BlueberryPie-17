@@ -5,11 +5,11 @@ a bootable distribution. The latter still require an Arch machine or VM.
 
 | Check | Result |
 | --- | --- |
-| Python bridge, desktop entry, settings and color regression suite | 37 tests passed |
+| Python bridge, desktop entry, settings, wireless and color regression suite | 57 tests passed |
 | CLI on host without Linux hardware tools | Missing services returned structured unavailable/error state |
 | Missing percentage CLI input | Structured JSON error; no unhandled traceback |
-| QML parser | All 16 native QML files parsed using Qt 6.12 tooling |
-| QML type lint | All 16 files passed with official Quickshell 0.3.2 package type definitions |
+| QML parser | All 24 native QML files and smoke fixture parsed using Qt 6.12 tooling |
+| QML type lint | Checked with official Quickshell 0.3.2 package type definitions; tooling warnings are not hardware qualification |
 | Hyprland Lua syntax | Passed through Lua 5.4 parser |
 | Shell scripts and PKGBUILD syntax | Passed `bash -n` |
 | JavaScript syntax | Passed Node syntax checks |
@@ -21,7 +21,8 @@ a bootable distribution. The latter still require an Arch machine or VM.
 | Archiso profile staging | Passed against official archiso 91 releng; 14 bootloader files preserved byte for byte |
 | Package repository index | Stubbed for staging review; real `repo-add` remains an Arch check |
 | Full `makepkg` / dependency resolution | Not run on this Ubuntu host |
-| Native offscreen component load | Automated runtime check added in Arch CI |
+| Native offscreen component load | Arch CI covers shared components, wireless panel delegates, private stdin and synthetic launch readiness |
+| Launch matching logic | Node checks exact desktop/StartupWMClass matching and comma-containing titles |
 | Native Quickshell + Hyprland compositor session | Not run |
 | Physical Wi-Fi/Bluetooth/audio/backlight writes | Not run on hardware |
 | Full ISO build, UEFI/BIOS and USB boot | Not run |
@@ -65,3 +66,20 @@ Quickshell shared components with an isolated D-Bus/config environment and synth
 media/notification objects; it never launches apps or changes hardware state.
 It does not qualify layer-shell focus, the compositor, actual MPRIS clients,
 physical suspend/resume or shutdown. Those remain hardware acceptance gates.
+
+## v0.3 connectivity and launch slice
+
+The wireless suite covers escaped SSIDs/BSSIDs, security type selection, saved
+profile reuse, unavailable/disappearing networks, fixed command arguments,
+password transport/permissions/cleanup, activation failure cleanup, retained
+existing profiles, autoconnect preference failure and BlueZ errors. Commands are
+mocked; no test changes physical network or Bluetooth state.
+
+The preview checks inline password validation, simulated connect/disconnect,
+password removal/no preference retention, paired-device actions and the phone
+connection panel bounds. The native smoke adds actual QProcess stdin transport
+to a synthetic subprocess and exercises the production launch state machine
+with synthetic window events, minimum timing, existing-window focus and timeout.
+It loads both connection panel delegates. This does not prove hardware
+authentication, saved-secret reuse, RF discovery, pairing, or real compositor
+event timing. Full app-surface morphs are not implemented.
