@@ -6,7 +6,7 @@ pkgdesc='PrismOS expressive native desktop shell and dedicated Wayland session'
 arch=('any')
 url='https://github.com/MobiLaunch/BlueberryPie-17'
 license=('MIT')
-depends=('quickshell>=0.3.2' 'hyprland>=0.56' 'python' 'python-pillow' 'qt6-declarative' 'qt6-svg' 'qt6-shadertools' 'networkmanager' 'nm-connection-editor' 'bluez' 'bluez-utils' 'blueman' 'pipewire' 'pipewire-pulse' 'wireplumber' 'brightnessctl' 'glib2' 'hyprlock' 'hypridle' 'dbus' 'foot' 'thunar' 'polkit-kde-agent' 'ttf-roboto' 'xdg-desktop-portal-hyprland' 'flatpak' 'waydroid' 'polkit')
+depends=('quickshell>=0.3.2' 'hyprland>=0.56' 'python' 'python-pillow' 'qt6-declarative' 'qt6-svg' 'qt6-shadertools' 'networkmanager' 'nm-connection-editor' 'bluez' 'bluez-utils' 'blueman' 'pipewire' 'pipewire-pulse' 'wireplumber' 'brightnessctl' 'glib2' 'hyprlock' 'hypridle' 'dbus' 'foot' 'thunar' 'polkit-kde-agent' 'ttf-roboto' 'xdg-desktop-portal-hyprland' 'xdg-desktop-portal-gtk' 'flatpak' 'waydroid' 'polkit')
 source=("PrismOS-${pkgver}.tar.gz")
 sha256sums=('GENERATED_BY_BUILD_SCRIPT')
 
@@ -17,6 +17,7 @@ package() {
     cp -r prismos "${pkgdir}/usr/lib/prismos/"
     install -Dm755 bin/prism-android-helper "${pkgdir}/usr/libexec/prism-android-helper"
     install -Dm644 packaging/polkit/org.prismos.android.policy "${pkgdir}/usr/share/polkit-1/actions/org.prismos.android.policy"
+    install -Dm644 packaging/portals/prismos-portals.conf "${pkgdir}/usr/share/xdg-desktop-portal/prismos-portals.conf"
     install -Dm755 bin/prism-style-env "${pkgdir}/usr/bin/prism-style-env"
     install -d "${pkgdir}/usr/share/themes"
     cp -r packaging/themes/PrismOS-* "${pkgdir}/usr/share/themes/"

@@ -1,6 +1,6 @@
 -- PrismOS session for Hyprland 0.56+. Keep this separate from personal configs.
 hl.monitor({ output = "", mode = "preferred", position = "auto", scale = "auto" })
-hl.env("XDG_CURRENT_DESKTOP", "Hyprland:PrismOS")
+hl.env("XDG_CURRENT_DESKTOP", "PrismOS:Hyprland")
 hl.env("XCURSOR_SIZE", "24")
 hl.env("QT_QPA_PLATFORM", "wayland")
 hl.config({

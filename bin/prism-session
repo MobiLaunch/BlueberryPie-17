@@ -4,7 +4,7 @@ if [[ -n "${WAYLAND_DISPLAY:-}" ]]; then
     echo 'Start the PrismOS session from your login screen or a fresh TTY.' >&2
     exit 1
 fi
-export XDG_CURRENT_DESKTOP=Hyprland:PrismOS
+export XDG_CURRENT_DESKTOP=PrismOS:Hyprland
 export XDG_SESSION_DESKTOP=prismos
 export XDG_SESSION_TYPE=wayland
 # Scope GTK/Qt Material styling to PrismOS, never overwrite other sessions.
