@@ -2,7 +2,7 @@ import argparse
 import json
 import sys
 
-from . import android, apps, audio, displays, favorites, fdroid, files, inputs, settings, store, system, theme, wireless
+from . import android, apps, audio, displays, drives, favorites, fdroid, files, inputs, settings, store, system, theme, wireless
 
 
 def main(argv=None):
@@ -14,14 +14,18 @@ def main(argv=None):
     inp.add_argument("operation", choices=("list", "set", "apply"))
     inp.add_argument("key", nargs="?")
     inp.add_argument("value", nargs="?")
+    volume = sub.add_parser("drives")
+    volume.add_argument("operation", choices=("list", "mount", "unmount"))
+    volume.add_argument("device", nargs="?")
     disp = sub.add_parser("display")
     disp.add_argument("operation", choices=("list", "preview", "confirm", "apply"))
     disp.add_argument("name", nargs="?")
     disp.add_argument("value", nargs="?")
     fileargs = sub.add_parser("files")
-    fileargs.add_argument("operation", choices=("list", "bookmarks", "open", "mkdir", "rename", "trash"))
+    fileargs.add_argument("operation", choices=("list", "bookmarks", "open", "mkdir", "rename", "trash", "stage", "paste", "clipboard"))
     fileargs.add_argument("path", nargs="?")
     fileargs.add_argument("--name")
+    fileargs.add_argument("--action", choices=("copy", "cut"))
     fileargs.add_argument("--hidden", action="store_true")
     software = sub.add_parser("store")
     software.add_argument("operation", choices=("status", "enable", "search", "install", "remove", "open"))
@@ -74,6 +78,9 @@ def main(argv=None):
                 result = inputs.change(args.key, args.value)
             else:
                 result = inputs.apply()
+        elif args.command == "drives":
+            result = (drives.volumes() if args.operation == "list"
+                      else drives.change(args.operation, args.device))
         elif args.command == "display":
             if args.operation == "list":
                 result = displays.status()
@@ -94,8 +101,14 @@ def main(argv=None):
                 result = files.create_folder(args.path, args.name)
             elif args.operation == "rename":
                 result = files.rename(args.path, args.name)
-            else:
+            elif args.operation == "trash":
                 result = files.trash(args.path)
+            elif args.operation == "stage":
+                result = files.stage(args.path, args.action)
+            elif args.operation == "paste":
+                result = files.paste(args.path)
+            else:
+                result = files.clipboard_status()
         elif args.command == "store":
             if args.operation == "status":
                 result = store.status()
