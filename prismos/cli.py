@@ -14,8 +14,11 @@ def main(argv=None):
     software.add_argument("operation", choices=("status", "enable", "search", "install", "remove", "open"))
     software.add_argument("value", nargs="?")
     droid = sub.add_parser("android")
-    droid.add_argument("operation", choices=("status", "open", "install"))
+    droid.add_argument("operation", choices=("status", "enable", "disable", "open", "install", "fdroid"))
     droid.add_argument("value", nargs="?")
+    welcome = sub.add_parser("welcome")
+    welcome.add_argument("operation", choices=("status", "finish"))
+    welcome.add_argument("--android", choices=("yes", "no"))
     sound = sub.add_parser("audio")
     sound.add_argument("operation", choices=("list", "select", "volume", "mute"))
     sound.add_argument("--kind", choices=("output", "input"))
@@ -60,10 +63,24 @@ def main(argv=None):
         elif args.command == "android":
             if args.operation == "status":
                 result = android.status()
+            elif args.operation == "enable":
+                return android.enable()
+            elif args.operation == "disable":
+                result = android.disable()
+            elif args.operation == "fdroid":
+                return android.install_fdroid()
             elif args.operation == "open":
                 result = android.open_android()
             else:
                 result = android.install_apk(args.value)
+        elif args.command == "welcome":
+            if args.operation == "finish":
+                result = settings.update(onboarding_complete=True,
+                                         android_enabled=(args.android == "yes"))
+            else:
+                prefs = settings.load()
+                result = {"ok": True, "complete": prefs["onboarding_complete"],
+                          "android_enabled": prefs["android_enabled"]}
         elif args.command == "audio":
             result = audio.snapshot() if args.operation == "list" else audio.action(args.operation, args.kind, args.serial, args.node_name, args.value)
         elif args.command == "wifi":

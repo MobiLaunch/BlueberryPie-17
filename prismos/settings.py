@@ -6,7 +6,8 @@ import tempfile
 from contextlib import contextmanager
 from pathlib import Path
 
-DEFAULTS = {"seed": "#8469cf", "dark": False, "reduced_motion": False, "dnd": False, "favorites": None}
+DEFAULTS = {"seed": "#8469cf", "dark": False, "reduced_motion": False, "dnd": False,
+            "favorites": None, "android_enabled": False, "onboarding_complete": False}
 
 
 def directory():
@@ -19,7 +20,7 @@ def load():
         if not isinstance(data, dict):
             return dict(DEFAULTS)
         valid = {}
-        for key in ("dark", "reduced_motion", "dnd"):
+        for key in ("dark", "reduced_motion", "dnd", "android_enabled", "onboarding_complete"):
             if isinstance(data.get(key), bool):
                 valid[key] = data[key]
         seed = data.get("seed")
