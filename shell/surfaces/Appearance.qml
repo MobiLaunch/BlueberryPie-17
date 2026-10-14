@@ -87,6 +87,79 @@ PanelWindow {
                     onClicked: SystemBridge.action("reduced_motion")
                 }
                 Rectangle { width: parent.width; height: 1; color: Theme.outline; opacity: .26 }
+                Label { text: "Connections"; font.pixelSize: 21; font.weight: Font.DemiBold }
+                QuickTile {
+                    width: parent.width
+                    title: "Wi-Fi"
+                    subtitle: SystemBridge.snapshot.wifi.available ?
+                              SystemBridge.snapshot.wifi.label : "No wireless adapter"
+                    symbol: "wifi"
+                    activated: SystemBridge.snapshot.wifi.enabled
+                    enabled: SystemBridge.snapshot.wifi.available
+                    onClicked: SystemBridge.action("wifi")
+                }
+                QuickTile {
+                    width: parent.width
+                    title: "Bluetooth"
+                    subtitle: SystemBridge.snapshot.bluetooth.available ?
+                              (activated ? "On" : "Off") : "Not available"
+                    symbol: "bluetooth"
+                    activated: SystemBridge.snapshot.bluetooth.enabled
+                    enabled: SystemBridge.snapshot.bluetooth.available
+                    onClicked: SystemBridge.action("bluetooth")
+                }
+                PillButton {
+                    width: parent.width
+                    text: "Manage Wi-Fi and Bluetooth devices"
+                    onClicked: ShellState.toggleShade(root.screen)
+                }
+                Rectangle { width: parent.width; height: 1; color: Theme.outline; opacity: .26 }
+                Label { text: "Display & audio"; font.pixelSize: 21; font.weight: Font.DemiBold }
+                ExpressiveSlider {
+                    width: parent.width
+                    symbol: "brightness"
+                    label: "Brightness"
+                    enabled: SystemBridge.snapshot.brightness.available
+                    modelValue: SystemBridge.snapshot.brightness.value
+                    onCommitted: level => SystemBridge.action("brightness", level)
+                }
+                ExpressiveSlider {
+                    width: parent.width
+                    symbol: "volume"
+                    label: "Output volume"
+                    enabled: SystemBridge.snapshot.volume.available
+                    modelValue: SystemBridge.snapshot.volume.value
+                    onCommitted: level => SystemBridge.action("volume", level)
+                }
+                QuickTile {
+                    width: parent.width
+                    title: "Sound output"
+                    subtitle: activated ? "On" : "Muted"
+                    symbol: "volume"
+                    activated: !SystemBridge.snapshot.volume.muted
+                    enabled: SystemBridge.snapshot.volume.available
+                    onClicked: SystemBridge.action("mute")
+                }
+                QuickTile {
+                    width: parent.width
+                    title: "Microphone"
+                    subtitle: activated ? "On" : "Muted"
+                    symbol: "microphone"
+                    activated: !SystemBridge.snapshot.microphone.muted
+                    enabled: SystemBridge.snapshot.microphone.available
+                    onClicked: SystemBridge.action("microphone-mute")
+                }
+                Rectangle { width: parent.width; height: 1; color: Theme.outline; opacity: .26 }
+                Label { text: "Notifications & privacy"; font.pixelSize: 21; font.weight: Font.DemiBold }
+                QuickTile {
+                    width: parent.width
+                    title: "Do Not Disturb"
+                    subtitle: activated ? "Notifications are quiet" : "Notifications enabled"
+                    symbol: "dnd"
+                    activated: SystemBridge.snapshot.settings.dnd
+                    onClicked: SystemBridge.action("dnd")
+                }
+                Rectangle { width: parent.width; height: 1; color: Theme.outline; opacity: .26 }
                 Label { text: "Pointer & keyboard"; font.pixelSize: 21; font.weight: Font.DemiBold }
                 Rectangle {
                     width: parent.width
@@ -275,6 +348,44 @@ PanelWindow {
                     wrapMode: Text.WordWrap
                     opacity: .65
                     text: "Optional. Downloads the Android system image on first use; an administrator may need to approve setup. Turning this off never deletes your Android data. F-Droid is installed only when you request it."
+                }
+                Rectangle { width: parent.width; height: 1; color: Theme.outline; opacity: .26 }
+                Label { text: "System"; font.pixelSize: 21; font.weight: Font.DemiBold }
+                Rectangle {
+                    width: parent.width
+                    height: 104
+                    radius: 28
+                    color: Theme.surfaceContainer
+                    Column {
+                        x: 17; y: 15
+                        width: parent.width - 34; spacing: 6
+                        Label { text: "PrismOS · Arch Linux"; font.pixelSize: 17; font.weight: Font.DemiBold }
+                        Label {
+                            width: parent.width
+                            text: "Hyprland · Quickshell · Wayland"
+                            opacity: .74
+                        }
+                        Label {
+                            width: parent.width
+                            text: SystemBridge.snapshot.battery.available ?
+                                  ("Battery " + SystemBridge.snapshot.battery.value + "%") :
+                                  "Desktop power"
+                            opacity: .74
+                        }
+                    }
+                }
+                Row {
+                    spacing: 8
+                    width: parent.width
+                    PillButton {
+                        text: "Power options"
+                        onClicked: ShellState.openPower(root.screen)
+                    }
+                    PillButton {
+                        text: "Software"
+                        filled: true
+                        onClicked: ShellState.openStore(root.screen)
+                    }
                 }
                 PillButton {
                     text: "Done"
