@@ -7,7 +7,7 @@ from contextlib import contextmanager
 from pathlib import Path
 
 DEFAULTS = {"seed": "#8469cf", "dark": False, "reduced_motion": False, "dnd": False,
-            "favorites": None, "android_enabled": False, "onboarding_complete": False,
+            "favorites": None, "recent_apps": [], "android_enabled": False, "onboarding_complete": False,
             "natural_scroll": True, "tap_to_click": True,
             "pointer_speed": 0.0, "repeat_rate": 25, "display_scales": {}, "display_positions": {}}
 
@@ -54,6 +54,11 @@ def load():
         favorites = data.get("favorites")
         if isinstance(favorites, list):
             valid["favorites"] = list(dict.fromkeys(value for value in favorites
+                if isinstance(value, str) and value.endswith(".desktop") and len(value) <= 256
+                and not any(char in value for char in ("/", "\\", "\x00"))))[:8]
+        recents = data.get("recent_apps")
+        if isinstance(recents, list):
+            valid["recent_apps"] = list(dict.fromkeys(value for value in recents
                 if isinstance(value, str) and value.endswith(".desktop") and len(value) <= 256
                 and not any(char in value for char in ("/", "\\", "\x00"))))[:8]
         return {**DEFAULTS, **valid}

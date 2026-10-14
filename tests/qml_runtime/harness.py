@@ -60,6 +60,10 @@ class Harness:
 
     def park_cursor(self):
         """Keep the synthetic pointer away from controls so nothing reports hover."""
+        # Offscreen starts with a phantom hover at the origin; a move through the
+        # top-left and out again delivers the matching leave event.
+        QTest.mouseMove(self.view, QPoint(20, 20))
+        self.pump(30)
         QTest.mouseMove(self.view, QPoint(self.view.width() - 3, self.view.height() - 3))
         self.pump(50)
 
