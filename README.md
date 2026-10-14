@@ -174,6 +174,17 @@ There is no permanent disk installer yet. Live login: `prism` / `prism`.
 
 ### Make a bootable USB
 
+For an extra safety check, use the included USB writer. It refuses non-USB
+or mounted disks and requires an explicit erase confirmation:
+
+```bash
+lsblk -o NAME,SIZE,MODEL,TRAN,MOUNTPOINTS
+sudo bash ./scripts/flash-usb.sh /dev/sdX
+```
+
+Replace `/dev/sdX` with the verified **whole USB device**. This erases it.
+The manual `dd` method below remains available.
+
 **All data on the target USB disk will be erased.** First identify its model
 and unmount its partitions. Use the entire disk, not a numbered partition.
 
