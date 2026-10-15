@@ -19,3 +19,4 @@ singleton ClockState 1.0 ClockState.qml
 singleton ClipboardState 1.0 ClipboardState.qml
 singleton DateTimeState 1.0 DateTimeState.qml
 singleton WorldClockState 1.0 WorldClockState.qml
+singleton StorageState 1.0 StorageState.qml

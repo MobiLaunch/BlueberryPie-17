@@ -1,4 +1,21 @@
-# Validation record — 2026-10-15 (v0.9 through round seven)
+# Validation record — 2026-10-15 (v0.9 through round eight)
+
+## Addendum: round eight (Storage)
+
+### Executed
+
+| Check | Result |
+| --- | --- |
+| Storage adapter | Top-level folders map to categories, the category sum equals the reported total, symbolic links are not followed, the entry cap and the time limit each stop the walk (including inside one huge directory) and set `truncated`, an unreadable home reports zero instead of failing |
+| Clear previews | Removes only the preview folder; symlinked previews are not counted; unknown `storage` operations are refused by the CLI |
+| Storage page | Boot, open Settings → Storage with real `prismctl`: folders appear with sizes, empty categories are hidden, nothing is elided at normal and largest text size, clearing previews deletes the folder and disables the button; byte formatting checked at unit boundaries |
+| `scripts/check.sh` | Passed |
+
+### Not executed
+
+- Block-based sizes (`st_blocks`) on btrfs, ZFS, compressed or deduplicated filesystems, and homes with millions of files (the partial-count notice is tested, not the timing on real disks).
+
+## Previous record — 2026-10-15 (through round seven)
 
 ## Addendum: round seven (pins, tile details, widget sizes, live Recents)
 

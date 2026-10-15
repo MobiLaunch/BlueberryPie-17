@@ -3,7 +3,7 @@ import json
 import sys
 
 from . import sound as alert_sound
-from . import about, alarms, android, apps, audio, clipboard, clockset, notes, thumbnails, worldclock, displays, drives, favorites, fdroid, files, inputs, installer, notifyprefs, screenshot, settings, stats, store, system, theme, tiles, wallpaper, weather, websearch, widgets, windows, wireless
+from . import about, alarms, android, apps, audio, clipboard, clockset, notes, thumbnails, worldclock, displays, drives, favorites, fdroid, files, inputs, installer, notifyprefs, screenshot, settings, stats, storage, store, system, theme, tiles, wallpaper, weather, websearch, widgets, windows, wireless
 
 
 def main(argv=None):
@@ -12,6 +12,8 @@ def main(argv=None):
     sub.add_parser("status")
     sub.add_parser("apps")
     sub.add_parser("about")
+    space = sub.add_parser("storage")
+    space.add_argument("operation", choices=("usage", "clear-previews"))
     sub.add_parser("stats")
     web = sub.add_parser("websearch")
     web.add_argument("query")
@@ -217,6 +219,8 @@ def main(argv=None):
                 result = weather.current()
         elif args.command == "about":
             result = about.info()
+        elif args.command == "storage":
+            result = storage.usage() if args.operation == "usage" else storage.clear_previews()
         elif args.command == "windows":
             result = (windows.status() if args.operation == "list"
                       else windows.dispatch(args.operation, args.address))

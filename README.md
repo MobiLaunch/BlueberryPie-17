@@ -122,6 +122,14 @@ ISO and hardware qualification have not been completed in this release.
 - **Live Recents**: when Quickshell exposes Hyprland toplevels and screencopy, cards show the window's live
   contents while the overview is open; otherwise the snapshot or an icon is used.
 
+### Round eight: Storage
+
+- **Settings → Storage**: used and free space with a segmented bar, and your home folder split into
+  Documents, Downloads, Pictures, Music, Videos, App data, Cache and Other files. It is read-only and
+  bounded (stops at 300,000 entries or six seconds and says the count is partial), never follows
+  symbolic links or crosses into other drives.
+- **Clear window previews** removes the Recents snapshots, the only thing the page can delete.
+
 ## Build the ISO on Windows
 
 See **[Windows build instructions](docs/WINDOWS-ISO.md)** for the

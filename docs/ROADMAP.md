@@ -211,4 +211,8 @@ Still open: per-tile detail panels, clipboard search/pinning, resizable widgets,
 
 - Clipboard pinning, Quick Settings tile detail panels, widget sizes, live Recents when screencopy is available.
 
+## Round eight (development slice)
+
+- Settings Storage page: bounded usage breakdown and clearing of window previews.
+
 Still open: measurements against the Android reference and everything listed under "Not executed" in `docs/VALIDATION.md`.

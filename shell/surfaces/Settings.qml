@@ -100,6 +100,13 @@ PanelWindow {
             keywords: "battery power lock sleep restart shut down"
         },
         {
+            id: "storage",
+            title: "Storage",
+            symbol: "storage",
+            page: "StoragePage",
+            keywords: "storage disk space files free used documents downloads cache clean"
+        },
+        {
             id: "about",
             title: "About",
             symbol: "info",
@@ -136,6 +143,8 @@ PanelWindow {
             return "Keys and touchpad gestures";
         case "apps":
             return SystemBridge.apps.length + " installed";
+        case "storage":
+            return StorageState.loaded ? StorageState.size(StorageState.usage.free) + " free" : "Space used by your files";
         case "power":
             return snap.battery.available ? snap.battery.value + "%" + (snap.battery.charging ? " · Charging" : "") : "Plugged in";
         default:

@@ -20,7 +20,7 @@ else:
     SKIP_REASON = ""
 
 SURFACES = ("shade", "launcher", "settings", "files", "store", "power", "recents", "calculator", "clock", "alarms", "converter", "clipboard", "worldclock")
-SECTIONS = ("network", "bluetooth", "display", "sound", "notifications", "style", "widgets", "datetime", "input", "shortcuts", "apps", "power", "about")
+SECTIONS = ("network", "bluetooth", "display", "sound", "notifications", "style", "widgets", "datetime", "input", "shortcuts", "apps", "power", "storage", "about")
 WINDOWS = ('Windows.available = true; Windows.list = ['
            '{address:"0xaa01", class:"firefox", title:"Docs", workspace:1, pid:1, recency:0, focused:true, hidden:false},'
            '{address:"0xaa02", class:"foot", title:"~/code", workspace:2, pid:2, recency:1, focused:false, hidden:false}];')
@@ -765,11 +765,44 @@ class ShellRuntimeTests(unittest.TestCase):
         self.assertTrue(harness.wait_for(lambda: all(command in Process.log for command in wanted), 8000), Process.log)
         self.assertEqual(harness.eval_value("Windows.closing.length"), "0")
 
+    def test_storage_page_reports_folders_and_clears_previews(self):
+        import os
+        from pathlib import Path
+        harness = self.boot()
+        home = Path(os.environ["HOME"])
+        (home / "Documents").mkdir()
+        (home / "Documents" / "notes.txt").write_bytes(b"x" * 50000)
+        (home / "Downloads").mkdir()
+        (home / "Downloads" / "big.iso").write_bytes(b"x" * 90000)
+        previews = Path(os.environ["XDG_RUNTIME_DIR"]) / "prismos-previews"
+        previews.mkdir()
+        (previews / "0xaa01-1.png").write_bytes(b"x" * 20000)
+        harness.ipc("settings")
+        harness.pump(600)
+        row = harness.find("section-storage")
+        self.assertIsNotNone(row)
+        harness.reveal(row)
+        harness.click(*harness.scene_pos(row))
+        self.assertTrue(harness.wait_for(lambda: harness.find("storage-documents") is not None, 8000))
+        self.assertIsNotNone(harness.find("storage-downloads"))
+        self.assertFalse(harness.find("storage-music").isVisible())
+        for value, text in (("0", "0 B"), ("999", "999 B"), ("1500", "1.5 KB"), ("20000", "20 KB"),
+                            ("123456789", "123 MB"), ("2000000000", "2 GB"), ("undefined", "Unknown")):
+            self.assertEqual(harness.eval_value(f"StorageState.size({value})"), text, value)
+        self.assertTrue(harness.find("storage-downloads").isVisible())
+        self.assertEqual(harness.problems(), [])
+        self.assertEqual(harness.truncated_texts(), [])
+        button = harness.find("storage-clear-previews")
+        harness.reveal(button)
+        harness.click(*harness.scene_pos(button))
+        self.assertTrue(harness.wait_for(lambda: not previews.exists(), 8000))
+        self.assertTrue(harness.wait_for(lambda: not harness.find("storage-clear-previews").isEnabled(), 8000))
+
     def test_settings_search_filters_sections(self):
         harness = self.boot()
         harness.ipc("settings")
         harness.pump(600)
-        self.assertIsNotNone(harness.find("section-about"))
+        self.assertIsNotNone(harness.find("section-network"))
         field = next(item for item in harness.visible_items() if item.property("placeholderText") == "Search settings")
         field.setProperty("text", "bluetooth")
         harness.pump(300)
