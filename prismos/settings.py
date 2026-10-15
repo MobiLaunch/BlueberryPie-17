@@ -101,9 +101,13 @@ def load():
                                      if key in RESIZABLE_WIDGETS and value in WIDGET_SIZES}
         zones = data.get("world_clocks")
         if isinstance(zones, list):
-            from .regional import timezones
-            known = set(timezones())
-            valid["world_clocks"] = list(dict.fromkeys(z for z in zones if isinstance(z, str) and z in known))[:MAX_WORLD_CLOCKS]
+            # The time zone database is only read (it is slow to scan) when there is something to check.
+            candidates = [z for z in zones if isinstance(z, str)]
+            if candidates:
+                from .regional import timezones
+                known = set(timezones())
+                candidates = [z for z in candidates if z in known]
+            valid["world_clocks"] = list(dict.fromkeys(candidates))[:MAX_WORLD_CLOCKS]
         alarms = data.get("alarms")
         if isinstance(alarms, list):
             valid["alarms"] = clean_alarms(alarms)

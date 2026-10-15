@@ -76,6 +76,7 @@ Button {
             width: 24
             height: 24
             name: root.symbol
+            filled: root.activated
             color: root.inkColor
             opacity: root.fade
         }

@@ -496,7 +496,12 @@ class HarnessInfo(QObject):
         self._shell_dir, self._screens = shell_dir, screens
 
     @Slot(str, str, result=str)
+    @Slot(str, bool, result=str)
     def iconPath(self, name, fallback):
+        # iconPath(name, true) is Quickshell's "check" form: empty when the theme lacks the icon.
+        if fallback is True or fallback is False:
+            found = find_icon(name)
+            return "file://" + found if found else ""
         found = find_icon(name) or find_icon(fallback)
         return "file://" + found if found else placeholder_icon(name)
 

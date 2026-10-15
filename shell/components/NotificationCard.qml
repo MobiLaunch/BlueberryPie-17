@@ -75,8 +75,8 @@ Item {
                     width: 26
                     height: 26
                     sourceSize: Qt.size(52, 52)
-                    source: Quickshell.iconPath(root.notification.appIcon || root.notification.desktopEntry || "", "dialog-information")
-                    visible: status === Image.Ready
+                    source: Quickshell.iconPath(root.notification.appIcon || root.notification.desktopEntry || "", true)
+                    visible: source.toString().length > 0 && status === Image.Ready
                 }
                 Symbol {
                     anchors.centerIn: parent

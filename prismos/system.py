@@ -2,7 +2,6 @@ import os
 import re
 import shutil
 import subprocess
-from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from . import settings
@@ -128,6 +127,7 @@ def airplane(radios):
 def status():
     readers = {"wifi": wifi, "bluetooth": bluetooth, "volume": volume, "microphone": microphone, "brightness": brightness,
                "battery": battery, "power": power, "profile": power_profile}
+    from concurrent.futures import ThreadPoolExecutor
     with ThreadPoolExecutor(max_workers=len(readers)) as pool:
         futures = {key: pool.submit(reader) for key, reader in readers.items()}
         result = {key: future.result() for key, future in futures.items()}

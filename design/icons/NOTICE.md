@@ -1,0 +1,17 @@
+# Icon sources
+
+The UI glyphs in `material/` are an unmodified subset of **Material Symbols**
+(Rounded style, weight 400, outlined and filled) from the
+[`@material-symbols/svg-400`](https://www.npmjs.com/package/@material-symbols/svg-400)
+package, version 0.48.0, which republishes Google's Material Symbols.
+
+- Copyright Google LLC. Licensed under the Apache License, Version 2.0 (`material/LICENSE`).
+- `material-map.json` maps PrismOS icon names to symbol names.
+- `scripts/generate-design.py` turns them into `shell/components/IconData.js` and
+  `preview/icons.js`; run it again after changing the map or adding SVGs.
+
+To add an icon: copy `rounded/<symbol>.svg` and `rounded/<symbol>-fill.svg` from the package
+into `material/`, add the mapping, and regenerate.
+
+Application icons are not bundled. They come from the installed icon theme
+(Papirus, GPL-3.0-or-later, a package dependency) at runtime.

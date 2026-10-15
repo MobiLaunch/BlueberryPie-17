@@ -2,23 +2,26 @@ import QtQuick
 import "../services"
 import "IconData.js" as IconData
 
-// Stroke icon recolored by rewriting the SVG, so it follows the theme on any
-// renderer (no shader effects) and tints instantly when roles change.
+// Material Symbols (Rounded) glyph, recolored by rewriting the SVG so it follows the
+// theme on any renderer (no shader effects) and tints instantly when roles change.
+// `filled` switches to the filled variant, used for active and selected states.
 Item {
     id: root
     property string name: "spark"
     property color color: Theme.surfaceInk
-    property real weight: 1.9
-    // 0..1 fill for the battery glyph; ignored by other symbols.
+    property bool filled: false
+    // 0..1 charge for the battery glyph; ignored by other symbols.
     property real level: -1
     implicitWidth: 24
     implicitHeight: 24
-    readonly property string baseMarkup: IconData.paths[name] || IconData.paths["spark"]
-    readonly property string markup: level >= 0 && name === "battery" ? baseMarkup.replace("width=\"12\"", "width=\"" + Math.max(1.4, 12 * Math.min(1, level)) + "\"") : baseMarkup
-    readonly property string svg: {
-        const ink = Theme.hex(color);
-        return "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='" + ink + "' stroke-opacity='" + color.a + "' stroke-width='" + weight + "' stroke-linecap='round' stroke-linejoin='round'>" + markup.replace(/#19151e/g, ink).replace(/"/g, "'") + "</svg>";
+    // The battery has real glyphs for seven partial levels plus full.
+    readonly property string resolved: {
+        if (name === "battery" && level >= 0 && level < 0.97)
+            return "battery_level_" + Math.min(6, Math.floor(level * 7));
+        return name;
     }
+    readonly property string pathData: (filled ? IconData.filled : IconData.outline)[resolved] || IconData.outline["spark"]
+    readonly property string svg: "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 -960 960 960'><path fill='" + Theme.hex(color) + "' fill-opacity='" + color.a + "' d='" + pathData + "'/></svg>"
     Image {
         anchors.fill: parent
         source: "data:image/svg+xml;utf8," + encodeURIComponent(root.svg)

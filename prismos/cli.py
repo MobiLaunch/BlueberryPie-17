@@ -1,10 +1,35 @@
 import argparse
+import importlib
 import json
 import sys
 
-from . import sound as alert_sound
-from . import about, alarms, android, apps, audio, clipboard, clockset, notes, thumbnails, worldclock, displays, drives, favorites, fdroid, files, inputs, installer, notifyprefs, screenshot, settings, stats, storage, store, system, theme, tiles, wallpaper, weather, websearch, widgets, windows, wireless
+from . import theme, windowops
 
+
+class _Lazy:
+    """A command's module, imported the first time it is used. Every `prismctl` call is a
+    new process, so importing all of them for each call made each toggle wait on imports
+    it never used (urllib, ssl, subprocess helpers, ...)."""
+
+    def __init__(self, name):
+        self._name = name
+        self._module = None
+
+    def __getattr__(self, attribute):
+        if self._module is None:
+            self._module = importlib.import_module(f".{self._name}", __package__)
+        return getattr(self._module, attribute)
+
+
+(about, alarms, android, apps, audio, clipboard, clockset, notes, thumbnails, worldclock, displays, drives,
+ favorites, fdroid, files, inputs, installer, notifyprefs, screenshot, settings, stats, storage, store,
+ system, tiles, wallpaper, weather, websearch, widgets, windows, wireless) = (
+    _Lazy(name) for name in (
+        "about", "alarms", "android", "apps", "audio", "clipboard", "clockset", "notes", "thumbnails",
+        "worldclock", "displays", "drives", "favorites", "fdroid", "files", "inputs", "installer",
+        "notifyprefs", "screenshot", "settings", "stats", "storage", "store", "system", "tiles",
+        "wallpaper", "weather", "websearch", "widgets", "windows", "wireless"))
+alert_sound = _Lazy("sound")
 
 def main(argv=None):
     parser = argparse.ArgumentParser(prog="prismctl", description="PrismOS native system bridge (JSON output)")
@@ -68,7 +93,7 @@ def main(argv=None):
     paper.add_argument("operation", choices=("list", "set", "clear"))
     paper.add_argument("path", nargs="?")
     win = sub.add_parser("windows")
-    win.add_argument("operation", choices=("list",) + windows.OPERATIONS)
+    win.add_argument("operation", choices=("list",) + windowops.OPERATIONS)
     win.add_argument("address", nargs="?")
     inp = sub.add_parser("input")
     inp.add_argument("operation", choices=("list", "set", "apply"))

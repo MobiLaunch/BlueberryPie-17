@@ -63,6 +63,8 @@ QtObject {
     property var pending: []
     property bool busy: writer.running
     property bool needsRefresh: false
+    property bool staleRead: false
+    property string lastStatus: ""
     signal launchFinished(bool success, string message)
 
     function refresh() {
@@ -75,7 +77,123 @@ QtObject {
         if (!appReader.running)
             appReader.running = true;
     }
+    // A copy of the snapshot with a few keys changed per section, so a tile can answer
+    // a click at once instead of waiting for the command and a full status read.
+    function patched(changes) {
+        const next = Object.assign({}, snapshot);
+        for (const section in changes)
+            next[section] = Object.assign({}, snapshot[section], changes[section]);
+        return next;
+    }
+    function clamp(value, low) {
+        return Math.max(low, Math.min(100, Math.round(value)));
+    }
+    // What the snapshot will say once `name` has run, for actions whose result is certain.
+    // Anything not listed waits for the real state. A failed action is corrected by the
+    // status read that always follows it.
+    function predict(name, value) {
+        const s = snapshot;
+        switch (name) {
+        case "dark":
+        case "reduced_motion":
+        case "dnd": {
+            const change = {};
+            change[name] = !s.settings[name];
+            return patched({
+                settings: change
+            });
+        }
+        case "wifi":
+            return s.wifi.available ? patched({
+                wifi: {
+                    enabled: !s.wifi.enabled
+                }
+            }) : null;
+        case "bluetooth":
+            return s.bluetooth.available ? patched({
+                bluetooth: {
+                    enabled: !s.bluetooth.enabled
+                }
+            }) : null;
+        case "mute":
+            return s.volume.available ? patched({
+                volume: {
+                    muted: !s.volume.muted
+                }
+            }) : null;
+        case "microphone-mute":
+            return s.microphone.available ? patched({
+                microphone: {
+                    muted: !s.microphone.muted
+                }
+            }) : null;
+        case "airplane":
+            return s.airplane.available ? patched({
+                airplane: {
+                    enabled: !s.airplane.enabled
+                },
+                wifi: {
+                    enabled: s.airplane.enabled && s.wifi.available
+                },
+                bluetooth: {
+                    enabled: s.airplane.enabled && s.bluetooth.available
+                }
+            }) : null;
+        case "night-light":
+            return s.night_light.available ? patched({
+                night_light: {
+                    enabled: !s.night_light.enabled
+                },
+                settings: {
+                    night_light: !s.night_light.enabled
+                }
+            }) : null;
+        case "battery-saver":
+            return s.profile.available ? patched({
+                profile: {
+                    saver: !s.profile.saver
+                }
+            }) : null;
+        case "volume":
+            return s.volume.available && value !== undefined ? patched({
+                volume: {
+                    value: clamp(value, 0)
+                }
+            }) : null;
+        case "brightness":
+            return s.brightness.available && value !== undefined ? patched({
+                brightness: {
+                    value: clamp(value, 1)
+                }
+            }) : null;
+        case "volume-up":
+        case "volume-down":
+            return s.volume.available ? patched({
+                volume: {
+                    value: clamp(s.volume.value + (name === "volume-up" ? 5 : -5), 0)
+                }
+            }) : null;
+        case "brightness-up":
+        case "brightness-down":
+            return s.brightness.available ? patched({
+                brightness: {
+                    value: clamp(s.brightness.value + (name === "brightness-up" ? 5 : -5), 1)
+                }
+            }) : null;
+        }
+        return null;
+    }
     function action(name, value) {
+        const guess = predict(name, value);
+        if (guess) {
+            snapshot = guess;
+            // The guess is not what was last read, so the next real answer must always replace it
+            // (even when it equals the previous reading, as after a command that failed).
+            lastStatus = "";
+            // A status read already in flight predates this click; its answer would flip the tile back.
+            if (reader.running)
+                staleRead = true;
+        }
         let args = ["prismctl", "action", name];
         if (value !== undefined)
             args.push(String(Math.round(value)));
@@ -236,10 +354,22 @@ QtObject {
         }
         stdout: StdioCollector {
             onStreamFinished: {
+                const stale = root.staleRead;
+                root.staleRead = false;
+                if (stale) {
+                    // Read before the last click took effect: discard it and read again.
+                    root.needsRefresh = true;
+                    return;
+                }
+                // An unchanged answer would still re-run every binding in the shell.
+                if (text === root.lastStatus)
+                    return;
                 try {
                     const data = JSON.parse(text);
-                    if (data.settings)
+                    if (data.settings) {
+                        root.lastStatus = text;
                         root.snapshot = data;
+                    }
                 } catch (e) {
                     root.error = "Could not read system state";
                 }
@@ -256,7 +386,8 @@ QtObject {
             onStreamFinished: {
                 try {
                     const data = JSON.parse(text);
-                    if (Array.isArray(data))
+                    // Reopening the launcher re-reads the list; keep the model (and its tiles) when nothing changed.
+                    if (Array.isArray(data) && JSON.stringify(data) !== JSON.stringify(root.apps))
                         root.apps = data;
                 } catch (e) {
                     root.error = "Could not read installed applications";

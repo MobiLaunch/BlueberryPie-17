@@ -133,11 +133,11 @@ PanelWindow {
                         x: 16
                         y: 14
                         spacing: 10
-                        Image {
+                        AppIcon {
                             width: 28
                             height: 28
-                            sourceSize: Qt.size(56, 56)
-                            source: Quickshell.iconPath(slot.app ? slot.app.icon : slot.modelData.class.toLowerCase(), "application-x-executable")
+                            icon: slot.app ? slot.app.icon : slot.modelData.class.toLowerCase()
+                            label: slot.app ? slot.app.name : slot.modelData.class
                         }
                         Label {
                             anchors.verticalCenter: parent.verticalCenter
@@ -189,14 +189,13 @@ PanelWindow {
                             onLoaded: item.source = Qt.binding(() => root.liveSource(slot.modelData))
                             visible: hasContent
                         }
-                        Image {
+                        AppIcon {
                             anchors.centerIn: parent
                             width: 72
                             height: 72
                             visible: preview.shot.length === 0 && !live.hasContent
-                            sourceSize: Qt.size(144, 144)
-                            fillMode: Image.PreserveAspectFit
-                            source: Quickshell.iconPath(slot.app ? slot.app.icon : slot.modelData.class.toLowerCase(), "application-x-executable")
+                            icon: slot.app ? slot.app.icon : slot.modelData.class.toLowerCase()
+                            label: slot.app ? slot.app.name : slot.modelData.class
                         }
                     }
                     Label {

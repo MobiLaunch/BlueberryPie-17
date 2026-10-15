@@ -855,6 +855,81 @@ class ShellRuntimeTests(unittest.TestCase):
         self.assertTrue(harness.wait_for(lambda: not previews.exists(), 8000))
         self.assertTrue(harness.wait_for(lambda: not harness.find("storage-clear-previews").isEnabled(), 8000))
 
+    def test_apps_the_theme_has_no_icon_for_get_a_letter_tile_not_a_generic_icon(self):
+        harness = Harness()
+        self.addCleanup(harness.close)
+        harness.add_desktop_entry("noicon.desktop", "Zebra Notes", icon="no-such-icon-anywhere")
+        harness.add_desktop_entry("bare.desktop", "Quill", icon="")
+        harness.write_settings(onboarding_complete=True)
+        harness.load()
+        harness.pump(1500)
+        harness.ipc("launcher")
+        harness.pump(700)
+        tiles = [item for item in harness.visible_items() if item.metaObject().className().startswith("AppIcon")]
+        self.assertGreaterEqual(len(tiles), 2)
+        for tile in tiles:
+            self.assertFalse(tile.property("found"), tile.property("label"))
+        initials = {tile.property("label"): tile.property("initial") for tile in tiles}
+        self.assertEqual(initials["Zebra Notes"], "Z")
+        self.assertEqual(initials["Quill"], "Q")
+        self.assertEqual(harness.problems(), [])
+        self.assertEqual(harness.truncated_texts(), [])
+
+    def test_toggles_answer_the_click_at_once_and_the_real_state_confirms_it(self):
+        from prismos import settings
+        harness = self.boot()
+        harness.pump(1500)  # first status read lands
+        now = harness.eval_value
+        # Hardware the sandbox does not have is put in place inside each evaluation, because
+        # the real status reads that follow every click would otherwise replace it.
+        fake = ("SystemBridge.snapshot = SystemBridge.patched({wifi: {available: true, enabled: true}, "
+                "volume: {available: true, value: 40, muted: false}, brightness: {available: true, value: 50}}); ")
+
+        def clicked(call, field):
+            return now("(function () { " + fake + call + "; return " + field + "; })()")
+        # The value is already there when the call returns: nothing waited on a command.
+        self.assertEqual(clicked("SystemBridge.action('dnd')", "SystemBridge.snapshot.settings.dnd"), "true")
+        self.assertEqual(clicked("SystemBridge.action('wifi')", "SystemBridge.snapshot.wifi.enabled"), "false")
+        self.assertEqual(clicked("SystemBridge.action('mute')", "SystemBridge.snapshot.volume.muted"), "true")
+        self.assertEqual(clicked("SystemBridge.action('volume', 72)", "SystemBridge.snapshot.volume.value"), "72")
+        self.assertEqual(clicked("SystemBridge.action('brightness-down')", "SystemBridge.snapshot.brightness.value"), "45")
+        self.assertEqual(clicked("SystemBridge.action('volume-up')", "SystemBridge.snapshot.volume.value"), "45")
+        # Sliders stay inside their range.
+        self.assertEqual(clicked("SystemBridge.action('volume', 400)", "SystemBridge.snapshot.volume.value"), "100")
+        self.assertEqual(clicked("SystemBridge.action('brightness', 0)", "SystemBridge.snapshot.brightness.value"), "1")
+        # Unavailable hardware is left alone, and unknown actions predict nothing.
+        self.assertEqual(clicked("SystemBridge.action('microphone-mute')", "SystemBridge.snapshot.microphone.muted"), "false")
+        self.assertEqual(now("SystemBridge.predict('lock') === null"), "true")
+        # The command really ran, and the status read that follows settles on the real value.
+        self.assertTrue(harness.wait_for(lambda: settings.load()["dnd"] is True, 8000))
+        self.assertTrue(harness.wait_for(lambda: now("SystemBridge.pending.length === 0 && !SystemBridge.busy") == "true", 20000))
+        harness.pump(1500)
+        self.assertEqual(now("SystemBridge.snapshot.settings.dnd"), "true")
+        self.assertEqual(harness.problems(), [])
+
+    def test_a_status_read_that_started_before_a_click_cannot_flip_the_tile_back(self):
+        harness = self.boot()
+        harness.pump(1500)
+        now = harness.eval_value
+        self.assertEqual(now("(function () { SystemBridge.action('dnd'); return SystemBridge.staleRead; })()"), "false",
+                         "nothing was reading, so nothing is stale")
+        harness.wait_for(lambda: now("!SystemBridge.busy && SystemBridge.pending.length === 0") == "true", 8000)
+        harness.pump(1500)
+        self.assertEqual(now("(function () { SystemBridge.refresh(); SystemBridge.action('dnd'); return SystemBridge.staleRead; })()"), "true")
+        self.assertTrue(harness.wait_for(lambda: now("SystemBridge.staleRead") == "false", 8000))
+        harness.pump(1500)
+        self.assertEqual(now("SystemBridge.snapshot.settings.dnd"), "false", "two toggles are back to the start")
+
+    def test_a_wrong_guess_is_replaced_by_the_real_state_even_when_nothing_else_changed(self):
+        harness = self.boot()
+        harness.pump(2500)
+        now = harness.eval_value
+        self.assertEqual(now("SystemBridge.lastStatus.length > 10"), "true", "the first real reading is remembered")
+        # A guess the system will not confirm (the real value stays false): the tile must go back.
+        self.assertEqual(now("(function () { SystemBridge.snapshot = SystemBridge.patched({settings: {dnd: true}}); "
+                             "SystemBridge.lastStatus = ''; SystemBridge.refresh(); return SystemBridge.snapshot.settings.dnd; })()"), "true")
+        self.assertTrue(harness.wait_for(lambda: now("SystemBridge.snapshot.settings.dnd") == "false", 8000))
+
     def test_settings_search_filters_sections(self):
         harness = self.boot()
         harness.ipc("settings")

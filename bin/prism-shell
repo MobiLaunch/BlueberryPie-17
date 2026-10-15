@@ -8,6 +8,12 @@ else
     prism_shell_dir=/usr/share/prismos/shell
 fi
 export PATH="$prism_bin_dir:$PATH"
+# Application icons: Papirus (open source, GPL-3.0-or-later) when it is installed, otherwise
+# whatever the system theme provides. An explicit QS_ICON_THEME always wins.
+prism_icon_root="${PRISM_ICON_ROOT:-/usr/share/icons}"
+if [[ -z "${QS_ICON_THEME:-}" && -d "$prism_icon_root/Papirus" ]]; then
+    export QS_ICON_THEME=Papirus
+fi
 if ! command -v qs >/dev/null; then
     echo 'Quickshell is required. On Arch: sudo pacman -S quickshell' >&2
     exit 1

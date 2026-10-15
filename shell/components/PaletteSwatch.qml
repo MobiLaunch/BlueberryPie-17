@@ -43,7 +43,6 @@ Button {
                 height: 28
                 visible: root.current
                 name: "check"
-                weight: 2.6
                 color: "#ffffff"
             }
         }

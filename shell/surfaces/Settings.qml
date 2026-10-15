@@ -74,7 +74,7 @@ PanelWindow {
         {
             id: "input",
             title: "Pointer & keyboard",
-            symbol: "keyboard",
+            symbol: "mouse",
             page: "InputPage",
             keywords: "mouse touchpad scrolling tap keyboard repeat pointer"
         },

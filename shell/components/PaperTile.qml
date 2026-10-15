@@ -61,10 +61,9 @@ Button {
                 color: Theme.primary
                 Symbol {
                     anchors.centerIn: parent
-                    width: 14
-                    height: 14
+                    width: 18
+                    height: 18
                     name: "check"
-                    weight: 3
                     color: Theme.primaryInk
                 }
             }

@@ -17,7 +17,7 @@ ADDRESS = re.compile(r"0x[0-9a-fA-F]{1,16}\Z")
 CLASS = re.compile(r"[^\x00-\x1f]{1,120}\Z")
 MINIMIZED = "special:minimized"
 GAP = 12  # breathing room around snapped windows, matching the session's gaps
-OPERATIONS = ("focus", "close", "minimize", "restore", "maximize", "float", "snap-left", "snap-right")
+from .windowops import OPERATIONS  # noqa: E402  (re-exported)
 
 
 def _json(command):

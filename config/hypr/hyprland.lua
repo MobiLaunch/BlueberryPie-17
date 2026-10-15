@@ -17,9 +17,14 @@ hl.config({
     animations = { enabled = true },
     input = { kb_layout = "us", follow_mouse = 1, touchpad = { natural_scroll = true } },
 })
-hl.curve("prismSpring", { type = "spring", mass = 1, stiffness = 340, damping = 29 })
+-- Spring curves are new in 0.55+: the damping field is spelled `dampening`, and an
+-- animation can only name a spring that was created. Register the spring under pcall
+-- and fall back to the bezier when it is refused, so a mistake here can never break
+-- window animations or abort the rest of the session configuration.
 hl.curve("prismFade", { type = "bezier", points = {{0.2, 0}, {0, 1}} })
-hl.animation({ leaf = "windowsIn", enabled = true, speed = 3.2, spring = "prismSpring", style = "popin 90%" })
+local spring_ok = pcall(hl.curve, "prismSpring", { type = "spring", mass = 1, stiffness = 340, dampening = 29 })
+local opening = spring_ok and { spring = "prismSpring" } or { bezier = "prismFade" }
+hl.animation({ leaf = "windowsIn", enabled = true, speed = 3.2, spring = opening.spring, bezier = opening.bezier, style = "popin 90%" })
 hl.animation({ leaf = "windowsOut", enabled = true, speed = 1.6, bezier = "prismFade", style = "popin 95%" })
 hl.animation({ leaf = "fade", enabled = true, speed = 1.6, bezier = "prismFade" })
 hl.animation({ leaf = "layers", enabled = false }) -- The shell animates its own panels.

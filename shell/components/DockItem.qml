@@ -49,14 +49,13 @@ Button {
         }
     }
     contentItem: Item {
-        Image {
+        AppIcon {
             anchors.horizontalCenter: parent.horizontalCenter
             y: 6
             width: 40
             height: 40
-            sourceSize: Qt.size(80, 80)
-            fillMode: Image.PreserveAspectFit
-            source: Quickshell.iconPath(root.app.icon, "application-x-executable")
+            icon: root.app.icon
+            label: root.app.name
         }
         Rectangle {
             anchors.horizontalCenter: parent.horizontalCenter
