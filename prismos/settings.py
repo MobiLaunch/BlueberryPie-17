@@ -40,7 +40,7 @@ TILE_IDS = ("wifi", "bluetooth", "sound", "microphone", "dnd", "dark", "reduced_
             "airplane", "battery_saver", "night_light", "screenshot", "lock", "hotspot", "vpn", "screen_record", "focus")
 WIDGET_IDS = ("glance", "clock", "search", "calendar", "media", "weather", "system", "analog", "notes")
 DEFAULTS = {"seed": "#8469cf", "dark": False, "reduced_motion": False, "dnd": False,
-            "favorites": None, "recent_apps": [], "wallpaper": "", "widgets": None, "weather": {}, "keyboard": "us", "widget_sizes": {}, "night_temp": 3800, "recents_previews": True, "clock_24h": True, "world_clocks": [], "tiles": None, "alarms": [], "dnd_schedule": {"enabled": False, "start": "22:00", "end": "07:00"}, "clipboard_history": False, "notification_history": False, "lock_notifications": True, "record_audio": False, "vpn_profile": "", "muted_apps": [], "focus": False, "focus_apps": [], "night_light": False, "scheme": "tonal_spot", "font_scale": 1.0, "android_enabled": False, "onboarding_complete": False,
+            "favorites": None, "recent_apps": [], "wallpaper": "", "widgets": None, "weather": {}, "keyboard": "us", "widget_sizes": {}, "night_temp": 3800, "recents_previews": True, "clock_24h": True, "world_clocks": [], "tiles": None, "alarms": [], "dnd_schedule": {"enabled": False, "start": "22:00", "end": "07:00"}, "clipboard_history": False, "notification_history": False, "lock_notifications": True, "record_audio": False, "vpn_profile": "", "muted_apps": [], "recent_emoji": [], "focus": False, "focus_apps": [], "night_light": False, "scheme": "tonal_spot", "font_scale": 1.0, "android_enabled": False, "onboarding_complete": False,
             "natural_scroll": True, "tap_to_click": True,
             "pointer_speed": 0.0, "repeat_rate": 25, "display_scales": {}, "display_positions": {}}
 
@@ -118,6 +118,10 @@ def load():
         profile = data.get("vpn_profile")
         if isinstance(profile, str) and re.fullmatch(r"[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}", profile):
             valid["vpn_profile"] = profile.lower()
+        used = data.get("recent_emoji")
+        if isinstance(used, list):
+            from .emoji import MAX_RECENT, valid as is_emoji
+            valid["recent_emoji"] = list(dict.fromkeys(item for item in used if is_emoji(item)))[:MAX_RECENT]
         for key in ("muted_apps", "focus_apps"):
             names = data.get(key)
             if isinstance(names, list):

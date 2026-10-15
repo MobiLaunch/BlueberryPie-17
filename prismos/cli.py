@@ -22,11 +22,11 @@ class _Lazy:
 
 
 (about, alarms, android, appinfo, apps, audio, clipboard, clockset, notes, thumbnails, worldclock, displays, drives,
- favorites, fdroid, files, inputs, installer, notifyprefs, hotspot, vpn, recorder, screenshot, settings, stats, storage, store,
+ emoji, favorites, fdroid, files, inputs, installer, notifyprefs, hotspot, vpn, recorder, screenshot, settings, stats, storage, store,
  system, tiles, updates, wallpaper, weather, websearch, widgets, windows, wireless) = (
     _Lazy(name) for name in (
         "about", "alarms", "android", "appinfo", "apps", "audio", "clipboard", "clockset", "notes", "thumbnails",
-        "worldclock", "displays", "drives", "favorites", "fdroid", "files", "inputs", "installer",
+        "worldclock", "displays", "drives", "emoji", "favorites", "fdroid", "files", "inputs", "installer",
         "notifyprefs", "hotspot", "vpn", "recorder", "screenshot", "settings", "stats", "storage", "store", "system", "tiles", "updates",
         "wallpaper", "weather", "websearch", "widgets", "windows", "wireless"))
 alert_sound = _Lazy("sound")
@@ -102,6 +102,9 @@ def main(argv=None):
     paper = sub.add_parser("wallpaper")
     paper.add_argument("operation", choices=("list", "set", "clear"))
     paper.add_argument("path", nargs="?")
+    emo = sub.add_parser("emoji")
+    emo.add_argument("operation", choices=("recent", "copy"))
+    emo.add_argument("text", nargs="?")
     upd = sub.add_parser("updates")
     upd.add_argument("operation", choices=("list", "check", "apply"))
     upd.add_argument("kind", nargs="?")
@@ -292,6 +295,8 @@ def main(argv=None):
             result = about.info()
         elif args.command == "storage":
             result = storage.usage() if args.operation == "usage" else storage.clear_previews()
+        elif args.command == "emoji":
+            result = emoji.recent() if args.operation == "recent" else emoji.copy(args.text)
         elif args.command == "updates":
             result = (updates.cached() if args.operation == "list" else
                       updates.check() if args.operation == "check" else updates.apply(args.kind))

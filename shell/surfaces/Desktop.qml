@@ -52,6 +52,9 @@ Scope {
     AppInfo {
         screen: root.screen
     }
+    EmojiPicker {
+        screen: root.screen
+    }
     HeadsUp {
         screen: root.screen
     }

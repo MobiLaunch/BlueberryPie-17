@@ -21,6 +21,7 @@ QtObject {
     property string launcherQuery: ""
     property bool powerOpen: false
     property bool appInfoOpen: false
+    property bool emojiOpen: false
     property bool storeOpen: false
     property bool filesOpen: false
     property bool recentsOpen: false
@@ -68,6 +69,7 @@ QtObject {
         settingsOpen = false;
         powerOpen = false;
         appInfoOpen = false;
+        emojiOpen = false;
         storeOpen = false;
         filesOpen = false;
         recentsOpen = false;
@@ -217,7 +219,7 @@ QtObject {
             root.finishRecents();
         }
     }
-    readonly property bool anyOpen: shadeOpen || drawerOpen || settingsOpen || powerOpen || appInfoOpen
+    readonly property bool anyOpen: shadeOpen || drawerOpen || settingsOpen || powerOpen || appInfoOpen || emojiOpen
         || storeOpen || filesOpen || recentsOpen || utilitiesOpen
     // Home: first leaves whatever is open; with nothing open it shows the desktop.
     function goHome() {
@@ -227,6 +229,14 @@ QtObject {
         }
         Windows.showDesktop();
         return "desktop";
+    }
+    function openEmoji(screen) {
+        const wasOpen = emojiOpen;
+        close();
+        if (wasOpen)
+            return;
+        activeScreen = screen;
+        emojiOpen = true;
     }
     function openAppInfo(app, screen) {
         close();
@@ -279,6 +289,10 @@ QtObject {
         function onRawEvent(event) {
             root.windowArrived(event.name, event.data);
         }
+    }
+    function showToast(message) {
+        toast = message;
+        toastTimer.restart();
     }
     property Timer toastTimer: Timer {
         interval: 5000

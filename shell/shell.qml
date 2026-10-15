@@ -61,6 +61,9 @@ ShellRoot {
         function recents(): void {
             ShellState.toggleRecents(ShellState.focusedScreen());
         }
+        function emoji(): void {
+            ShellState.openEmoji(ShellState.focusedScreen());
+        }
         function home(): void {
             ShellState.goHome();
         }

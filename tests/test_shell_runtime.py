@@ -21,7 +21,7 @@ except ImportError as error:  # PySide6 or its system libraries are absent
 else:
     SKIP_REASON = ""
 
-SURFACES = ("shade", "launcher", "settings", "files", "store", "power", "recents", "calculator", "clock", "alarms", "converter", "clipboard", "worldclock")
+SURFACES = ("shade", "launcher", "settings", "files", "store", "power", "recents", "calculator", "clock", "alarms", "converter", "clipboard", "worldclock", "emoji")
 SECTIONS = ("network", "bluetooth", "display", "sound", "notifications", "style", "widgets", "datetime", "input", "shortcuts", "apps", "power", "storage", "update", "about")
 WINDOWS = ('Windows.available = true; Windows.list = ['
            '{address:"0xaa01", class:"firefox", title:"Docs", workspace:1, pid:1, recency:0, focused:true, hidden:false},'
@@ -1841,6 +1841,52 @@ class ShellRuntimeTests(unittest.TestCase):
         arguments = log.read_text().splitlines()
         self.assertEqual(arguments[:4], ["--title", "PrismOS update", "bash", "-c"])
         self.assertTrue(arguments[4].startswith("sudo pacman -Syu; flatpak update;"), arguments)
+        self.assertEqual(harness.problems(), [])
+
+    def test_emoji_picker_searches_copies_and_remembers(self):
+        import os
+        import shutil
+        from pathlib import Path
+        from prismos import settings
+        harness = Harness()
+        self.addCleanup(harness.close)
+        harness.write_settings(onboarding_complete=True)
+        folder = Path(harness.sandbox) / "emojibin"
+        folder.mkdir()
+        copied = Path(harness.sandbox) / "emoji.txt"
+        (folder / "wl-copy").write_text(f"#!/bin/sh\ncat > '{copied}'\n")
+        (folder / "wl-copy").chmod(0o755)
+        os.environ["PATH"] = f"{folder}:{os.environ['PATH']}"
+        harness.load()
+        harness.pump(2000)
+        now = harness.eval_value
+        harness.ipc("emoji")
+        harness.pump(600)
+        self.assertEqual(now("ShellState.emojiOpen"), "true")
+        grid = harness.find("emoji-grid")
+        self.assertEqual(now("EmojiState.recents.length"), "0")
+        self.assertIsNotNone(harness.find("emoji-group-0"))
+        self.assertIsNone(harness.find("emoji-group--2"), "no Recent tab before anything was used")
+        self.assertGreater(grid.property("count"), 100, "browsing starts with the first group")
+        search = next(item for item in harness.visible_items()
+                      if "TextField" in item.metaObject().className() and item.property("placeholderText") == "Search emoji")
+        search.setProperty("text", "thumbs up")
+        harness.pump(400)
+        self.assertEqual(grid.property("count"), 1)
+        cell = next(item for item in harness.visible_items() if item.objectName() == "emoji-cell")
+        harness.click(*harness.scene_pos(cell))
+        self.assertTrue(harness.wait_for(copied.exists, 8000))
+        self.assertTrue(copied.read_text().startswith("\U0001F44D"))
+        self.assertEqual(now("ShellState.emojiOpen"), "false", "the picker closes after copying")
+        self.assertIn("Copied", now("ShellState.toast"))
+        self.assertTrue(harness.wait_for(lambda: settings.load()["recent_emoji"] != [], 8000))
+        self.assertTrue(harness.wait_for(lambda: now("EmojiState.recents.length") == "1", 8000))
+        harness.ipc("emoji")
+        harness.pump(600)
+        self.assertIsNotNone(harness.find("emoji-group--2"), "a Recent tab appears once something was used")
+        self.assertEqual(harness.find("emoji-grid").property("count"), 1)
+        harness.ipc("emoji")      # the key toggles it closed again
+        self.assertEqual(now("ShellState.emojiOpen"), "false")
         self.assertEqual(harness.problems(), [])
 
     def test_every_surface_opens_without_qml_errors(self):

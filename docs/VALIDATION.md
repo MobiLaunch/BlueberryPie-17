@@ -98,6 +98,18 @@
 
 - A real `checkupdates` against live mirrors (network, mirror failures, partial-upgrade warnings), and the terminal flow with a real `sudo pacman -Syu`. Reboot-required detection and automatic or scheduled checks are not built: a check happens only when asked.
 
+### Slice 9: emoji picker — executed
+
+| Check | Result |
+| --- | --- |
+| Data and search | 1,906 emoji in nine groups; labels and tags matched case-insensitively with exact and prefix matches first (`ok` finds "OK hand", `cat` finds the plain cat), unknown recents skipped, no duplicates (`tests/emojisearch.spec.cjs`) |
+| Adapter | Only short symbol/joiner/variation-selector sequences or keycaps are accepted; text, control characters, shell syntax and overlong input are refused before `wl-copy` or the settings file are touched; **every emoji the picker offers passes the validator**; copying pipes the text to `wl-copy` on stdin, remembers the newest 24 without duplicates, a tampered recents list is cleaned on load |
+| Shell | `Super + .` toggles the picker, browsing starts with the first group, searching narrows the grid, choosing an emoji copies it (fake `wl-copy`), closes the picker and shows a toast; a Recent tab appears afterwards and lists it |
+
+### Not executed (slice 9)
+
+- Glyph rendering with the real `noto-fonts-emoji` (the offscreen runtime has no colour emoji font, so only the text is checked), skin-tone and gender variants (only the base emoji are listed), and pasting into other apps.
+
 ### Not executed (slice 2)
 
 - Real messengers: whether their notifications set the inline-reply capability and how they react to a reply or to a dismissal; the lock screen label in a real `hyprlock` (the config is only checked for structure).

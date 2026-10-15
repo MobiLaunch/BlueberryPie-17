@@ -216,6 +216,10 @@ One slice per gap an Android user notices first.
   Flatpak apps, lists what would change and remembers the last result. Checking never installs anything.
   **Install updates** opens the session terminal on a fixed command (`sudo pacman -Syu`, and
   `flatpak update`) so you see the password prompt and any package news yourself.
+- **Emoji picker** (`Super + .`): search by name or keyword ("thumbs up", "lol", "heart"), or browse the nine
+  groups; the ones you use most recently come first. Choosing one copies it to the clipboard (a Wayland
+  shell cannot type into another app) and says so; `Enter` copies the first match. The names come from
+  Unicode CLDR through `emojibase-data` (MIT); the glyphs come from the system emoji font.
 
 ## Build the ISO on Windows
 

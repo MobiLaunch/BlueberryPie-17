@@ -23,6 +23,7 @@ python
 python-pillow
 ttf-roboto
 noto-fonts
+noto-fonts-emoji
 sudo
 mesa
 vulkan-intel

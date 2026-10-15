@@ -165,6 +165,9 @@ class HyprlandConfigTests(unittest.TestCase):
         self.assertEqual(gestures[("4", "up")], "prism-shell ipc launcher")
         self.assertEqual(gestures[("4", "down")], "prism-shell ipc shade")
 
+    def test_emoji_key_opens_the_picker(self):
+        self.assertEqual(self.binds.get("SUPER + PERIOD"), "prism-shell ipc emoji")
+
     def test_home_key_shows_the_desktop_even_without_the_shell(self):
         self.assertEqual(self.binds.get("SUPER + D"), "prism-shell ipc home || prismctl windows show-desktop")
 
