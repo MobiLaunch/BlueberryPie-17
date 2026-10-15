@@ -14,6 +14,7 @@ PanelWindow {
     property string dateText: Qt.formatDate(new Date(), "dddd, MMMM d")
     property string connectionKind: ""
     property bool soundOpen: false
+    property bool editing: false
     readonly property var battery: SystemBridge.snapshot.battery
     readonly property string batteryText: battery.available ? battery.value + "%" + (battery.charging ? " · Charging" : "") : ""
     onSoundOpenChanged: AudioState.panelOpen = soundOpen
@@ -26,6 +27,58 @@ PanelWindow {
         Wireless.operation = "";
         if (connectionKind)
             Wireless.refresh(kind);
+    }
+    function activateTile(id) {
+        switch (id) {
+        case "wifi":
+            SystemBridge.action("wifi");
+            break;
+        case "bluetooth":
+            SystemBridge.action("bluetooth");
+            break;
+        case "sound":
+            SystemBridge.action("mute");
+            break;
+        case "microphone":
+            SystemBridge.action("microphone-mute");
+            break;
+        case "dnd":
+            SystemBridge.action("dnd");
+            break;
+        case "dark":
+            SystemBridge.action("dark");
+            break;
+        case "reduced_motion":
+            SystemBridge.action("reduced_motion");
+            break;
+        case "audio_devices":
+            showSound();
+            break;
+        case "airplane":
+            SystemBridge.action("airplane");
+            break;
+        case "battery_saver":
+            SystemBridge.action("battery-saver");
+            break;
+        case "night_light":
+            SystemBridge.action("night-light");
+            break;
+        case "screenshot":
+            ShellState.screenshot("area");
+            break;
+        case "lock":
+            ShellState.close();
+            SystemBridge.action("lock");
+            break;
+        }
+    }
+    function tileDetails(id) {
+        if (id === "wifi" || id === "bluetooth")
+            showConnections(id);
+        else if (id === "sound")
+            showSound();
+        else if (id === "microphone")
+            showSound("input");
     }
     function showSound(kind = "output") {
         connectionKind = "";
@@ -65,6 +118,7 @@ PanelWindow {
         if (opened)
             card.forceActiveFocus();
         else {
+            editing = false;
             connectionKind = "";
             soundOpen = false;
         }
@@ -174,6 +228,14 @@ PanelWindow {
                         }
                     }
                     IconButton {
+                        symbol: "edit"
+                        variant: "tonal"
+                        toggle: true
+                        checked: root.editing
+                        Accessible.name: "Edit tiles"
+                        onClicked: root.editing = !root.editing
+                    }
+                    IconButton {
                         symbol: "settings"
                         variant: "tonal"
                         Accessible.name: "Settings"
@@ -195,93 +257,38 @@ PanelWindow {
                     onCommitted: level => SystemBridge.action("brightness", level)
                 }
                 GridLayout {
+                    id: tileGrid
                     width: parent.width
+                    visible: !root.editing
+                    height: visible ? implicitHeight : 0
                     columns: 4
                     columnSpacing: 8
                     rowSpacing: 8
-                    QuickTile {
-                        Layout.fillWidth: true
-                        Layout.columnSpan: 2
-                        title: "Wi-Fi"
-                        subtitle: SystemBridge.snapshot.wifi.available ? SystemBridge.snapshot.wifi.label : "Unavailable"
-                        symbol: SystemBridge.snapshot.wifi.enabled ? "wifi" : "wifi_off"
-                        hasDetails: true
-                        onDetailsRequested: root.showConnections("wifi")
-                        activated: SystemBridge.snapshot.wifi.enabled
-                        enabled: SystemBridge.snapshot.wifi.available
-                        onClicked: SystemBridge.action("wifi")
+                    Repeater {
+                        model: TilesState.enabled
+                        delegate: QuickTile {
+                            id: tile
+                            required property string modelData
+                            readonly property var info: TilesState.describe(modelData)
+                            Layout.fillWidth: true
+                            Layout.columnSpan: info.large ? 2 : 1
+                            large: info.large
+                            title: info.title
+                            subtitle: info.subtitle
+                            symbol: info.symbol
+                            hasDetails: info.hasDetails
+                            activated: modelData === "audio_devices" ? root.soundOpen : info.activated
+                            enabled: info.enabled
+                            onClicked: root.activateTile(modelData)
+                            onDetailsRequested: root.tileDetails(modelData)
+                        }
                     }
-                    QuickTile {
-                        Layout.fillWidth: true
-                        Layout.columnSpan: 2
-                        title: "Bluetooth"
-                        subtitle: SystemBridge.snapshot.bluetooth.available ? (activated ? "On" : "Off") : "Unavailable"
-                        symbol: SystemBridge.snapshot.bluetooth.enabled ? "bluetooth" : "bluetooth_off"
-                        hasDetails: true
-                        onDetailsRequested: root.showConnections("bluetooth")
-                        activated: SystemBridge.snapshot.bluetooth.enabled
-                        enabled: SystemBridge.snapshot.bluetooth.available
-                        onClicked: SystemBridge.action("bluetooth")
-                    }
-                    QuickTile {
-                        Layout.fillWidth: true
-                        Layout.columnSpan: 2
-                        title: "Sound"
-                        subtitle: !SystemBridge.snapshot.volume.available ? "Unavailable" : activated ? SystemBridge.snapshot.volume.value + "%" : "Muted"
-                        symbol: activated ? "volume" : "volume_off"
-                        hasDetails: true
-                        onDetailsRequested: root.showSound()
-                        activated: !SystemBridge.snapshot.volume.muted
-                        enabled: SystemBridge.snapshot.volume.available && !AudioState.writing
-                        onClicked: SystemBridge.action("mute")
-                    }
-                    QuickTile {
-                        Layout.fillWidth: true
-                        Layout.columnSpan: 2
-                        title: "Microphone"
-                        subtitle: SystemBridge.snapshot.microphone.available ? (activated ? "On" : "Muted") : "Unavailable"
-                        symbol: activated ? "microphone" : "microphone_off"
-                        activated: SystemBridge.snapshot.microphone.available && !SystemBridge.snapshot.microphone.muted
-                        enabled: SystemBridge.snapshot.microphone.available && !AudioState.writing
-                        hasDetails: true
-                        onDetailsRequested: root.showSound("input")
-                        onClicked: SystemBridge.action("microphone-mute")
-                    }
-                    QuickTile {
-                        Layout.fillWidth: true
-                        large: false
-                        title: "Do Not Disturb"
-                        subtitle: activated ? "On" : "Off"
-                        symbol: activated ? "notifications_off" : "dnd"
-                        activated: SystemBridge.snapshot.settings.dnd
-                        onClicked: SystemBridge.action("dnd")
-                    }
-                    QuickTile {
-                        Layout.fillWidth: true
-                        large: false
-                        title: "Dark theme"
-                        subtitle: activated ? "On" : "Off"
-                        symbol: "moon"
-                        activated: Theme.dark
-                        onClicked: SystemBridge.action("dark")
-                    }
-                    QuickTile {
-                        Layout.fillWidth: true
-                        large: false
-                        title: "Reduced motion"
-                        subtitle: activated ? "On" : "Off"
-                        symbol: "motion"
-                        activated: Theme.reducedMotion
-                        onClicked: SystemBridge.action("reduced_motion")
-                    }
-                    QuickTile {
-                        Layout.fillWidth: true
-                        large: false
-                        title: "Audio devices"
-                        symbol: "headphones"
-                        activated: root.soundOpen
-                        onClicked: root.showSound()
-                    }
+                }
+                TileEditor {
+                    width: parent.width
+                    visible: root.editing
+                    height: visible ? implicitHeight : 0
+                    onDone: root.editing = false
                 }
                 WirelessPanel {
                     width: parent.width

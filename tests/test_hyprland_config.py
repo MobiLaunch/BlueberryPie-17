@@ -66,6 +66,12 @@ class HyprlandConfigTests(unittest.TestCase):
         for keys, command in expected.items():
             self.assertEqual(self.binds.get(keys), command, keys)
 
+    def test_screenshot_keys_and_night_light_autostart(self):
+        self.assertEqual(self.binds.get("Print"), "prism-shell ipc screenshot")
+        self.assertEqual(self.binds.get("SHIFT + Print"), "prism-shell ipc screenshotFull")
+        source = (ROOT / "config/hypr/hyprland.lua").read_text()
+        self.assertIn("prismctl action night-light-apply", source)
+
     def test_every_ipc_target_exists_in_wrapper_and_shell(self):
         targets = {match.split()[-1] for command in self.binds.values()
                    for match in re.findall(r"prism-shell ipc \w+", command)}

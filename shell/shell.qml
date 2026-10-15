@@ -34,6 +34,12 @@ ShellRoot {
         function installer(): void {
             ShellState.openInstaller(ShellState.focusedScreen());
         }
+        function screenshot(): void {
+            ShellState.screenshot("area");
+        }
+        function screenshotFull(): void {
+            ShellState.screenshot("full");
+        }
         function recents(): void {
             ShellState.toggleRecents(ShellState.focusedScreen());
         }

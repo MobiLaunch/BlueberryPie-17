@@ -32,6 +32,18 @@ QtObject {
                 available: false,
                 value: 0
             },
+            airplane: {
+                available: false,
+                enabled: false
+            },
+            profile: {
+                available: false,
+                saver: false
+            },
+            night_light: {
+                available: false,
+                enabled: false
+            },
             settings: {
                 dark: false,
                 reduced_motion: false,
@@ -87,6 +99,46 @@ QtObject {
         queue.push(["prismctl", "theme", "--seed", seed]);
         pending = queue;
         drain();
+    }
+    function setTiles(ids) {
+        const queue = pending.filter(item => item[1] !== "tiles");
+        queue.push(["prismctl", "tiles", "set"].concat(ids));
+        pending = queue;
+        drain();
+    }
+    function resetTiles() {
+        const queue = pending.filter(item => item[1] !== "tiles");
+        queue.push(["prismctl", "tiles", "reset"]);
+        pending = queue;
+        drain();
+    }
+    function muteApp(name, muted) {
+        const queue = pending.slice();
+        queue.push(["prismctl", "notifications", muted ? "mute" : "unmute", name]);
+        pending = queue;
+        drain();
+    }
+    function screenshot(mode) {
+        if (shooter.running)
+            return;
+        shooter.command = ["prismctl", "screenshot", mode];
+        shooter.running = true;
+    }
+    signal screenshotFinished(bool success, string message)
+    property Process shooter: Process {
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const data = JSON.parse(text);
+                    if (data.ok === false)
+                        root.screenshotFinished(false, data.error);
+                    else
+                        root.screenshotFinished(true, data.copied ? "Screenshot copied and saved to Pictures" : "Screenshot saved to Pictures");
+                } catch (e) {
+                    root.screenshotFinished(false, "The screenshot did not finish");
+                }
+            }
+        }
     }
     function setScheme(scheme) {
         const queue = pending.slice();

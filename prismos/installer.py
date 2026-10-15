@@ -59,8 +59,10 @@ RESERVED_USERS = {"root", "daemon", "bin", "sys", "sync", "games", "man", "mail"
 # Installed with pacstrap. The prism-shell package pulls in the rest of the desktop.
 BASE_PACKAGES = ("base", "linux", "linux-firmware", "grub", "networkmanager", "sudo", "nano",
                  "mesa", "vulkan-intel", "vulkan-radeon", "zram-generator",
-                 "greetd", "greetd-tuigreet", "prism-shell", "firefox", "noto-fonts")
-SERVICES = ("NetworkManager.service", "bluetooth.service", "greetd.service", "systemd-timesyncd.service")
+                 "greetd", "greetd-tuigreet", "prism-shell", "firefox", "noto-fonts",
+                 "hyprsunset", "power-profiles-daemon")
+SERVICES = ("NetworkManager.service", "bluetooth.service", "greetd.service", "systemd-timesyncd.service",
+            "power-profiles-daemon.service")
 HYPR_FILES = ("hyprland.lua", "hyprlock.conf", "hypridle.conf")
 
 

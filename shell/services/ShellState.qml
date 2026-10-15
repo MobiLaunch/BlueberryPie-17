@@ -94,6 +94,17 @@ QtObject {
         drawerOpen = true;
         SystemBridge.refreshApps();
     }
+    // Capture after the panels have faded so they are not in the picture.
+    property string screenshotMode: "area"
+    function screenshot(mode) {
+        close();
+        screenshotMode = mode;
+        shotTimer.restart();
+    }
+    property Timer shotTimer: Timer {
+        interval: 380
+        onTriggered: SystemBridge.screenshot(root.screenshotMode)
+    }
     function openInstaller(screen) {
         if (!InstallerState.live) {
             toast = "Installing is only available from the PrismOS live USB";
@@ -185,6 +196,12 @@ QtObject {
         function onErrorChanged() {
             if (SystemBridge.error) {
                 root.toast = SystemBridge.error;
+                toastTimer.restart();
+            }
+        }
+        function onScreenshotFinished(success, message) {
+            if (success || message !== "Screenshot cancelled") {
+                root.toast = message;
                 toastTimer.restart();
             }
         }

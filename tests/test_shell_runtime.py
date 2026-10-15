@@ -160,6 +160,86 @@ class ShellRuntimeTests(unittest.TestCase):
         self.assertEqual(after.split("|")[1], "18")
         self.assertEqual(harness.problems(), [])
 
+    def test_quick_settings_tiles_can_be_added_reordered_and_used(self):
+        from prismos import settings
+        from qml_runtime.stubs import Process
+        harness = self.boot()
+        harness.ipc("shade")
+        harness.pump(600)
+        edit = next(item for item in harness.visible_items() if item.property("symbol") == "edit")
+        harness.click(*harness.scene_pos(edit))
+        harness.pump(500)
+        self.assertEqual(harness.problems(), [])
+        self.assertEqual(harness.truncated_texts(), [])
+
+        def toggle_for(title):
+            return next(row for row in harness.visible_items()
+                        if row.metaObject().className().startswith("ListRow") and row.property("title") == title)
+
+        def chevron(symbol):
+            return next((item for item in harness.visible_items(toggle_for("Screenshot")) if item.property("symbol") == symbol), None)
+        row = toggle_for("Screenshot")
+        harness.reveal(row)
+        switch = next(item for item in harness.visible_items(row) if item.metaObject().className().startswith("AndroidToggle"))
+        harness.click(*harness.scene_pos(switch))
+        self.assertTrue(harness.wait_for(lambda: "screenshot" in (settings.load()["tiles"] or []), 6000))
+        self.assertTrue(harness.wait_for(lambda: chevron("chevron_up") is not None, 6000))
+        harness.reveal(chevron("chevron_up"))
+        harness.click(*harness.scene_pos(chevron("chevron_up")))
+        self.assertTrue(harness.wait_for(lambda: settings.load()["tiles"][-2:] == ["screenshot", "audio_devices"], 6000))
+        done = next(item for item in harness.visible_items()
+                    if item.metaObject().className().startswith("PillButton") and item.property("text") == "Done")
+        harness.reveal(done)
+        harness.click(*harness.scene_pos(done))
+        find_tile = lambda: next((item for item in harness.visible_items()
+                                  if item.metaObject().className().startswith("QuickTile") and item.property("title") == "Screenshot"), None)
+        self.assertTrue(harness.wait_for(lambda: find_tile() is not None, 8000))
+        shot = find_tile()
+        Process.log.clear()
+        harness.click(*harness.scene_pos(shot))
+        self.assertTrue(harness.wait_for(lambda: ["prismctl", "screenshot", "area"] in Process.log, 4000))
+        self.assertEqual(harness.problems(), [])
+
+    def test_muted_apps_are_dropped_but_critical_alerts_get_through(self):
+        from qml_runtime import stubs
+        harness = Harness()
+        self.addCleanup(harness.close)
+        harness.write_settings(onboarding_complete=True, muted_apps=["Chat"])
+        harness.load()
+        harness.pump(1800)
+        server = stubs.NotificationServer.instances[0]
+        server.post(appName="Chat", summary="Muted hello")
+        server.post(appName="Mail", summary="Visible hello")
+        harness.pump(400)
+        texts = {item.property("text") for item in harness.visible_items() if item.property("text")}
+        self.assertNotIn("Muted hello", texts)
+        self.assertIn("Visible hello", texts)
+        server.post(appName="Chat", summary="Chat fire alarm", urgency=2)
+        harness.pump(500)
+        texts = {item.property("text") for item in harness.visible_items() if item.property("text")}
+        self.assertIn("Chat fire alarm", texts)
+
+    def test_notification_settings_list_apps_and_mute_through_the_bridge(self):
+        from prismos import settings
+        from qml_runtime import stubs
+        harness = self.boot()
+        server = stubs.NotificationServer.instances[0]
+        server.post(appName="Chat", summary="hello")
+        harness.pump(300)
+        harness.ipc("settings")
+        harness.pump(500)
+        row = harness.find("section-notifications")
+        harness.reveal(row)
+        harness.click(*harness.scene_pos(row))
+        harness.pump(600)
+        app = next(item for item in harness.visible_items()
+                   if item.metaObject().className().startswith("ToggleRow") and item.property("title") == "Chat")
+        harness.reveal(app)
+        harness.click(*harness.scene_pos(app))
+        self.assertTrue(harness.wait_for(lambda: settings.load()["muted_apps"] == ["Chat"], 6000))
+        self.assertEqual(harness.truncated_texts(), [])
+        self.assertEqual(harness.problems(), [])
+
     def test_settings_search_filters_sections(self):
         harness = self.boot()
         harness.ipc("settings")

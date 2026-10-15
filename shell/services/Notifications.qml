@@ -24,12 +24,28 @@ QtObject {
         return order.map(key => byApp[key]);
     }
     readonly property int count: items.values.length
+    // Apps that have sent something this session (for the per-app switches in Settings).
+    property var seenApps: []
+    readonly property var mutedApps: SystemBridge.snapshot.settings.muted_apps || []
+    function noteApp(name) {
+        if (name && seenApps.indexOf(name) < 0)
+            seenApps = seenApps.concat([name]).slice(-30);
+    }
+    function isMuted(name) {
+        return mutedApps.indexOf(name || "Other") >= 0;
+    }
     property NotificationServer server: NotificationServer {
         bodySupported: true
         bodyMarkupSupported: false
         actionsSupported: true
         persistenceSupported: true
         onNotification: function (notification) {
+            root.noteApp(notification.appName);
+            // Muted apps are dropped; critical alerts still get through.
+            if (root.isMuted(notification.appName) && notification.urgency !== NotificationUrgency.Critical) {
+                notification.dismiss();
+                return;
+            }
             notification.tracked = true;
             const current = Array.from(root.items.values);
             if (current.length > root.limit) {

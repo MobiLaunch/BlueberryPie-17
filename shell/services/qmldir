@@ -14,3 +14,4 @@ singleton AboutState 1.0 AboutState.qml
 singleton WallpaperState 1.0 WallpaperState.qml
 singleton WidgetsState 1.0 WidgetsState.qml
 singleton InstallerState 1.0 InstallerState.qml
+singleton TilesState 1.0 TilesState.qml

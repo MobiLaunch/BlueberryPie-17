@@ -2,7 +2,7 @@ import argparse
 import json
 import sys
 
-from . import about, android, apps, audio, displays, drives, favorites, fdroid, files, inputs, installer, settings, stats, store, system, theme, wallpaper, weather, websearch, widgets, windows, wireless
+from . import about, android, apps, audio, displays, drives, favorites, fdroid, files, inputs, installer, notifyprefs, screenshot, settings, stats, store, system, theme, tiles, wallpaper, weather, websearch, widgets, windows, wireless
 
 
 def main(argv=None):
@@ -16,6 +16,14 @@ def main(argv=None):
     web.add_argument("query")
     setup = sub.add_parser("installer")
     setup.add_argument("operation", choices=("status", "options", "disks", "plan", "install"))
+    shot = sub.add_parser("screenshot")
+    shot.add_argument("mode", choices=screenshot.MODES)
+    tile = sub.add_parser("tiles")
+    tile.add_argument("operation", choices=("list", "set", "reset"))
+    tile.add_argument("ids", nargs="*")
+    alerts = sub.add_parser("notifications")
+    alerts.add_argument("operation", choices=("list", "mute", "unmute"))
+    alerts.add_argument("app", nargs="?")
     gadget = sub.add_parser("widgets")
     gadget.add_argument("operation", choices=("list", "set"))
     gadget.add_argument("ids", nargs="*")
@@ -111,6 +119,14 @@ def main(argv=None):
             else:
                 result = {"status": installer.status, "options": installer.options,
                           "disks": installer.disk_listing}[args.operation]()
+        elif args.command == "screenshot":
+            result = screenshot.capture(args.mode)
+        elif args.command == "tiles":
+            result = (tiles.status() if args.operation == "list" else
+                      tiles.reset() if args.operation == "reset" else tiles.change(args.ids))
+        elif args.command == "notifications":
+            result = (notifyprefs.status() if args.operation == "list" else
+                      notifyprefs.mute(args.app) if args.operation == "mute" else notifyprefs.unmute(args.app))
         elif args.command == "websearch":
             result = websearch.search(args.query)
         elif args.command == "stats":

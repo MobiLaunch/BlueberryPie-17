@@ -11,9 +11,11 @@ from .theme import SCHEME_SPECS
 
 FONT_SCALES = (0.9, 1.0, 1.15, 1.3)
 
+TILE_IDS = ("wifi", "bluetooth", "sound", "microphone", "dnd", "dark", "reduced_motion", "audio_devices",
+            "airplane", "battery_saver", "night_light", "screenshot", "lock")
 WIDGET_IDS = ("glance", "clock", "search", "calendar", "media", "weather", "system", "analog")
 DEFAULTS = {"seed": "#8469cf", "dark": False, "reduced_motion": False, "dnd": False,
-            "favorites": None, "recent_apps": [], "wallpaper": "", "widgets": None, "weather": {}, "keyboard": "us", "scheme": "tonal_spot", "font_scale": 1.0, "android_enabled": False, "onboarding_complete": False,
+            "favorites": None, "recent_apps": [], "wallpaper": "", "widgets": None, "weather": {}, "keyboard": "us", "tiles": None, "muted_apps": [], "night_light": False, "scheme": "tonal_spot", "font_scale": 1.0, "android_enabled": False, "onboarding_complete": False,
             "natural_scroll": True, "tap_to_click": True,
             "pointer_speed": 0.0, "repeat_rate": 25, "display_scales": {}, "display_positions": {}}
 
@@ -28,7 +30,7 @@ def load():
         if not isinstance(data, dict):
             return dict(DEFAULTS)
         valid = {}
-        for key in ("dark", "reduced_motion", "dnd", "android_enabled", "onboarding_complete",
+        for key in ("dark", "reduced_motion", "dnd", "night_light", "android_enabled", "onboarding_complete",
                     "natural_scroll", "tap_to_click"):
             if isinstance(data.get(key), bool):
                 valid[key] = data[key]
@@ -65,6 +67,14 @@ def load():
         widgets = data.get("widgets")
         if isinstance(widgets, list):
             valid["widgets"] = [item for item in WIDGET_IDS if item in widgets]
+        tiles = data.get("tiles")
+        if isinstance(tiles, list):
+            valid["tiles"] = [item for item in dict.fromkeys(tiles) if item in TILE_IDS]
+        muted = data.get("muted_apps")
+        if isinstance(muted, list):
+            valid["muted_apps"] = list(dict.fromkeys(
+                name for name in muted if isinstance(name, str) and 1 <= len(name) <= 64
+                and not re.search(r"[\x00-\x1f\x7f]", name)))[:50]
         place = data.get("weather")
         if isinstance(place, dict) and place:
             try:
@@ -127,6 +137,6 @@ def modify(transform):
 
 
 def toggle(key):
-    if key not in ("dark", "reduced_motion", "dnd"):
+    if key not in ("dark", "reduced_motion", "dnd", "night_light"):
         raise ValueError("Unknown preference")
     return modify(lambda data: {**data, key: not bool(data[key])})

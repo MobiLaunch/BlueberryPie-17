@@ -560,7 +560,8 @@ class PackagingTests(unittest.TestCase):
 
     def test_shell_services_exist_in_the_package_list(self):
         self.assertEqual(set(installer.SERVICES), {"NetworkManager.service", "bluetooth.service", "greetd.service",
-                                                   "systemd-timesyncd.service"})
+                                                   "systemd-timesyncd.service",
+                                                   "power-profiles-daemon.service"})
         self.assertIn("bluez", (ROOT / "packaging/arch/PKGBUILD").read_text())
 
 

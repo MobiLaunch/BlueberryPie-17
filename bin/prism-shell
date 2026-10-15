@@ -13,8 +13,8 @@ if ! command -v qs >/dev/null; then
     exit 1
 fi
 if [[ "${1:-}" == ipc ]]; then
-    case "${2:-}" in shade|launcher|settings|store|files|power|recents|installer|close) exec qs -p "$prism_shell_dir" ipc call prism "$2";;
-        *) echo 'Usage: prism-shell ipc {shade|launcher|settings|store|files|power|recents|installer|close}' >&2; exit 2;;
+    case "${2:-}" in shade|launcher|settings|store|files|power|recents|installer|screenshot|screenshotFull|close) exec qs -p "$prism_shell_dir" ipc call prism "$2";;
+        *) echo 'Usage: prism-shell ipc {shade|launcher|settings|store|files|power|recents|installer|screenshot|screenshotFull|close}' >&2; exit 2;;
     esac
 fi
 exec qs -p "$prism_shell_dir" "$@"

@@ -3,7 +3,12 @@ import "../../components"
 import "../../services"
 
 SettingsPage {
+    id: page
     title: "Notifications"
+    readonly property var apps: {
+        const names = Notifications.mutedApps.concat(Notifications.seenApps, Notifications.groups.map(group => group.app));
+        return names.filter((name, index) => names.indexOf(name) === index).sort((a, b) => a.localeCompare(b));
+    }
     SettingsGroup {
         width: parent.width
         ToggleRow {
@@ -33,11 +38,38 @@ SettingsPage {
             onClicked: Notifications.clear()
         }
     }
+    SettingsGroup {
+        width: parent.width
+        title: "App notifications"
+        visible: page.apps.length > 0
+        Repeater {
+            model: page.apps
+            delegate: ToggleRow {
+                required property string modelData
+                width: parent ? parent.width : 600
+                title: modelData
+                supporting: on ? "Shows banners and appears in the shade" : "Muted"
+                symbol: on ? "notifications" : "notifications_off"
+                on: !Notifications.isMuted(modelData)
+                onSwitched: value => SystemBridge.muteApp(modelData, !value)
+            }
+        }
+    }
+    Label {
+        width: parent.width
+        visible: page.apps.length === 0
+        leftPadding: 16
+        rightPadding: 16
+        text: "Apps that send notifications will appear here so you can mute them one by one."
+        role: "bodyMedium"
+        color: Theme.surfaceVariantInk
+        wrapMode: Text.WordWrap
+    }
     Label {
         width: parent.width
         leftPadding: 16
         rightPadding: 16
-        text: "Important notifications from apps keep a distinct color so they stand out, even in Do Not Disturb."
+        text: "Important notifications keep a distinct color and still break through Do Not Disturb or a muted app."
         role: "bodyMedium"
         color: Theme.surfaceVariantInk
         wrapMode: Text.WordWrap
