@@ -98,7 +98,7 @@ ShellRoot {
     }
     FloatingWindow {
         implicitWidth: 420
-        implicitHeight: 580
+        implicitHeight: 1000
         visible: true
         color: Theme.surface
         Column {
@@ -127,6 +127,58 @@ ShellRoot {
             ExpressiveLoader {
                 width: 40
                 height: 40
+            }
+            Row {
+                spacing: 8
+                IconButton {
+                    symbol: "settings"
+                    Accessible.name: "Smoke icon button"
+                }
+                PillButton {
+                    text: "Smoke button"
+                    symbol: "plus"
+                    variant: "tonal"
+                }
+                FilterChip {
+                    text: "Smoke chip"
+                    selected: true
+                }
+                PaletteSwatch {
+                    text: "Smoke"
+                    seed: "#8469cf"
+                    current: true
+                }
+                KeyCap {
+                    text: "Super"
+                }
+            }
+            SearchField {
+                width: parent.width
+                placeholderText: "Smoke search"
+            }
+            SettingsGroup {
+                width: parent.width
+                title: "Smoke group"
+                ToggleRow {
+                    width: parent.width
+                    title: "Smoke toggle"
+                    supporting: "Optimistic switch"
+                    symbol: "moon"
+                    on: true
+                }
+                ListRow {
+                    width: parent.width
+                    title: "Smoke row"
+                    symbol: "spark"
+                    interactive: false
+                }
+            }
+            NotificationGroup {
+                width: parent.width
+                group: ({
+                        app: "Prism test",
+                        items: [fakeNote, fakeNote]
+                    })
             }
             WirelessPanel {
                 width: parent.width

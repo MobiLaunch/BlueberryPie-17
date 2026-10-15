@@ -1,153 +1,167 @@
 import QtQuick
 import QtQuick.Controls
+import "."
 import "../services"
 
+// Monitor scale (with 20-second automatic rollback) and relative arrangement.
 Column {
     id: root
     width: parent.width
-    spacing: 10
+    spacing: 12
     Label {
         text: "Displays"
-        font.pixelSize: 21
-        font.weight: Font.DemiBold
-    }
-    Label {
-        text: "Safely adjust the size of everything on screen."
-        font.pixelSize: 13
-        wrapMode: Text.WordWrap
-        width: parent.width
-        opacity: .72
-    }
-    Repeater {
-        model: DisplayState.monitors
-        delegate: Rectangle {
-            id: screenCard
-            required property var modelData
-            width: root.width
-            height: 110
-            radius: 25
-            color: Theme.surfaceContainer
-            Label {
-                x: 17; y: 13
-                text: screenCard.modelData.name
-                font.weight: Font.DemiBold
-                font.pixelSize: 17
-            }
-            Label {
-                x: 17; y: 45
-                text: screenCard.modelData.width + " × " +
-                      screenCard.modelData.height + " · " +
-                      Math.round(screenCard.modelData.refresh) + " Hz"
-                opacity: .7
-                font.pixelSize: 13
-            }
-            ComboBox {
-                id: scalePicker
-                anchors.right: parent.right
-                anchors.rightMargin: 12
-                anchors.verticalCenter: parent.verticalCenter
-                implicitWidth: 148
-                implicitHeight: 48
-                model: screenCard.modelData.choices
-                currentIndex: model.indexOf(screenCard.modelData.scale)
-                enabled: !DisplayState.busy
-                displayText: "Scale " + (currentIndex >= 0 ? model[currentIndex] : screenCard.modelData.scale) + "×"
-                background: Rectangle {
-                    radius: 24
-                    color: Theme.surfaceHigh
-                    border.width: scalePicker.activeFocus ? 2 : 0
-                    border.color: Theme.primaryStrong
-                }
-                onActivated: index => DisplayState.preview(
-                    screenCard.modelData.name, model[index])
-            }
-        }
-    }
-    Label {
-        text: "Arrange monitors"
-        font.pixelSize: 17
-        font.weight: Font.DemiBold
-        visible: DisplayState.monitors.length > 1
-    }
-    Label {
-        text: "Choose a screen, then place it beside another."
-        width: parent.width
-        font.pixelSize: 13
-        wrapMode: Text.WordWrap
-        opacity: .72
-        visible: DisplayState.monitors.length > 1
+        role: "titleSmall"
+        color: Theme.primary
+        leftPadding: 16
     }
     Column {
-        id: arrangement
         width: parent.width
-        spacing: 8
-        visible: DisplayState.monitors.length > 1
-        ComboBox {
-            id: movedMonitor
-            width: parent.width
-            model: DisplayState.monitors.map(m => m.name)
-            currentIndex: 0
-            Accessible.name: "Display to move"
-        }
-        ComboBox {
-            id: targetMonitor
-            width: parent.width
-            model: DisplayState.monitors.map(m => m.name).filter(n => n !== movedMonitor.currentText)
-            currentIndex: 0
-            Accessible.name: "Place relative to display"
-        }
-        Flow {
-            width: parent.width
-            spacing: 7
-            Repeater {
-                model: [
-                    {label: "← Left", direction: "left"},
-                    {label: "Right →", direction: "right"},
-                    {label: "↑ Above", direction: "above"},
-                    {label: "Below ↓", direction: "below"}
-                ]
-                delegate: PillButton {
-                    required property var modelData
-                    text: modelData.label
-                    enabled: !DisplayState.busy && targetMonitor.currentText.length > 0
-                    onClicked: DisplayState.arrange(movedMonitor.currentText,
-                                                    modelData.direction,
-                                                    targetMonitor.currentText)
+        spacing: 3
+        Repeater {
+            model: DisplayState.monitors
+            delegate: ListRow {
+                id: screenRow
+                required property var modelData
+                required property int index
+                width: root.width
+                implicitHeight: 76
+                interactive: false
+                symbol: "display"
+                title: modelData.name
+                supporting: modelData.width + " × " + modelData.height + " · " + Math.round(modelData.refresh) + " Hz"
+                shapePosition: DisplayState.monitors.length === 1 ? "single" : index === 0 ? "top" : index === DisplayState.monitors.length - 1 ? "bottom" : "middle"
+                ComboBox {
+                    id: scalePicker
+                    implicitWidth: 156
+                    implicitHeight: 48
+                    model: screenRow.modelData.choices
+                    currentIndex: model.indexOf(screenRow.modelData.scale)
+                    enabled: !DisplayState.busy
+                    displayText: "Scale " + (currentIndex >= 0 ? model[currentIndex] : screenRow.modelData.scale) + "×"
+                    Accessible.name: "Scale for " + screenRow.modelData.name
+                    font.family: Theme.font
+                    background: Rectangle {
+                        radius: 24
+                        color: Theme.surfaceContainerHighest
+                        border.width: scalePicker.visualFocus ? 2 : 0
+                        border.color: Theme.primary
+                    }
+                    contentItem: Label {
+                        leftPadding: 16
+                        text: scalePicker.displayText
+                        role: "labelLarge"
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    onActivated: index => DisplayState.preview(screenRow.modelData.name, model[index])
                 }
             }
         }
     }
     Label {
         width: parent.width
-        text: DisplayState.monitors.length === 0 ?
-              "No monitors were detected. Display settings require an active PrismOS session." : ""
+        leftPadding: 16
+        rightPadding: 16
         visible: DisplayState.monitors.length === 0
+        text: "No monitors were detected. Display settings require an active PrismOS session."
         wrapMode: Text.WordWrap
-        opacity: .7
+        role: "bodyMedium"
+        color: Theme.surfaceVariantInk
     }
     Rectangle {
         width: parent.width
-        height: 114
-        radius: 25
-        color: Theme.primary
+        height: arrangement.height + 32
+        radius: Theme.shape.extraLarge - 4
+        color: Theme.surfaceContainer
+        visible: DisplayState.monitors.length > 1
+        Column {
+            id: arrangement
+            x: 16
+            y: 16
+            width: parent.width - 32
+            spacing: 10
+            Label {
+                text: "Arrange monitors"
+                role: "titleMedium"
+            }
+            Label {
+                width: parent.width
+                text: "Choose a screen, then place it beside another."
+                role: "bodyMedium"
+                color: Theme.surfaceVariantInk
+                wrapMode: Text.WordWrap
+            }
+            ComboBox {
+                id: movedMonitor
+                width: parent.width
+                model: DisplayState.monitors.map(m => m.name)
+                currentIndex: 0
+                Accessible.name: "Display to move"
+            }
+            ComboBox {
+                id: targetMonitor
+                width: parent.width
+                model: DisplayState.monitors.map(m => m.name).filter(n => n !== movedMonitor.currentText)
+                currentIndex: 0
+                Accessible.name: "Place relative to display"
+            }
+            Flow {
+                width: parent.width
+                spacing: 8
+                Repeater {
+                    model: [
+                        {
+                            label: "Left",
+                            direction: "left"
+                        },
+                        {
+                            label: "Right",
+                            direction: "right"
+                        },
+                        {
+                            label: "Above",
+                            direction: "above"
+                        },
+                        {
+                            label: "Below",
+                            direction: "below"
+                        }
+                    ]
+                    delegate: PillButton {
+                        required property var modelData
+                        text: modelData.label
+                        variant: "tonal"
+                        enabled: !DisplayState.busy && targetMonitor.currentText.length > 0
+                        onClicked: DisplayState.arrange(movedMonitor.currentText, modelData.direction, targetMonitor.currentText)
+                    }
+                }
+            }
+        }
+    }
+    Rectangle {
+        width: parent.width
+        height: trial.height + 32
+        radius: Theme.shape.extraLarge - 4
+        color: Theme.primaryContainer
         visible: DisplayState.trialToken.length > 0
         Column {
-            anchors.fill: parent
-            anchors.margins: 14
-            spacing: 7
+            id: trial
+            x: 16
+            y: 16
+            width: parent.width - 32
+            spacing: 8
             Label {
                 text: "Keep these display settings?"
-                font.pixelSize: 16
-                font.weight: Font.DemiBold
-                color: Theme.onPrimary
+                role: "titleMedium"
+                color: Theme.primaryContainerInk
             }
             Label {
                 text: "Reverting automatically in " + DisplayState.seconds + " seconds"
-                color: Theme.onPrimary
-                font.pixelSize: 12
+                role: "bodyMedium"
+                color: Theme.primaryContainerInk
             }
             PillButton {
                 text: "Keep changes"
+                variant: "filled"
                 enabled: !DisplayState.confirmer.running
                 onClicked: DisplayState.confirm()
             }
@@ -155,16 +169,25 @@ Column {
     }
     Row {
         spacing: 10
+        leftPadding: 16
         visible: DisplayState.busy && DisplayState.trialToken.length === 0
-        ExpressiveLoader { width: 25; height: 25 }
-        Label { text: "Updating displays…"; opacity: .8 }
+        ExpressiveLoader {
+            width: 25
+            height: 25
+        }
+        Label {
+            text: "Updating displays…"
+            role: "bodyMedium"
+            anchors.verticalCenter: parent.verticalCenter
+        }
     }
     Label {
         width: parent.width
+        leftPadding: 16
         visible: DisplayState.error.length > 0 || DisplayState.notice.length > 0
         text: DisplayState.error || DisplayState.notice
-        color: DisplayState.error ? Theme.roles.error : Theme.primaryStrong
+        color: DisplayState.error ? Theme.error : Theme.primary
         wrapMode: Text.WordWrap
-        font.pixelSize: 13
+        role: "bodyMedium"
     }
 }

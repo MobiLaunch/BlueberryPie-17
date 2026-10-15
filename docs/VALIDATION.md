@@ -1,4 +1,266 @@
-# Validation record — 2026-10-14
+# Validation record — 2026-10-15 (v0.9 through round nine)
+
+## Addendum: round nine (notification history)
+
+### Executed
+
+| Check | Result |
+| --- | --- |
+| Setting | Off by default; only `yes`/`no` accepted by the bridge; persists; a non-boolean value in the file falls back to off |
+| History | Nothing recorded before opting in; entries newest first with the app, title, a bounded body and the important flag; muted apps are not recorded; the list is capped at 100 and long text is cut; clearing and turning the setting off both empty it; nothing is written to disk |
+| Settings page | The toggle reaches the bridge and the rows render without elided text |
+| `scripts/check.sh` | Passed |
+
+### Not executed
+
+- Real notification clients: whether Quickshell reports an in-place replacement as a new notification (it would then be recorded again), and very large bodies from real apps.
+
+## Previous record — 2026-10-15 (through round eight)
+
+## Addendum: round eight (Storage)
+
+### Executed
+
+| Check | Result |
+| --- | --- |
+| Storage adapter | Top-level folders map to categories, the category sum equals the reported total, symbolic links are not followed, the entry cap and the time limit each stop the walk (including inside one huge directory) and set `truncated`, an unreadable home reports zero instead of failing |
+| Clear previews | Removes only the preview folder; symlinked previews are not counted; unknown `storage` operations are refused by the CLI |
+| Storage page | Boot, open Settings → Storage with real `prismctl`: folders appear with sizes, empty categories are hidden, nothing is elided at normal and largest text size, clearing previews deletes the folder and disables the button; byte formatting checked at unit boundaries |
+| `scripts/check.sh` | Passed |
+
+### Not executed
+
+- Block-based sizes (`st_blocks`) on btrfs, ZFS, compressed or deduplicated filesystems, and homes with millions of files (the partial-count notice is tested, not the timing on real disks).
+
+## Previous record — 2026-10-15 (through round seven)
+
+## Addendum: round seven (pins, tile details, widget sizes, live Recents)
+
+### Executed
+
+| Check | Result |
+| --- | --- |
+| Clipboard pins | Private (0600) atomic file, text only, duplicate/oversize/limit refusal, survive clearing and a disabled history, corrupt files filtered; copy sends the text on stdin to `wl-copy`; the pane's rows send the right commands and images get no pin button |
+| Tile details | Right-click opens the panel even on tiles that look unavailable (so they can say why); battery modes, color scheme and screenshot mode chips act through the bridge |
+| Widget sizes | Validation (only four widgets, three sizes), persistence, corrupt files; small and large cards render at the expected widths with no elided text; Settings chips reach the bridge |
+| Live Recents | With a stub toplevel list (addresses with and without `0x`), only the window with a handle gets a live view, none while closed; the live view loads on demand so a Quickshell without screencopy cannot break the overview |
+| `scripts/check.sh` | Passed |
+
+### Not executed
+
+- **The real `ScreencopyView`**: whether Quickshell on Arch was built with screencopy, whether
+  `HyprlandToplevel.address` matches `hyprctl` addresses as assumed, permission prompts, frame rates, and
+  the cost of capturing many windows at once. The harness uses a flat-color test double.
+- Pinned text is stored unencrypted in the user's data directory (by design, like the notes widget).
+
+## Previous record — 2026-10-15 (through round six)
+
+## Addendum: round six (notes, warmth, power modes, clipboard search)
+
+### Executed
+
+| Check | Result |
+| --- | --- |
+| Notes | Round trip, private (0600/0700) atomic writes, control characters stripped, 4000-character limit, bad input keeps the old note; the widget saved typed text through the bridge |
+| Night Light warmth | Bounded integer only; applied live only while Night Light is on; the saved value is reused when it is turned on; failures not persisted |
+| Power modes | Fixed `powerprofilesctl set` values for three modes; the Settings row sends the right action |
+| Clipboard search | Filters the injected history and shows "No matches" |
+| `scripts/check.sh` | Passed |
+
+### Not executed
+
+- `hyprsunset` warmth changes and `powerprofilesctl` on real hardware (mocked here); the Performance profile exists only on some machines.
+
+## Previous record — 2026-10-15 (through round five)
+
+## Addendum: round five (Recents previews, lock screen, glance)
+
+### Executed
+
+| Check | Result |
+| --- | --- |
+| `scripts/check.sh` | Python suites, Node specs (now including next-alarm arithmetic), shell syntax and the QML runtime suite passed |
+| Preview adapter | Mocked `grim`/`hyprctl`: only visible windows on the current workspace are captured, bounded integer regions, old previews replaced, closed windows' previews deleted, earlier previews kept for other workspaces, one failure does not lose the rest, private (0700) runtime directory, off switch deletes everything |
+| Recents | Opens even when no preview can be taken; a preview image renders on the right card, others fall back to icons; the Settings switch reaches the bridge |
+| Next alarm arithmetic | Spec: later today, passed time rolls to tomorrow, weekday/weekend sets, once-only alarms, month/year rollover, malformed times ignored |
+| Glance | Shows the next alarm and a running timer, no elided text |
+| Lock screen config | Structural test of `hyprlock.conf` (documented blocks, color roles, static label commands) |
+
+### Not executed
+
+- `grim` window captures on a real compositor: overlapping floating windows will appear in each other's
+  preview, HiDPI scaling and multi-monitor offsets are unverified, and capture latency before Recents opens
+  (up to 1.5 s timeout) has not been measured.
+- `hyprlock` rendering (`$USER`, the battery command, `brightness`) on a real session.
+
+## Previous record — 2026-10-15 (through round four)
+
+## Addendum: round four (Date & time, keyboard layout, world clock, snooze)
+
+### Executed
+
+| Check | Result |
+| --- | --- |
+| `scripts/check.sh` | Python suites, Node specs, shell syntax and the QML runtime suite passed |
+| Date & time adapter | Mocked `timedatectl`: only listed zones and fixed booleans reach the command; 12/24-hour preference persists; clicked through in Settings |
+| 12-hour clock | Every visible clock (bar, desktop widget) shows AM/PM with no elided text |
+| Keyboard layout | Applies through `hyprctl keyword` before saving; failure is not persisted; unknown ids refused; the Settings row sends the right command |
+| World clock | Day and offset arithmetic (including next-day) checked; adding a zone from the panel persisted; corrupt saved zones filtered |
+| Ringing banner | Alarm and timer banners, Snooze → ring again, Dismiss; timers have no snooze |
+
+### Not executed
+
+- `timedatectl` and polkit approval on a real system; changing the zone while the shell runs.
+- Live `input:kb_layout` changes on Hyprland 0.56 with a Lua config.
+- Ringing on multiple monitors or over a locked screen; the repeated sound is not a looping clip.
+
+## Previous record — 2026-10-15 (through round three)
+
+## Addendum: round three (alarms, quiet hours, clipboard history, converter)
+
+### Executed
+
+| Check | Result |
+| --- | --- |
+| `scripts/check.sh` | Python suites, Node specs (calculator and unit converter parsers), shell syntax and the QML runtime suite passed |
+| Alarms | Adapter tests (validation, id reuse, limit, corrupt-file filtering, argv-only sound player); in the shell, a due alarm toasted once, asked for the sound and switched itself off; adding from the panel persisted |
+| Quiet hours | Banners suppressed inside the window (including a window spanning midnight in the Python/QML logic), shown outside it and when disabled; edited from Settings through the bridge |
+| Clipboard history | Adapter tests with mocked `cliphist`/`wl-copy` (numeric ids only, no shell, delete by original line, watcher pids verified by `/proc/PID/cmdline` before signalling); the pane explains missing tools and copies by id |
+| Converter | Spec covers every category, round trips, decimal commas, absolute zero and prototype-name rejection; clicked through in the shell |
+
+### Not executed
+
+- Real `cliphist`, `wl-paste --watch` and `wl-copy`; real `pw-play`/`paplay` with the sound theme.
+- Alarm ringing across a suspend/resume or while the screen is locked; the sound is a single short clip, not a looping alarm.
+- Quiet hours over a real day/night boundary (tests use windows around "now").
+
+## Previous record (through round two)
+
+## Addendum: round two (schemes, tiles, screenshots, notifications, utilities)
+
+### Executed
+
+| Check | Result |
+| --- | --- |
+| `scripts/check.sh` | 308 Python tests passed, 0 skipped; Node specs (including the new calculator parser spec) passed; `qmlformat` accepted all QML files |
+| Color schemes | Contrast ≥ 4.5:1 for nine role pairs × 5 schemes × 8 seeds × light/dark; monochrome stays gray; invalid scheme names refused |
+| Text size at Largest | Every surface and Settings section opened with no QML errors or elided text (this found and fixed truncation in Quick Settings tiles and the Settings sidebar) |
+| Tile editor, mute, screenshot tile | Clicked through the offscreen shell; tile layout persisted by `prismctl tiles`; muted app dropped, critical alert shown; the screenshot tile ran `prismctl screenshot area` |
+| Airplane, Battery Saver, Night Light, screenshots | Adapters tested with mocked `nmcli`, `bluetoothctl`, `powerprofilesctl`, `hyprctl hyprsunset`, `grim`, `slurp` (argv lists, region pattern, failure does not persist state) |
+| Calculator | Parser spec (precedence, functions, errors, hostile text never executed) and a typed/clicked session in the shell |
+| Timer / stopwatch | Countdown, finish toast, laps and pause stability in the shell |
+
+### Not executed
+
+- Real `grim`/`slurp`/`wl-copy`, `hyprsunset`, `powerprofilesctl` and rfkill-style radio toggles on hardware.
+- `hyprctl hyprsunset ...` IPC names and the `Print` binds under Hyprland 0.56 with a Lua config.
+- Notification muting against real clients (a stub server only).
+- Timer sound and alarms do not exist yet.
+
+## Previous addendum — 2026-10-15 (v0.9 + window management, widgets, installer)
+
+## Addendum: window controls, desktop widgets, disk installer
+
+### Executed
+
+| Check | Result |
+| --- | --- |
+| `scripts/check.sh` | 270 Python tests passed, 0 skipped (PySide6, Lua and Pillow present); shell, PKGBUILD, Node and compile checks passed |
+| `qmlformat` over all 92 QML files | Pass (the `check.sh` QML step still skips without Qt's own `qmlformat`) |
+| Window adapter (`prismos/windows.py`) with mocked `hyprctl`: focus, close, minimize, restore, maximize, float, snap | Argument lists, refusal of bad addresses/minimized snaps/too-small areas and the `special:minimized` workspace checked |
+| Caption controls clicked in the offscreen shell | Buttons call the adapter with the focused address; snap menu opens; no QML errors or elided text |
+| `config/hypr/hyprland.lua` against a mock `hl` | New `Super + arrow/F` binds exist and map to `prismctl windows ...` |
+| Widgets: adapters (`stats`, `weather`, `widgets`, `websearch`) and every widget rendered | Weather host allowlist, no-redirect and size bounds, cache, WMO mapping; light and dark screenshots reviewed; search hands off to the launcher |
+| Installer engine with a recording host | Disk eligibility (live USB incl. label/ISO 9660, mounted, read-only, small, zram/loop), strict request validation, typed confirmation, UEFI/BIOS/NVMe layouts, argv-only commands, password only on `chpasswd` stdin, step ordering, failure → unmount, optional steps, progress, write containment, pacman.conf generation |
+| Installer wizard clicked through in the offscreen shell | Every page, unusable disks unselectable, password mismatch, typed confirmation gate, progress, success and failure/return; the password reached the process on stdin and never in argv; light and dark screenshots reviewed |
+
+### Not executed — still open
+
+- **Any real installation.** No partition table, filesystem, `pacstrap`, `arch-chroot`,
+  `grub-install` or `efibootmgr` call has run. The installer's commands are asserted as
+  data, not executed. Needs UEFI and BIOS VMs, NVMe/virtio/SATA, failure and retry, and
+  hardware.
+- **polkit on the live session**: the prompt, the admin identity and `pkexec` stdin/stdout
+  passing are unverified. The package/ISO changes (`/opt/prismos/repo`, the desktop entry,
+  extra packages) are unbuilt.
+- **`hyprctl dispatch` names** `movetoworkspacesilent`, `resizewindowpixel`,
+  `movewindowpixel`, `fullscreen 1`, `togglefloating` and the `special:minimized`
+  workspace on Hyprland 0.56 with a Lua config; the adapter reports a rejected dispatch
+  and leaves windows untouched. Snap uses the monitor's reserved area and may disagree
+  with real gaps.
+- **Weather over the network** (only fixtures were used); CPU/memory/storage values on
+  real machines; widget layout on real monitors and at fractional scales.
+- **Hyprland keyboard layout** via `input:kb_layout` / `input:kb_variant` at session start.
+- Windows are not exercised under a real compositor; the harness stubs layer-shell.
+
+## Earlier record — v0.9 shell pass
+
+This pass rebuilt most of the native shell. A new **offscreen QML runtime harness**
+(`tests/qml_runtime/`) loads the real `shell/` QML with *stub* Quickshell modules
+under plain Qt Quick (PySide6 / Qt 6.12, software renderer, offscreen platform),
+runs the genuine `prismctl` bridge against an isolated config, and can screenshot
+the composited desktop. It finds binding, reference and layout errors without a
+compositor. **It is an approximation, not Quickshell or Hyprland qualification.**
+
+## Executed
+
+| Check | Result |
+| --- | --- |
+| `scripts/check.sh` (Python suites, shell syntax, Node specs, QML syntax) | 186 tests passed; 0 skipped with Qt, Lua and Pillow present (on a bare host the runtime and Lua tests skip) |
+| HCT color engine against published Material Tonal Spot values (seed `#6750A4`) | Roles matched the reference scheme within 2/255 per channel; tone round-trips within 0.6 L* |
+| Contrast pairs (primary, containers, error, surface, inverse; 6 seeds × light/dark) | All ≥ 4.5:1 |
+| Real shell QML under the harness | Loads with zero QML errors; every surface (Quick Settings, launcher, Settings, Files, Store, power, Recents, first run) opens without errors |
+| Elided or clipped text on every surface | None (automated item-tree scan) |
+| Settings: all 11 sections loaded by clicking their rows | No errors, no elided text |
+| First-run wizard clicked through to completion | `prismctl welcome finish` ran; `onboarding_complete` persisted |
+| Notifications: grouping, swipe-target, dismiss, banner, Do Not Disturb, critical break-through | Pass |
+| Wallpaper picker: list, choose, accent extraction, path/symlink/size rejection | Pass (adapter tests and a clicked-through runtime test) |
+| Dark theme legibility | Ink roles resolve to scheme values; dark surface is dark, text is light |
+| `tests/native-smoke.qml` (the fixture CI runs on real Quickshell) | `PRISM_NATIVE_SMOKE_OK` under stub modules |
+| `config/hypr/hyprland.lua` | Lua 5.4 parse; executed against a mock `hl`; every bind checked against the shell IPC and `prism-shell` allowlist |
+| `qmlformat` over 72 QML files | Pass |
+| `qmllint` with stub type roots | 0 errors (warnings remain; real-type lint runs in Arch CI) |
+| Browser preview interactions (Playwright 1.56.1, Chromium 1194) | Passed with regenerated Material 3 tokens |
+| Generated assets reproducible (`generate-design.py`) | No diff |
+
+## Not executed — treat as open
+
+- **Native Quickshell + Hyprland session.** Layer-shell focus, `HyprlandFocusGrab`,
+  stacking of overlays over the dock, input regions and monitor hotplug are
+  stubbed in the harness.
+- **Hyprland control calls.** `hyprctl dispatch focuswindow|closewindow` (dock,
+  Recents) is unverified on Hyprland 0.56 with a Lua config; failures surface as
+  a toast and leave windows untouched. Bind options `locked`/`repeating` for
+  hardware keys are unverified; the binds are `pcall`-guarded so an unsupported
+  option cannot break the session config.
+- **Hardware keys, touchpad gestures, brightness/volume steps** on real devices.
+- **`hyprlock` configuration** (new layout): not run; it uses documented options only.
+- **GPU rendering.** All screenshots are from the software renderer. Icons are
+  recolored SVG data URIs (no shader effects) and should render the same on GL.
+- **Fonts.** The harness host lacks Roboto/Google Sans Flex and fell back to Inter;
+  metrics on Arch with Roboto may differ slightly (labels are measured, not guessed).
+- **Real MPRIS, tray and notification clients** (stubs only), PipeWire/NetworkManager/
+  BlueZ writes (hosts lacked them), Waydroid, Flatpak.
+- **ISO build and boot, `makepkg`.** Not run on this host.
+- **Publication.** These commits were made locally; the push was refused because the
+  session lacked GitHub access to the repository.
+
+## Defects found and fixed this pass
+
+- Every button label was clipped: Qt's Material `Button` pins 24/16 px padding that
+  `PillButton` did not budget for. Close (`×`) and tile chevrons had zero content width.
+- Inside `components/`, `Label` resolved to `QtQuick.Controls.Label`, so shared
+  components never used the Theme font or color for text.
+- **Content-color roles (`onPrimary`, `onSurface`, …) silently evaluated to black.** A
+  property named `onX` beside a property `x` loses its binding in Qt 6.12. Default
+  text was therefore black on every surface, which is unreadable in dark mode. The
+  roles are now `*Ink` (for example `Theme.surfaceInk`) and covered by a test.
+- The dock was 62 px too narrow, clipping its last button for any number of favorites.
+- A stray "Prism Store" button overlapped the app drawer header, and the Settings page
+  was one long mixed scroll. (While rebuilding, the harness also caught `ToggleRow`
+  redeclaring `Button`'s final `checked` property before it shipped.)
+
+## Previous record — 2026-10-14 (v0.8)
 
 This record distinguishes source/preview verification from a running desktop and
 a bootable distribution. The latter still require an Arch machine or VM.

@@ -51,7 +51,8 @@ class SettingsTests(IsolatedConfig):
 class ColorTests(unittest.TestCase):
     def test_semantic_text_pairs_pass_contrast(self):
         seeds = list(theme.PALETTES.values()) + ["#ff0000","#00ff00","#0000ff","#000000","#ffffff","#888888"]
-        pairs = [(name,"on"+name[0].upper()+name[1:]) for name in ("primary","primaryStrong","secondary","tertiary","surface","surfaceContainer","surfaceHigh","error")]
+        pairs = [(name,"on"+name[0].upper()+name[1:]) for name in ("primary","primaryContainer","secondary","secondaryContainer","tertiary","tertiaryContainer","error","errorContainer","surface","surfaceVariant")]
+        pairs += [("surfaceContainer","onSurface"),("surfaceContainerHigh","onSurface"),("surfaceContainerHighest","onSurface"),("inverseSurface","inverseOnSurface")]
         for seed in seeds:
             for dark in (False,True):
                 colors = theme.palette(seed,dark)
@@ -66,8 +67,10 @@ class ColorTests(unittest.TestCase):
     def test_generated_tokens_match_native_generator(self):
         tokens = json.loads((Path(__file__).resolve().parent.parent/"design/tokens.json").read_text())
         for name, seed in theme.PALETTES.items():
-            self.assertEqual(tokens["palettes"][name]["light"],theme.palette(seed))
-            self.assertEqual(tokens["palettes"][name]["dark"],theme.palette(seed,True))
+            self.assertEqual(tokens["material"][name]["light"],theme.palette(seed))
+            self.assertEqual(tokens["material"][name]["dark"],theme.palette(seed,True))
+            self.assertEqual(tokens["palettes"][name]["light"],theme.legacy_tokens(theme.palette(seed)))
+            self.assertEqual(tokens["palettes"][name]["dark"],theme.legacy_tokens(theme.palette(seed,True)))
 
     def test_wallpaper_extracts_color(self):
         from PIL import Image

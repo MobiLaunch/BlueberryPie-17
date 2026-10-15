@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Calculator
+Comment=Do math, with a scientific mode
+Exec=prism-shell ipc calculator
+Icon=accessories-calculator
+Categories=Utility;
+Keywords=calculator;math;scientific;
+OnlyShowIn=PrismOS;
+StartupNotify=false
+Terminal=false

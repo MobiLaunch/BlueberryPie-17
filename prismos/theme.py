@@ -1,12 +1,36 @@
-"""Seed-derived, contrast-checked tonal colors for the initial shell.
+"""Material 3 dynamic color for PrismOS.
 
-This is an HSL tonal generator, not Google's HCT/Monet algorithm. The adapter
-boundary is deliberate so HCT can replace it without changing any component.
+`palette()` builds the Tonal Spot scheme (the Android default) from a seed color
+using the CAM16/HCT engine in `hct.py`. Roles use the Material 3 names and
+tone mapping, so contrast follows from tone differences rather than guesses.
 """
-import colorsys
 import re
 
+from .hct import TonalPalette, hct_from_hex
+
 PALETTES = {"Lilac": "#8469cf", "Mint": "#47846a", "Tangerine": "#c27443", "Rose": "#b85c80"}
+
+# Role -> (palette, light tone, dark tone). Tones follow the Material 3 baseline.
+ROLES = {
+    "primary": ("primary", 40, 80), "onPrimary": ("primary", 100, 20),
+    "primaryContainer": ("primary", 90, 30), "onPrimaryContainer": ("primary", 10, 90),
+    "inversePrimary": ("primary", 80, 40),
+    "secondary": ("secondary", 40, 80), "onSecondary": ("secondary", 100, 20),
+    "secondaryContainer": ("secondary", 90, 30), "onSecondaryContainer": ("secondary", 10, 90),
+    "tertiary": ("tertiary", 40, 80), "onTertiary": ("tertiary", 100, 20),
+    "tertiaryContainer": ("tertiary", 90, 30), "onTertiaryContainer": ("tertiary", 10, 90),
+    "error": ("error", 40, 80), "onError": ("error", 100, 20),
+    "errorContainer": ("error", 90, 30), "onErrorContainer": ("error", 10, 90),
+    "surface": ("neutral", 98, 6), "onSurface": ("neutral", 10, 90),
+    "surfaceDim": ("neutral", 87, 6), "surfaceBright": ("neutral", 98, 24),
+    "surfaceContainerLowest": ("neutral", 100, 4), "surfaceContainerLow": ("neutral", 96, 10),
+    "surfaceContainer": ("neutral", 94, 12), "surfaceContainerHigh": ("neutral", 92, 17),
+    "surfaceContainerHighest": ("neutral", 90, 22),
+    "surfaceVariant": ("neutralVariant", 90, 30), "onSurfaceVariant": ("neutralVariant", 30, 80),
+    "outline": ("neutralVariant", 50, 60), "outlineVariant": ("neutralVariant", 80, 30),
+    "inverseSurface": ("neutral", 20, 90), "inverseOnSurface": ("neutral", 95, 20),
+    "scrim": ("neutral", 0, 0), "shadow": ("neutral", 0, 0),
+}
 
 
 def rgb(value):
@@ -25,54 +49,95 @@ def contrast(a, b):
     return (hi + 0.05) / (lo + 0.05)
 
 
-def ink(background):
-    selected = max(("#19151e", "#ffffff"), key=lambda c: contrast(c, background))
-    if contrast(selected, background) >= 4.5:
-        return selected
-    return max(("#000000", "#ffffff"), key=lambda c: contrast(c, background))
+# Scheme -> (label, one-line description). Chroma values follow Material's dynamic
+# schemes; Vibrant and Expressive rotate secondary/tertiary hues by fixed offsets
+# rather than Material's lookup tables, so they are close but not bit-exact.
+SCHEMES = {
+    "tonal_spot": ("Tonal Spot", "Calm, Android's default"),
+    "vibrant": ("Vibrant", "Saturated and lively"),
+    "expressive": ("Expressive", "Playful, shifted hues"),
+    "neutral": ("Neutral", "Almost gray, a hint of color"),
+    "monochrome": ("Monochrome", "Pure grays"),
+}
+# scheme -> {palette: (hue offset, chroma)}
+SCHEME_SPECS = {
+    "tonal_spot": {"primary": (0, 36), "secondary": (0, 16), "tertiary": (60, 24), "neutral": (0, 6), "neutralVariant": (0, 8)},
+    "vibrant": {"primary": (0, 200), "secondary": (20, 24), "tertiary": (40, 32), "neutral": (0, 10), "neutralVariant": (0, 12)},
+    "expressive": {"primary": (240, 40), "secondary": (330, 24), "tertiary": (150, 32), "neutral": (15, 8), "neutralVariant": (15, 12)},
+    "neutral": {"primary": (0, 12), "secondary": (0, 8), "tertiary": (60, 16), "neutral": (0, 2), "neutralVariant": (0, 2)},
+    "monochrome": {"primary": (0, 0), "secondary": (0, 0), "tertiary": (0, 0), "neutral": (0, 0), "neutralVariant": (0, 0)},
+}
 
 
-def palette(seed="#8469cf", dark=False):
-    hue, _, saturation = colorsys.rgb_to_hls(*rgb(seed))
-    saturation = max(0.3, min(0.65, saturation))
+def scheme_palettes(seed, scheme="tonal_spot"):
+    """Core palettes for a scheme: hue from the seed, chroma and offsets per role."""
+    if scheme not in SCHEME_SPECS:
+        raise ValueError("Unknown color scheme")
+    hue, _, _ = hct_from_hex(seed)
+    cores = {name: TonalPalette(hue + offset, chroma) for name, (offset, chroma) in SCHEME_SPECS[scheme].items()}
+    cores["error"] = TonalPalette(25, 84)
+    return cores
 
-    def tone(lightness, sat=None, offset=0):
-        values = colorsys.hls_to_rgb((hue+offset) % 1, lightness, saturation if sat is None else sat)
-        return "#" + "".join(f"{round(c*255):02x}" for c in values)
 
-    roles = {
-        "primary": tone(.79 if dark else .84),
-        "primaryStrong": tone(.74 if dark else .34),
-        "secondary": tone(.76 if dark else .84, .35, .38),
-        "tertiary": tone(.77 if dark else .86, .65, -.22),
-        "surface": tone(.09 if dark else .98, .12),
-        "surfaceContainer": tone(.15 if dark else .94, .14),
-        "surfaceHigh": tone(.22 if dark else .88, .13),
-        "outline": tone(.65 if dark else .48, .1),
-        "error": "#ffb4ab" if dark else "#a8332a",
-    }
-    for suffix, role in (("Primary", "primary"), ("PrimaryStrong", "primaryStrong"),
-                         ("Secondary", "secondary"), ("Tertiary", "tertiary"),
-                         ("Surface", "surface"), ("SurfaceContainer", "surfaceContainer"),
-                         ("SurfaceHigh", "surfaceHigh"), ("Error", "error")):
-        roles["on"+suffix] = ink(roles[role])
-    roles["seed"] = seed.lower()
+def tonal_spot(seed):
+    return scheme_palettes(seed, "tonal_spot")
+
+
+def palette(seed="#8469cf", dark=False, scheme="tonal_spot"):
+    rgb(seed)  # validates; raises ValueError on anything but #rrggbb
+    seed = seed.lower()
+    tones = scheme_palettes(seed, scheme)
+    roles = {name: tones[source].tone(dark_tone if dark else light_tone)
+             for name, (source, light_tone, dark_tone) in ROLES.items()}
+    roles["surfaceTint"] = roles["primary"]
+    roles["seed"] = seed
     roles["dark"] = bool(dark)
+    roles["scheme"] = scheme
     return roles
 
 
+def legacy_tokens(roles):
+    """Pre-Material-3 role names, used by the offline HTML preview.
+
+    The preview's CSS predates the M3 role set: its "primary" was a tonal
+    container, "primaryStrong" the saturated accent. Mapping is explicit here
+    so preview and native shell stay derived from the same scheme.
+    """
+    mapped = {
+        "primary": roles["primaryContainer"], "onPrimary": roles["onPrimaryContainer"],
+        "primaryStrong": roles["primary"], "onPrimaryStrong": roles["onPrimary"],
+        "secondary": roles["secondaryContainer"], "onSecondary": roles["onSecondaryContainer"],
+        "tertiary": roles["tertiaryContainer"], "onTertiary": roles["onTertiaryContainer"],
+        "surface": roles["surface"], "onSurface": roles["onSurface"],
+        "surfaceContainer": roles["surfaceContainer"], "onSurfaceContainer": roles["onSurface"],
+        "surfaceHigh": roles["surfaceContainerHigh"], "onSurfaceHigh": roles["onSurface"],
+        "outline": roles["outline"], "error": roles["error"], "onError": roles["onError"],
+    }
+    mapped["seed"], mapped["dark"] = roles["seed"], roles["dark"]
+    return mapped
+
+
 def wallpaper_seed(path):
+    """Pick the most representative accent in an image, as Material scoring does:
+    favor populous colors, require some chroma, and prefer moderately vivid ones."""
     from PIL import Image
     with Image.open(path) as image:
         image = image.convert("RGB")
         image.thumbnail((96, 96))
         colors = image.quantize(colors=12).convert("RGB").getcolors(96*96) or []
+        total = sum(count for count, _ in colors) or 1
+
         def score(item):
             count, color = item
-            _, lightness, sat = colorsys.rgb_to_hls(*(c/255 for c in color))
-            return count * (sat+.05) if .18 < lightness < .88 else 0
+            hex_color = "#%02x%02x%02x" % color
+            _, chroma, tone = hct_from_hex(hex_color)
+            if chroma < 5 or not 15 < tone < 90:
+                return 0
+            proportion = count / total
+            return proportion * 100 * 0.7 + (chroma - 48) * (0.1 if chroma > 48 else 0.3)
         candidates = [item for item in colors if score(item) > 0]
         if not candidates:
             return "#8469cf"
         color = max(candidates, key=score)[1]
-        return "#"+"".join(f"{c:02x}" for c in color)
+        return "#%02x%02x%02x" % color
+

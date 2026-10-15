@@ -1,98 +1,109 @@
 import QtQuick
 import QtQuick.Layouts
+import "."
 import "../services"
 
+// Now-playing card driven by MPRIS. Controls are enabled only when the player
+// advertises the capability.
 Rectangle {
     id: root
     property var player: MediaState.player
-    implicitHeight: 154
-    radius: 28
-    color: Theme.secondary
+    implicitHeight: 128
+    radius: Theme.shape.extraLarge
+    color: Theme.secondaryContainer
     visible: player !== null
     RowLayout {
         anchors.fill: parent
         anchors.margins: 16
         spacing: 14
         Rectangle {
-            Layout.preferredWidth: 64
-            Layout.preferredHeight: 64
-            radius: 22
-            color: Theme.primary
+            Layout.preferredWidth: 88
+            Layout.preferredHeight: 88
+            Layout.alignment: Qt.AlignVCenter
+            radius: Theme.shape.largeIncreased
+            color: Theme.primaryContainer
+            clip: true
             Image {
                 anchors.fill: parent
-                anchors.margins: 5
                 source: root.player ? root.player.trackArtUrl : ""
-                fillMode: Image.PreserveAspectFit
+                fillMode: Image.PreserveAspectCrop
                 visible: status === Image.Ready
-                sourceSize: Qt.size(128, 128)
+                sourceSize: Qt.size(176, 176)
             }
             Symbol {
                 anchors.centerIn: parent
-                width: 28
-                height: 28
+                width: 36
+                height: 36
                 name: "music"
-                color: Theme.onPrimary
+                color: Theme.primaryContainerInk
                 visible: !root.player || !root.player.trackArtUrl
             }
         }
         ColumnLayout {
             Layout.fillWidth: true
-            spacing: 5
+            Layout.alignment: Qt.AlignVCenter
+            spacing: 2
             Label {
                 Layout.fillWidth: true
                 text: root.player ? root.player.identity : ""
-                font.pixelSize: 11
-                color: Theme.onSecondary
+                role: "labelMedium"
+                color: Theme.secondaryContainerInk
+                opacity: 0.8
                 elide: Text.ElideRight
             }
             Label {
                 Layout.fillWidth: true
                 text: root.player ? (root.player.trackTitle || "Now playing") : ""
-                font.pixelSize: 16
-                font.weight: Font.DemiBold
-                color: Theme.onSecondary
+                role: "titleMedium"
+                color: Theme.secondaryContainerInk
                 elide: Text.ElideRight
             }
             Label {
                 Layout.fillWidth: true
                 text: root.player ? root.player.trackArtist : ""
-                font.pixelSize: 12
-                color: Theme.onSecondary
+                role: "bodySmall"
+                color: Theme.secondaryContainerInk
+                opacity: 0.85
                 elide: Text.ElideRight
             }
             RowLayout {
-                spacing: 5
-                PillButton {
-                    text: "‹"
+                Layout.topMargin: 4
+                spacing: 2
+                IconButton {
+                    symbol: "skip_previous"
+                    implicitWidth: 40
+                    implicitHeight: 40
+                    iconSize: 22
                     Accessible.name: "Previous track"
-                    implicitWidth: 44
-                    implicitHeight: 38
                     enabled: root.player && root.player.canGoPrevious
                     onClicked: root.player.previous()
                 }
-                PillButton {
-                    text: root.player && root.player.isPlaying ? "Ⅱ" : "▶"
-                    Accessible.name: root.player && root.player.isPlaying ? "Pause" : "Play"
-                    filled: true
+                IconButton {
+                    symbol: root.player && root.player.isPlaying ? "pause" : "play"
+                    variant: "filled"
                     implicitWidth: 48
-                    implicitHeight: 38
+                    implicitHeight: 40
+                    iconSize: 22
+                    Accessible.name: root.player && root.player.isPlaying ? "Pause" : "Play"
                     enabled: root.player && root.player.canTogglePlaying
                     onClicked: root.player.togglePlaying()
                 }
-                PillButton {
-                    text: "›"
+                IconButton {
+                    symbol: "skip_next"
+                    implicitWidth: 40
+                    implicitHeight: 40
+                    iconSize: 22
                     Accessible.name: "Next track"
-                    implicitWidth: 44
-                    implicitHeight: 38
                     enabled: root.player && root.player.canGoNext
                     onClicked: root.player.next()
                 }
-                PillButton {
-                    text: "↻"
-                    Accessible.name: "Switch media player"
-                    implicitWidth: 38
-                    implicitHeight: 38
+                IconButton {
+                    symbol: "refresh"
+                    implicitWidth: 40
+                    implicitHeight: 40
+                    iconSize: 20
                     visible: MediaState.players.length > 1
+                    Accessible.name: "Switch media player"
                     onClicked: MediaState.cycle()
                 }
             }

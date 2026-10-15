@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import "."
 import "../services"
 
 Slider {
@@ -7,6 +8,7 @@ Slider {
     property string symbol: "brightness"
     property string label: "Brightness"
     property real modelValue: 0
+    property real keyStep: 5
     signal committed(real level)
     from: symbol === "brightness" ? 1 : 0
     to: 100
@@ -25,11 +27,11 @@ Slider {
     onPressedChanged: if (!pressed)
         committed(value)
     Keys.onLeftPressed: {
-        value = Math.max(from, value - 5);
+        value = Math.max(from, value - keyStep);
         committed(value);
     }
     Keys.onRightPressed: {
-        value = Math.min(to, value + 5);
+        value = Math.min(to, value + keyStep);
         committed(value);
     }
     background: Rectangle {
@@ -38,12 +40,12 @@ Slider {
         width: root.availableWidth
         height: 44
         radius: 22
-        color: Theme.surfaceHigh
+        color: Theme.surfaceContainerHigh
         Rectangle {
             width: Math.max(44, parent.width * root.visualPosition)
             height: parent.height
             radius: 22
-            color: Theme.primary
+            color: Theme.primaryContainer
             Behavior on width {
                 enabled: !root.pressed
                 NumberAnimation {
@@ -64,11 +66,11 @@ Slider {
             anchors.verticalCenter: parent.verticalCenter
             text: root.enabled ? Math.round(root.value) + "%" : "Unavailable"
             font.pixelSize: 12
-            color: Theme.onSurfaceHigh
+            color: Theme.surfaceInk
         }
         opacity: root.enabled ? 1 : .5
-        border.width: root.activeFocus ? 2 : 0
-        border.color: Theme.primaryStrong
+        border.width: root.visualFocus ? 2 : 0
+        border.color: Theme.primary
     }
     handle: Rectangle {
         x: root.leftPadding + root.visualPosition * (root.availableWidth - width)
@@ -76,7 +78,7 @@ Slider {
         width: 5
         height: root.pressed ? 35 : 28
         radius: 3
-        color: Theme.primaryStrong
+        color: Theme.primary
         Behavior on height {
             NumberAnimation {
                 duration: Theme.fast

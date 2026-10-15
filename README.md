@@ -9,10 +9,134 @@ PrismOS is a new Arch Linux desktop project inspired by Android 17 and Material
 3 Expressive: playful color, tactile rounded controls, emphasized typography,
 and motion that connects an action to its result.
 
-The v0.8 source release includes a native **Qt Quick / Quickshell** shell, an
-interactive offline design preview, real Linux system adapters, and an Arch
+The v0.9 source release rebuilds the native **Qt Quick / Quickshell** shell on a
+real Material 3 color system (CAM16/HCT Tonal Spot), shared Expressive components,
+an Android-style Settings app, a dual notification/Quick Settings shade, a
+running-app dock, Recents, and an offscreen QML runtime harness. It also keeps the
+interactive offline preview, real Linux system adapters, and the Arch
 package/live-ISO staging pipeline. This is a development foundation. A bootable
 ISO and hardware qualification have not been completed in this release.
+
+### What's new in v0.9
+
+- **Material 3 dynamic color**: `prismos/hct.py` implements CAM16/HCT; the Tonal Spot
+  scheme produces the full M3 role set, validated against published reference values.
+  The wallpaper, Settings preview and every surface follow the palette and dark mode.
+- **Fixed**: clipped button labels, unreadable dark mode (content-color roles rendered
+  black), a dock that clipped its last button, and glyph icons. Icons are now a 68-symbol
+  original set recolored at runtime.
+- **Quick Settings**: large and compact tiles (active = pill, inactive = squircle),
+  brightness/volume sliders, MPRIS media card, and Android's dual shade on wide
+  screens with grouped, swipe-to-dismiss notifications and heads-up banners.
+- **Settings**: searchable two-pane app with Network, Bluetooth, Display, Sound,
+  Notifications, Wallpaper & style, Pointer & keyboard, Shortcuts, Apps, Battery & power
+  and About (real system facts).
+- **Launcher** with ranked search, categories and recents; **dock** with running-app
+  indicators and window cycling; **Recents** overview (Super + Tab).
+- **Wallpaper picker**: choose any PNG/JPEG/WebP from `~/Pictures` (home folder only);
+  the whole shell recolors from the picture's accent. The default wallpaper is drawn
+  from the current palette.
+- **Hardware keys**: volume, mute, microphone mute and brightness bind to fixed actions.
+- **Verification**: `tests/test_shell_runtime.py` loads the real shell QML offscreen with
+  stub Quickshell modules; it needs PySide6 and is skipped when unavailable.
+
+### Added after v0.9: window controls, desktop widgets and an installer
+
+- **Window controls**: the status bar carries Google-style caption controls for the
+  focused window (minimize, maximize/restore, snap left/right, close; the title and app
+  icon sit beside them). Windows can be floated, snapped to halves of the work area,
+  minimized to a hidden workspace and restored from the dock or Recents. Keys:
+  `Super + ↑/↓/←/→` maximize, minimize and snap, `Super + F` float. Everything goes through
+  `prismctl windows ...` with fixed `hyprctl dispatch` calls; the dispatchers are
+  unverified on Hyprland 0.56 with a Lua config (see `docs/VALIDATION.md`).
+- **Desktop widgets** in a classic Google style, chosen in Settings → Widgets: At a glance,
+  clock, search (apps first, then a web search), month calendar, now playing, system
+  (CPU, memory, storage), analog clock and opt-in weather. Weather talks only to fixed
+  HTTPS hosts after you pick a place; nothing leaves the machine otherwise.
+- **Installer**: a wizard from the live USB (`docs/INSTALLER.md`). It erases and installs
+  to one whole disk after a typed confirmation and runs the root work through a
+  polkit-protected helper. It is **unrun on real disks**; try it in a VM first.
+
+### Round two: schemes, tiles, screenshots and utilities
+
+- **Color schemes** (Settings → Wallpaper & style): Tonal Spot, Vibrant, Expressive, Neutral and
+  Monochrome, with contrast tested for every role pair. Vibrant and Expressive use fixed
+  hue offsets rather than Material's lookup tables, so they are close, not bit-exact.
+- **Text size**: Small, Default, Large and Largest scale the whole type scale; Quick Settings
+  tiles and the Settings sidebar adapt so nothing is elided.
+- **Quick Settings tiles**: Airplane mode, Battery Saver (power-profiles-daemon), Night Light
+  (hyprsunset), Screenshot and Lock screen, plus a pencil-activated editor to show, hide and
+  reorder tiles.
+- **Screenshots**: `Print` (area) and `Shift + Print` (full screen) via grim/slurp, saved to
+  `~/Pictures/Screenshots` and copied to the clipboard.
+- **Notifications**: mute individual apps in Settings → Notifications (critical alerts still
+  break through).
+- **Calculator, timer and stopwatch** in one panel: `Super + C`, the launcher, or
+  `prism-shell ipc calculator|clock`. The calculator is a hand-written parser (no `eval`).
+
+### Round three: alarms, quiet hours, clipboard history and a converter
+
+- **Alarms** (Utilities → Alarms, `prism-shell ipc alarms`): up to ten time-of-day alarms with
+  weekdays and labels; they ring while the panel is closed (toast plus a freedesktop sound) and
+  a one-time alarm turns itself off. The timer plays the same sound.
+- **Quiet hours** (Settings → Notifications): Do Not Disturb turns on between two times, even
+  across midnight; critical alerts still break through.
+- **Clipboard history** (`Super + V`): off by default. When turned on, cliphist and wl-clipboard
+  keep text and images; entries are copied back by numeric id through a pipe.
+- **Converter**: length, mass, volume, speed, data and temperature.
+
+### Round four: Date & time, layouts, world clock and snooze
+
+- **Settings → Date & time**: 12/24-hour display everywhere (status bar, shade, desktop clock),
+  automatic time (NTP) and time zone through `timedatectl` (asks for administrator approval).
+- **Keyboard layout** (Settings → Pointer & keyboard): fourteen layouts, applied live to Hyprland
+  and kept for the next session.
+- **World clock** (Utilities → World): up to six time zones with day and offset.
+- **Alarm banner**: alarms and timers show a ringing banner on every screen with Dismiss, and
+  Snooze (10 minutes) for alarms; the sound repeats until dismissed or two minutes pass.
+
+### Round five: Recents previews, lock screen and the glance
+
+- **Recents previews** (`Super + Tab`): small screenshots of the windows that are on screen when the
+  overview opens (grim, scaled to 30%); windows on other workspaces keep their last preview, else
+  an app icon. Previews live in the per-login runtime directory (removed at sign-out), are deleted
+  when their window closes, and can be turned off in Settings → Wallpaper & style.
+- **Lock screen**: user name, battery and a dimmed blurred background in the same dark Material roles.
+- **At a glance** shows the next alarm ("Tomorrow 07:30") and a running timer.
+
+### Round six: Notes, Night Light warmth, power modes and clipboard search
+
+- **Notes widget** (Settings → Widgets): a scratchpad kept in `~/.local/share/prismos/notes.txt`
+  (private, 4000 characters, saved as you type).
+- **Night Light warmth** slider (Settings → Display, 2500 to 5500 K) and **Power mode**
+  (Power saver, Balanced, Performance) in Settings → Battery & power, when power-profiles-daemon is present.
+- **Clipboard search** in the clipboard history panel.
+
+### Round seven: pins, tile details, widget sizes and live Recents
+
+- **Clipboard pinning**: pin a text entry to keep it when history is cleared or turned off; pins live in
+  `~/.local/share/prismos/clipboard-pins.json` (private, up to 20 snippets of 2000 characters).
+- **Tile details**: right-click or long-press Night Light (warmth), Battery Saver (modes), Screenshot
+  (area/window/full screen), Do Not Disturb (quiet hours) or Dark theme (color scheme) in Quick Settings.
+- **Widget sizes**: Calendar, Weather, System and Notes can be small, medium or large (Settings → Widgets).
+- **Live Recents**: when Quickshell exposes Hyprland toplevels and screencopy, cards show the window's live
+  contents while the overview is open; otherwise the snapshot or an icon is used.
+
+### Round eight: Storage
+
+- **Settings → Storage**: used and free space with a segmented bar, and your home folder split into
+  Documents, Downloads, Pictures, Music, Videos, App data, Cache and Other files. It is read-only and
+  bounded (stops at 300,000 entries or six seconds and says the count is partial), never follows
+  symbolic links or crosses into other drives.
+- **Clear window previews** removes the Recents snapshots, the only thing the page can delete.
+
+### Round nine: Notification history
+
+- **Settings → Notifications → Notification history**: off by default. When turned on, the shell remembers
+  the last 100 notifications (app, title, the start of the body, time, and whether it was important) so you
+  can look back after dismissing them, and clear the list.
+- The history lives in the shell's memory only. It is never written to disk, is dropped when you turn the
+  setting off or log out, and notifications from muted apps are not recorded.
 
 ## Build the ISO on Windows
 
@@ -40,12 +164,12 @@ controls and app contents are explicitly simulated. Native controls use Linux.
 
 | Area | First implementation |
 | --- | --- |
-| Native shell | Wallpaper, top bar, saved dock favorites, app badges, system tray, searchable app drawer, appearance panel |
-| Quick Settings | Split radio/sound/microphone controls, inline connection and audio panels, Do Not Disturb, dark theme, brightness, reduced motion |
+| Native shell | Theme-following wallpaper, status bar with live status icons, running-app dock, system tray, ranked app launcher, Recents, Settings app |
+| Quick Settings | Large/compact tiles, split radio/sound/microphone controls, inline connection and audio panels, Do Not Disturb, dark theme, brightness, reduced motion, dual notification shade |
 | System controls | NetworkManager, BlueZ, WirePlumber/PipeWire, brightnessctl; no shell evaluation |
-| Color | Four palettes, custom seed, optional wallpaper sampling, contrast-checked semantic roles |
+| Color | CAM16/HCT Tonal Spot, four palettes, custom seed, optional wallpaper sampling, full Material 3 role set, M3 type scale and shape tokens |
 | Motion | Tile shape response, slider feedback, shade/drawer transitions, morphing loader, launch splash that ends on matching Hyprland window arrival/focus |
-| Notifications | Action buttons, urgency, 50-item retention cap, plain-text cards, dismissal and quiet mode |
+| Notifications | Grouped by app, swipe to dismiss, action buttons, urgency, heads-up banners, 50-item retention cap, plain-text cards, quiet mode |
 | Media | MPRIS metadata/artwork, capability-guarded playback controls and player selection |
 | Sound devices | Output/microphone tabs, default selection, levels, independent mute, unavailable-device feedback and filtered PipeWire event updates |
 | Session | Confirmed power actions, idle locking, per-monitor shortcuts and unplug recovery |
@@ -140,7 +264,10 @@ when upgrading. Native hardware qualification remains open.
 | --- | --- |
 | Super + Space / Super + A | App drawer |
 | Super + Q | Quick Settings |
-| Super + comma | Appearance |
+| Super + Tab | Recent apps |
+| Super + comma | Settings |
+| Super + S | Prism Store |
+| Volume, mute, microphone mute, brightness keys | Fixed `prismctl` actions |
 | Super + Enter | Terminal |
 | Super + E | Files |
 | Super + L | Lock |
@@ -153,10 +280,23 @@ when upgrading. Native hardware qualification remains open.
 ./bin/prismctl theme --seed '#47846a'
 ```
 
-Wallpaper sampling changes the shell palette. The v0.4 desktop still uses the
-bundled vector wallpaper; a wallpaper picker is planned. The initial tonal
-algorithm is HSL-based with contrast checks, **not** Google's HCT/Monet system.
-Third-party Linux applications retain their own themes in this milestone.
+Wallpaper sampling changes the shell palette. The default wallpaper is drawn from the
+current color roles, so it follows the palette and dark mode; Settings > Wallpaper &
+style picks pictures from `~/Pictures`. Color uses a CAM16/HCT Tonal Spot implementation validated against
+published Material values; it is not Google's Monet service, and wallpaper seed
+scoring is a simplified version of Material's. Third-party Linux applications retain
+their own themes in this milestone.
+
+### Run the offscreen shell checks
+
+```bash
+python -m venv .venv && .venv/bin/pip install PySide6-Essentials pillow
+.venv/bin/python -m unittest tests.test_shell_runtime -v
+```
+
+The harness needs Qt's EGL libraries (`libEGL.so.1`) and optionally `lua` for the
+Hyprland config test. It uses stub Quickshell modules; see `docs/VALIDATION.md` for
+exactly what it does and does not prove.
 
 ## Build a live ISO on Arch
 
@@ -177,7 +317,7 @@ Logs go to `build/iso-build.log`; successful ISO output goes to `out/`.
 Use `bash ./build.sh --stage-only` to inspect just the generated Arch profile.
 
 This ISO remains **unverified until an Arch build and physical boot succeed**.
-There is no permanent disk installer yet. Live login: `prism` / `prism`.
+The live session has an "Install PrismOS" wizard (see `docs/INSTALLER.md`; it has never been run on a real disk). Live login: `prism` / `prism`.
 
 ### Make a bootable USB
 

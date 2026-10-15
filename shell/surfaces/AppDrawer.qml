@@ -1,13 +1,21 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
 import "../components"
 import "../services"
+import "../services/AppSearch.js" as AppSearch
 
+// App launcher: search-first, category chips, recents and an alphabetical grid.
 PanelWindow {
     id: root
     property bool opened: ShellState.drawerOpen && ShellState.activeScreen === screen
+    property string category: "All"
+    readonly property var chips: AppSearch.categories(SystemBridge.apps)
+    readonly property var results: AppSearch.rank(SystemBridge.apps, search.text, category)
+    readonly property var recent: AppSearch.recents(SystemBridge.apps, SystemBridge.snapshot.settings.recent_apps, 6)
+    readonly property bool browsing: search.text.length === 0 && category === "All"
     anchors {
         top: true
         left: true
@@ -20,12 +28,17 @@ PanelWindow {
     color: "transparent"
     visible: opened || card.opacity > .01
     onOpenedChanged: if (opened) {
-        search.text = "";
-        search.forceActiveFocus();
+        search.text = ShellState.launcherQuery;
+        ShellState.launcherQuery = "";
+        category = "All";
+        search.focusField();
+    }
+    function launchApp(app, x, y) {
+        ShellState.launch(app, root.screen, x, y);
     }
     Rectangle {
         anchors.fill: parent
-        color: "#551b1425"
+        color: Theme.withAlpha(Theme.scrim, 0.42)
         opacity: root.opened ? 1 : 0
         Behavior on opacity {
             NumberAnimation {
@@ -40,14 +53,14 @@ PanelWindow {
     Rectangle {
         id: card
         anchors.centerIn: parent
-        width: Math.min(980, root.width - 40)
-        height: Math.min(730, root.height - 100)
-        color: Theme.surface
-        radius: 40
+        width: Math.min(1040, root.width - 48)
+        height: Math.min(780, root.height - 112)
+        color: Theme.surfaceContainerLow
+        radius: Theme.shape.extraExtraLarge
         opacity: root.opened ? 1 : 0
         scale: root.opened ? 1 : .94
         transform: Translate {
-            y: root.opened ? 0 : 60
+            y: root.opened ? 0 : 48
             Behavior on y {
                 NumberAnimation {
                     duration: Theme.standard
@@ -72,140 +85,154 @@ PanelWindow {
             anchors.fill: parent
             onClicked: {}
         }
-        Label {
-            x: 28
-            y: 25
-            text: "Your apps"
-            font.pixelSize: 32
-            font.weight: Font.Bold
-        }
-        PillButton {
-            x: 248
-            y: 24
-            text: "✦  Prism Store"
-            filled: true
-            onClicked: ShellState.openStore(root.screen)
-        }
-        PillButton {
-            anchors.right: parent.right
-            anchors.top: parent.top
-            anchors.margins: 20
-            text: "×"
-            Accessible.name: "Close app drawer"
-            onClicked: ShellState.close()
-        }
-        ExpressiveTextField {
-            id: search
-            x: 24
-            y: 82
-            width: parent.width - 48
-            height: 54
-            placeholderText: "Search your apps"
-            color: Theme.onSurface
-            font.family: Theme.font
-            font.pixelSize: 16
-            leftPadding: 22
-            Keys.onEscapePressed: ShellState.close()
-            Keys.onReturnPressed: {
-                const matches = grid.model;
-                if (matches.length)
-                    ShellState.launch(matches[0], root.screen, root.width / 2, root.height / 2);
-            }
-        }
-        GridView {
-            id: grid
-            x: 24
-            y: 158
-            width: parent.width - 48
-            height: parent.height - 186
-            clip: true
-            cellWidth: width / Math.max(2, Math.floor(width / 130))
-            cellHeight: 122
-            model: SystemBridge.apps.filter(app => (app.name + " " + app.description).toLowerCase().includes(search.text.toLowerCase()))
-            ScrollBar.vertical: ScrollBar {}
-            delegate: Button {
-                id: appButton
-                required property var modelData
-                required property int index
-                property bool held: false
-                width: grid.cellWidth
-                height: grid.cellHeight
-                hoverEnabled: true
-                Accessible.name: modelData.name
-                background: Rectangle {
-                    anchors.margins: 5
-                    radius: 28
-                    color: appButton.hovered || appButton.activeFocus ? Theme.surfaceContainer : "transparent"
+        ColumnLayout {
+            anchors.fill: parent
+            anchors.margins: 24
+            spacing: 14
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 10
+                SearchField {
+                    id: search
+                    Layout.fillWidth: true
+                    placeholderText: "Search apps"
+                    onEscaped: ShellState.close()
+                    onDownPressed: grid.forceActiveFocus()
+                    onAccepted: {
+                        if (root.results.length)
+                            root.launchApp(root.results[0], root.width / 2, root.height / 2);
+                    }
                 }
-                contentItem: Column {
-                    spacing: 10
-                    Rectangle {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        width: 64
-                        height: 64
-                        radius: 24
-                        color: index % 3 === 0 ? Theme.primary : index % 3 === 1 ? Theme.secondary : Theme.tertiary
-                        scale: appButton.down ? .9 : 1
-                        Behavior on scale {
-                            NumberAnimation {
-                                duration: Theme.fast
-                                easing.type: Easing.OutBack
-                            }
+                IconButton {
+                    symbol: "close"
+                    variant: "tonal"
+                    Accessible.name: "Close app launcher"
+                    onClicked: ShellState.close()
+                }
+            }
+            Flickable {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 44
+                contentWidth: chipRow.implicitWidth
+                clip: true
+                boundsBehavior: Flickable.StopAtBounds
+                Row {
+                    id: chipRow
+                    spacing: 8
+                    anchors.verticalCenter: parent.verticalCenter
+                    Repeater {
+                        model: root.chips
+                        delegate: FilterChip {
+                            required property string modelData
+                            text: modelData
+                            selected: root.category === modelData
+                            onClicked: root.category = modelData
                         }
-                        Image {
-                            anchors.centerIn: parent
-                            width: 40
-                            height: 40
-                            sourceSize: Qt.size(40, 40)
-                            fillMode: Image.PreserveAspectFit
-                            source: Quickshell.iconPath(appButton.modelData.icon, "application-x-executable")
+                    }
+                }
+            }
+            GridView {
+                id: grid
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                clip: true
+                readonly property int columns: Math.max(3, Math.floor(width / 128))
+                cellWidth: width / columns
+                cellHeight: 118
+                model: root.results
+                boundsBehavior: Flickable.StopAtBounds
+                keyNavigationEnabled: true
+                focus: false
+                ScrollBar.vertical: ScrollBar {}
+                header: Column {
+                    width: grid.width
+                    spacing: 6
+                    visible: root.browsing && root.recent.length > 0
+                    height: visible ? implicitHeight : 0
+                    Label {
+                        text: "Recent"
+                        role: "titleSmall"
+                        color: Theme.surfaceVariantInk
+                        leftPadding: 8
+                        topPadding: 2
+                    }
+                    Row {
+                        Repeater {
+                            model: root.recent
+                            delegate: AppTile {
+                                required property var modelData
+                                width: grid.cellWidth
+                                height: grid.cellHeight
+                                app: modelData
+                                onLaunched: (x, y) => root.launchApp(modelData, x, y)
+                            }
                         }
                     }
                     Label {
-                        width: parent.width - 8
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: appButton.modelData.name
-                        font.pixelSize: 12
-                        horizontalAlignment: Text.AlignHCenter
-                        elide: Text.ElideRight
+                        text: "All apps"
+                        role: "titleSmall"
+                        color: Theme.surfaceVariantInk
+                        leftPadding: 8
+                        topPadding: 6
                     }
                 }
-                function openApp() {
-                    const p = mapToItem(root.contentItem, width / 2, 36);
-                    ShellState.launch(modelData, root.screen, p.x, p.y);
+                delegate: AppTile {
+                    required property var modelData
+                    width: grid.cellWidth
+                    height: grid.cellHeight
+                    app: modelData
+                    onLaunched: (x, y) => root.launchApp(modelData, x, y)
                 }
-                onPressedChanged: if (pressed)
-                    held = false
-                onPressAndHold: {
-                    held = true;
-                    appMenu.open();
+                Keys.onEscapePressed: ShellState.close()
+                Keys.onUpPressed: event => {
+                    if (grid.currentIndex < grid.columns)
+                        search.focusField();
+                    else
+                        event.accepted = false;
                 }
-                onClicked: if (!held)
-                    openApp()
-                Keys.onMenuPressed: appMenu.open()
-                TapHandler {
-                    acceptedButtons: Qt.RightButton
-                    onTapped: appMenu.open()
-                }
-                AppMenu {
-                    id: appMenu
-                    app: appButton.modelData
-                    onLaunchRequested: appButton.openApp()
-                }
-                Rectangle {
-                    x: parent.width / 2 + 21
-                    y: 4
-                    width: 11
-                    height: 11
-                    radius: 6
-                    color: Theme.primaryStrong
-                    visible: Applications.isPinned(appButton.modelData.id)
+                Column {
+                    anchors.centerIn: parent
+                    spacing: 10
+                    visible: grid.count === 0
+                    Symbol {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        width: 40
+                        height: 40
+                        name: "search"
+                        color: Theme.surfaceVariantInk
+                    }
+                    Label {
+                        text: SystemBridge.apps.length ? "No apps match your search" : "No desktop applications found"
+                        role: "bodyLarge"
+                        color: Theme.surfaceVariantInk
+                    }
                 }
             }
-            Label {
-                anchors.centerIn: parent
-                visible: grid.count === 0
-                text: SystemBridge.apps.length ? "No apps match your search" : "No desktop applications found"
+            RowLayout {
+                Layout.fillWidth: true
+                Label {
+                    Layout.fillWidth: true
+                    Layout.leftMargin: 8
+                    text: root.results.length + (root.results.length === 1 ? " app" : " apps")
+                    role: "labelMedium"
+                    color: Theme.surfaceVariantInk
+                }
+                PillButton {
+                    visible: search.text.trim().length > 0
+                    text: "Search the web for \u201c" + search.text.trim() + "\u201d"
+                    symbol: "browser"
+                    variant: "filled"
+                    onClicked: {
+                        SystemBridge.webSearch(search.text.trim());
+                        ShellState.close();
+                    }
+                }
+                PillButton {
+                    text: "Get more apps"
+                    symbol: "store"
+                    variant: "tonal"
+                    onClicked: ShellState.openStore(root.screen)
+                }
             }
         }
     }

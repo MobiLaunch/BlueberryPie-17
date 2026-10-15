@@ -176,7 +176,7 @@ PanelWindow {
     }
     Rectangle {
         anchors.fill: parent
-        color: "#661b1425"
+        color: Theme.withAlpha(Theme.scrim, 0.45)
         opacity: root.opened ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: Theme.fast } }
     }
@@ -186,135 +186,142 @@ PanelWindow {
         anchors.centerIn: parent
         width: Math.min(1020, root.width - 32)
         height: Math.min(800, root.height - 52)
-        radius: 40
+        radius: Theme.shape.extraExtraLarge - 8
         color: Theme.surface
         opacity: root.opened ? 1 : 0
         scale: root.opened ? 1 : .95
         Behavior on opacity { NumberAnimation { duration: Theme.fast } }
         Behavior on scale { NumberAnimation { duration: Theme.standard; easing.type: Easing.OutBack } }
         MouseArea { anchors.fill: parent; onClicked: {} }
-        Label {
-            x: 28; y: 18
-            text: "✦  Prism Store"
-            font.pixelSize: 30
-            font.weight: Font.Bold
+        Row {
+            x: 28; y: 22
+            spacing: 12
+            Symbol {
+                anchors.verticalCenter: parent.verticalCenter
+                width: 30; height: 30
+                name: "store"
+                color: Theme.primary
+            }
+            Column {
+                Label { text: "Prism Store"; role: "headlineMedium" }
+                Label {
+                    text: "Linux and Android, all in one place"
+                    role: "bodyMedium"
+                    color: Theme.surfaceVariantInk
+                }
+            }
         }
-        Label {
-            x: 30; y: 61
-            text: "Linux and Android, all in one place"
-            opacity: .68
-        }
-        PillButton {
+        IconButton {
             anchors.top: parent.top; anchors.right: parent.right; anchors.margins: 18
-            text: "×"; Accessible.name: "Close Prism Store"; onClicked: ShellState.close()
+            symbol: "close"
+            variant: "tonal"
+            Accessible.name: "Close Prism Store"
+            onClicked: ShellState.close()
         }
         Row {
-            x: 27; y: 96; spacing: 8
+            x: 28; y: 96; spacing: 8
             Repeater {
                 model: ["Games", "Apps"]
-                delegate: PillButton {
+                delegate: FilterChip {
                     required property string modelData
                     text: modelData
-                    filled: root.category === modelData
+                    selected: root.category === modelData
                     onClicked: root.switchCategory(modelData)
                 }
             }
         }
-        ExpressiveTextField {
+        SearchField {
             id: searchField
-            x: 26; y: 153
-            width: parent.width - 52; height: 50
+            x: 26; y: 146
+            width: parent.width - 52
             placeholderText: "Find Linux and Android games or apps"
-            color: Theme.onSurface
-            font.family: Theme.font
-            font.pixelSize: 16
-            leftPadding: 20
             onAccepted: root.searchNow()
-            Keys.onEscapePressed: ShellState.close()
+            onEscaped: ShellState.close()
         }
         Row {
-            x: 28; y: 213; spacing: 8
+            x: 28; y: 214; spacing: 8
             Repeater {
                 model: ["All", "Linux", "Android"]
-                delegate: PillButton {
+                delegate: FilterChip {
                     required property string modelData
                     text: modelData
-                    filled: root.sourceFilter === modelData
-                    implicitHeight: 38
+                    selected: root.sourceFilter === modelData
                     onClicked: root.sourceFilter = modelData
                 }
             }
         }
         Row {
-            x: 28; y: 265; spacing: 12
+            x: 28; y: 268; spacing: 12
             visible: root.busy
             ExpressiveLoader { width: 26; height: 26 }
-            Label { text: "Finding your next favorite…"; opacity: .75 }
+            Label { text: "Finding your next favorite…"; role: "bodyMedium"; color: Theme.surfaceVariantInk }
         }
         Label {
-            x: 28; y: 267; width: parent.width - 56
+            x: 28; y: 270; width: parent.width - 56
             visible: !root.busy && (root.error.length > 0 || root.notice.length > 0)
-            color: root.error.length ? Theme.roles.error : Theme.primaryStrong
+            color: root.error.length ? Theme.error : Theme.primary
             text: root.error.length ? root.error : root.notice
+            role: "bodyMedium"
             elide: Text.ElideRight
         }
         ListView {
             id: results
-            x: 26; y: 301
+            x: 26; y: 304
             width: parent.width - 52
-            height: Math.max(90, parent.height - 320)
+            height: Math.max(90, parent.height - 330)
             clip: true
-            spacing: 10
+            spacing: 8
             model: root.results
             ScrollBar.vertical: ScrollBar {}
             delegate: Rectangle {
                 id: resultRow
                 required property var modelData
                 width: results.width
-                height: 106
-                radius: 28
+                height: 100
+                radius: Theme.shape.extraLarge - 4
                 color: Theme.surfaceContainer
                 Rectangle {
                     x: 14
                     anchors.verticalCenter: parent.verticalCenter
-                    width: 68; height: 68; radius: 24
-                    color: resultRow.modelData.kind === "android" ? Theme.secondary : Theme.primary
-                    Label {
+                    width: 68; height: 68; radius: 22
+                    color: resultRow.modelData.kind === "android" ? Theme.secondaryContainer : Theme.primaryContainer
+                    Symbol {
                         anchors.centerIn: parent
-                        font.pixelSize: 26
-                        text: resultRow.modelData.kind === "android" ? "◈" : "✦"
-                        color: Theme.onPrimary
+                        width: 32; height: 32
+                        name: resultRow.modelData.kind === "android" ? "android" : "store"
+                        color: resultRow.modelData.kind === "android" ? Theme.secondaryContainerInk : Theme.primaryContainerInk
                     }
                 }
                 Label {
-                    x: 94; y: 10
-                    width: Math.max(80, parent.width - 258)
+                    x: 96; y: 12
+                    width: Math.max(80, parent.width - 250)
                     text: resultRow.modelData.name
-                    font.pixelSize: 17; font.weight: Font.DemiBold
+                    role: "titleMedium"
                     elide: Text.ElideRight
                 }
                 Label {
-                    x: 94; y: 37
-                    width: Math.max(80, parent.width - 260)
+                    x: 96; y: 38
+                    width: Math.max(80, parent.width - 250)
                     text: resultRow.modelData.source + " · " +
                           (resultRow.modelData.kind === "android" ? "Android" : "Linux")
-                    font.pixelSize: 12
-                    color: Theme.primaryStrong
+                    role: "labelMedium"
+                    color: Theme.primary
                     elide: Text.ElideRight
                 }
                 Label {
-                    x: 94; y: 59
-                    width: Math.max(80, parent.width - 255)
+                    x: 96; y: 58
+                    width: Math.max(80, parent.width - 250)
                     text: resultRow.modelData.description || "Open-source software"
                     maximumLineCount: 2
                     wrapMode: Text.WordWrap
                     elide: Text.ElideRight
-                    opacity: .75
+                    role: "bodySmall"
+                    color: Theme.surfaceVariantInk
                 }
                 PillButton {
-                    anchors.right: parent.right; anchors.rightMargin: 12
+                    anchors.right: parent.right; anchors.rightMargin: 14
                     anchors.verticalCenter: parent.verticalCenter
-                    filled: true
+                    variant: "filled"
                     enabled: !root.busy
                     text: resultRow.modelData.kind === "android" ?
                           (AndroidState.ready && AndroidState.fdroidInstalled ?
@@ -335,6 +342,8 @@ PanelWindow {
                 horizontalAlignment: Text.AlignHCenter
                 wrapMode: Text.WordWrap
                 visible: results.count === 0 && !root.busy
+                role: "bodyLarge"
+                color: Theme.surfaceVariantInk
                 text: root.sourceFilter === "Android" && !AndroidState.enabled ?
                       "Enable Android apps in Settings to browse F-Droid." :
                       root.sourceFilter === "Linux" && !root.linuxConfigured ?
@@ -351,15 +360,17 @@ PanelWindow {
             PillButton {
                 text: root.linuxAvailable ? "Connect Flathub" : "Flatpak unavailable"
                 visible: !root.linuxConfigured
+                variant: "tonal"
                 enabled: root.linuxAvailable && !root.busy
-                implicitHeight: 36
+                implicitHeight: 40
                 onClicked: root.writeLinux("enable", "")
             }
             PillButton {
                 text: "Set up Android in Settings"
                 visible: !AndroidState.enabled
-                implicitHeight: 36
-                onClicked: ShellState.openSettings(root.screen)
+                variant: "tonal"
+                implicitHeight: 40
+                onClicked: ShellState.openSettings(root.screen, "apps")
             }
         }
     }

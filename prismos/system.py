@@ -102,11 +102,37 @@ def power():
     return result
 
 
+PROFILES = ("power-saver", "balanced", "performance")
+
+
+def power_profile():
+    if not shutil.which("powerprofilesctl"):
+        return {"available": False, "profile": "", "saver": False}
+    try:
+        profile = run(["powerprofilesctl", "get"], timeout=3)
+    except CommandError:
+        return {"available": False, "profile": "", "saver": False}
+    return {"available": profile in PROFILES, "profile": profile, "saver": profile == "power-saver"}
+
+
+def night_light():
+    return {"available": bool(shutil.which("hyprsunset")), "enabled": bool(settings.load()["night_light"])}
+
+
+def airplane(radios):
+    """Airplane mode is on when every radio this machine has is off."""
+    present = [radio for radio in (radios["wifi"], radios["bluetooth"]) if radio["available"]]
+    return {"available": bool(present), "enabled": bool(present) and not any(radio["enabled"] for radio in present)}
+
+
 def status():
-    readers = {"wifi": wifi, "bluetooth": bluetooth, "volume": volume, "microphone": microphone, "brightness": brightness, "battery": battery, "power": power}
+    readers = {"wifi": wifi, "bluetooth": bluetooth, "volume": volume, "microphone": microphone, "brightness": brightness,
+               "battery": battery, "power": power, "profile": power_profile}
     with ThreadPoolExecutor(max_workers=len(readers)) as pool:
         futures = {key: pool.submit(reader) for key, reader in readers.items()}
         result = {key: future.result() for key, future in futures.items()}
+    result["airplane"] = airplane(result)
+    result["night_light"] = night_light()
     result["settings"] = settings.load()
     return result
 
@@ -135,12 +161,62 @@ def action(name, value=None):
         run(["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", f"{percentage(value)}%"])
     elif name == "brightness":
         run(["brightnessctl", "-c", "backlight", "set", f"{percentage(value, 1)}%"])
+    elif name == "volume-up":
+        run(["wpctl", "set-volume", "-l", "1", "@DEFAULT_AUDIO_SINK@", "5%+"])
+    elif name == "volume-down":
+        run(["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", "5%-"])
+    elif name == "brightness-up":
+        run(["brightnessctl", "-c", "backlight", "set", "5%+"])
+    elif name == "brightness-down":
+        # Never step to a black screen: keep at least 1% so the display stays usable.
+        run(["brightnessctl", "-c", "backlight", "--min-value=1", "set", "5%-"])
     elif name == "mute":
         run(["wpctl", "set-mute", "@DEFAULT_AUDIO_SINK@", "toggle"])
     elif name == "microphone-mute":
         run(["wpctl", "set-mute", "@DEFAULT_AUDIO_SOURCE@", "toggle"])
     elif name in ("dark", "reduced_motion", "dnd"):
         settings.toggle(name)
+    elif name == "airplane":
+        radios = {"wifi": wifi(), "bluetooth": bluetooth()}
+        state = airplane(radios)
+        if not state["available"]:
+            raise CommandError("No wireless radios were found")
+        turning_on = not state["enabled"]
+        if radios["wifi"]["available"]:
+            run(["nmcli", "radio", "wifi", "off" if turning_on else "on"])
+        if radios["bluetooth"]["available"]:
+            run(["bluetoothctl", "power", "off" if turning_on else "on"])
+    elif name == "night-temp":
+        low, high = settings.NIGHT_TEMPS
+        try:
+            kelvin = int(value)
+        except (TypeError, ValueError):
+            raise ValueError("Warmth must be a number") from None
+        if not low <= kelvin <= high:
+            raise ValueError(f"Warmth must be between {low} and {high}")
+        if settings.load()["night_light"]:
+            if not shutil.which("hyprsunset"):
+                raise CommandError("Night Light needs the hyprsunset package")
+            run(["hyprctl", "hyprsunset", "temperature", str(kelvin)], timeout=5)
+        settings.update(night_temp=kelvin)
+    elif name in ("power-saver", "power-balanced", "power-performance"):
+        state = power_profile()
+        if not state["available"]:
+            raise CommandError("Power profiles are not available on this computer")
+        run(["powerprofilesctl", "set", name.split("-", 1)[1] if name != "power-saver" else "power-saver"])
+    elif name == "battery-saver":
+        state = power_profile()
+        if not state["available"]:
+            raise CommandError("Power profiles are not available on this computer")
+        run(["powerprofilesctl", "set", "balanced" if state["saver"] else "power-saver"])
+    elif name in ("night-light", "night-light-apply"):
+        if not shutil.which("hyprsunset"):
+            raise CommandError("Night Light needs the hyprsunset package")
+        wanted = settings.load()["night_light"] if name == "night-light-apply" else not settings.load()["night_light"]
+        run(["hyprctl", "hyprsunset", "temperature", str(settings.load()["night_temp"])] if wanted
+            else ["hyprctl", "hyprsunset", "identity"], timeout=5)
+        if name == "night-light":
+            settings.update(night_light=wanted)
     elif name == "lock":
         config = os.environ.get("PRISM_HYPRLOCK_CONFIG", "/usr/share/prismos/config/hypr/hyprlock.conf")
         if not Path(config).is_file():

@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import tempfile
 import unittest
 from concurrent.futures import ThreadPoolExecutor
@@ -64,3 +65,87 @@ class PowerTests(unittest.TestCase):
     def test_logout_only_uses_current_session(self, run):
         system.action("logout")
         run.assert_called_once_with(["loginctl","terminate-session","c4"])
+
+
+class LauncherDataTests(unittest.TestCase):
+    def setUp(self):
+        temp = tempfile.TemporaryDirectory(); self.addCleanup(temp.cleanup)
+        env = patch.dict(os.environ, {"XDG_CONFIG_HOME": temp.name + "/config", "XDG_DATA_HOME": temp.name + "/data",
+                                      "XDG_DATA_DIRS": temp.name + "/none", "XDG_CURRENT_DESKTOP": "PrismOS:Hyprland"})
+        env.start(); self.addCleanup(env.stop)
+        apps_dir = Path(temp.name) / "data/applications"; apps_dir.mkdir(parents=True)
+        for name, categories, extra in (("web", "Network;WebBrowser;", "Keywords=internet;surf;"), ("tux", "Game;ArcadeGame;", ""),
+                                        ("calc", "Utility;Calculator;", ""), ("plain", "", "")):
+            (apps_dir / f"{name}.desktop").write_text(
+                f"[Desktop Entry]\nType=Application\nName={name.title()}\nExec=true\nCategories={categories}\n{extra}\n")
+
+    def test_entries_have_groups_and_keywords(self):
+        from prismos import apps
+        by_name = {item["name"]: item for item in apps.entries()}
+        self.assertEqual(by_name["Web"]["category"], "Internet")
+        self.assertEqual(by_name["Tux"]["category"], "Games")
+        self.assertEqual(by_name["Calc"]["category"], "Utilities")
+        self.assertEqual(by_name["Plain"]["category"], "Other")
+        self.assertEqual(by_name["Web"]["keywords"], "internet surf")
+
+    def test_launch_records_most_recent_first_without_duplicates(self):
+        from prismos import apps
+        with patch("prismos.apps.run"):
+            for name in ("web", "tux", "web"):
+                apps.launch(f"{name}.desktop")
+        self.assertEqual(settings.load()["recent_apps"], ["web.desktop", "tux.desktop"])
+
+    def test_recents_ignore_hostile_values_and_cap_at_eight(self):
+        settings.update(recent_apps=["../etc/passwd", 7, "ok.desktop", "ok.desktop"] + [f"a{i}.desktop" for i in range(12)])
+        recents = settings.load()["recent_apps"]
+        self.assertEqual(recents[0], "ok.desktop")
+        self.assertEqual(len(recents), 8)
+        self.assertNotIn("../etc/passwd", recents)
+
+
+class AboutTests(unittest.TestCase):
+    def test_reads_system_files_without_running_commands(self):
+        from prismos import about
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / "os-release").write_text('NAME="Arch Linux"\nPRETTY_NAME="Arch Linux"\n# comment\nBROKEN\n')
+            (root / "cpuinfo").write_text("processor\t: 0\nmodel name\t: Fake   CPU @ 3GHz\n")
+            (root / "meminfo").write_text("MemTotal:       16384000 kB\n")
+            (root / "uptime").write_text("3600.55 100.0\n")
+            with patch("subprocess.run") as run, patch("subprocess.Popen") as popen:
+                result = about.info(root / "os-release", root / "cpuinfo", root / "meminfo", root / "uptime")
+            run.assert_not_called(); popen.assert_not_called()
+        self.assertEqual(result["base"], "Arch Linux")
+        self.assertEqual(result["cpu"], "Fake CPU @ 3GHz")
+        self.assertEqual(result["memory_gib"], 15.6)
+        self.assertEqual(result["uptime_seconds"], 3600)
+
+    def test_missing_files_degrade_to_empty_values(self):
+        from prismos import about
+        missing = "/nonexistent/prism"
+        result = about.info(missing, missing, missing, missing)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["cpu"], "")
+        self.assertIsNone(result["memory_gib"])
+        self.assertIsNone(result["uptime_seconds"])
+
+
+class HardwareKeyTests(unittest.TestCase):
+    @patch("prismos.system.run", return_value="")
+    def test_media_key_actions_map_to_fixed_commands(self, run):
+        expected = {
+            "volume-up": ["wpctl", "set-volume", "-l", "1", "@DEFAULT_AUDIO_SINK@", "5%+"],
+            "volume-down": ["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", "5%-"],
+            "brightness-up": ["brightnessctl", "-c", "backlight", "set", "5%+"],
+            "brightness-down": ["brightnessctl", "-c", "backlight", "--min-value=1", "set", "5%-"],
+        }
+        for name, command in expected.items():
+            with self.subTest(action=name):
+                run.reset_mock()
+                self.assertEqual(system.action(name), {"ok": True, "action": name})
+                run.assert_called_once_with(command)
+
+    @patch("prismos.system.run")
+    def test_step_actions_take_no_caller_value(self, run):
+        system.action("volume-up", "999; reboot")
+        self.assertNotIn("999; reboot", " ".join(run.call_args.args[0]))

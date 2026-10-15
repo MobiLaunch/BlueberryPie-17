@@ -14,7 +14,7 @@ Windows computer just downloads the finished ISO.
 3. Click **Run workflow**, select `main`, and click the green **Run workflow**.
 4. Open the newly created workflow run. A **green check** means all steps
    succeeded. A red X means do **not** treat its files as a completed ISO.
-5. At the bottom under **Artifacts**, download `PrismOS-v0.8-ISO`.
+5. At the bottom under **Artifacts**, download `PrismOS-v0.9-ISO`.
 6. Windows will receive a ZIP file. Extract it to obtain the `.iso` and
    `SHA256SUMS`. Do not try to flash the artifact ZIP as an ISO.
 

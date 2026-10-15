@@ -19,12 +19,14 @@ jobs:
       - run: ./scripts/check.sh
       - run: |
           python scripts/generate-design.py
-          git diff --exit-code -- design preview/tokens.js preview/icons.js preview/assets/wallpaper.svg
+          git diff --exit-code -- design preview/tokens.js preview/icons.js preview/assets/wallpaper.svg shell/components/IconData.js
   native-lint:
     runs-on: ubuntu-latest
     container: archlinux:base-devel
     steps:
-      - run: pacman -Syu --noconfirm git nodejs python python-pillow quickshell qt6-declarative dbus
+      # ttf-roboto is a runtime dependency of prism-shell; without any font the offscreen runtime
+      # tests fall back to a wide built-in face and report every label as elided.
+      - run: pacman -Syu --noconfirm git nodejs python python-pillow quickshell qt6-declarative dbus pyside6 lua ttf-roboto
       - uses: actions/checkout@v4
       - run: |
           while IFS= read -r path; do /usr/lib/qt6/bin/qmllint -I /usr/lib/qt6/qml "$path"; done < <(find shell -name '*.qml')

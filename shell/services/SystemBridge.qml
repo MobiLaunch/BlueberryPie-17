@@ -32,6 +32,18 @@ QtObject {
                 available: false,
                 value: 0
             },
+            airplane: {
+                available: false,
+                enabled: false
+            },
+            profile: {
+                available: false,
+                saver: false
+            },
+            night_light: {
+                available: false,
+                enabled: false
+            },
             settings: {
                 dark: false,
                 reduced_motion: false,
@@ -88,11 +100,125 @@ QtObject {
         pending = queue;
         drain();
     }
+    function setPreviews(on) {
+        const queue = pending.filter(item => item[1] !== "thumbnails");
+        queue.push(["prismctl", "thumbnails", "enable", on ? "yes" : "no"]);
+        pending = queue;
+        drain();
+    }
+    function setTiles(ids) {
+        const queue = pending.filter(item => item[1] !== "tiles");
+        queue.push(["prismctl", "tiles", "set"].concat(ids));
+        pending = queue;
+        drain();
+    }
+    function resetTiles() {
+        const queue = pending.filter(item => item[1] !== "tiles");
+        queue.push(["prismctl", "tiles", "reset"]);
+        pending = queue;
+        drain();
+    }
+    function addAlarm(time, days, label) {
+        const queue = pending.slice();
+        queue.push(["prismctl", "alarms", "add", "--time", time, "--days", days.join(","), "--label", label]);
+        pending = queue;
+        drain();
+    }
+    function toggleAlarm(id) {
+        const queue = pending.slice();
+        queue.push(["prismctl", "alarms", "toggle", String(id)]);
+        pending = queue;
+        drain();
+    }
+    function removeAlarm(id) {
+        const queue = pending.slice();
+        queue.push(["prismctl", "alarms", "remove", String(id)]);
+        pending = queue;
+        drain();
+    }
+    function setQuietHours(enabled, start, end) {
+        const queue = pending.filter(item => item[1] !== "quiet-hours");
+        queue.push(["prismctl", "quiet-hours", "set", "--enabled", enabled ? "yes" : "no", "--start", start, "--end", end]);
+        pending = queue;
+        drain();
+    }
+    function playSound(name) {
+        if (!sounder.running) {
+            sounder.command = ["prismctl", "sound", name];
+            sounder.running = true;
+        }
+    }
+    property Process sounder: Process {}
+    function muteApp(name, muted) {
+        const queue = pending.slice();
+        queue.push(["prismctl", "notifications", muted ? "mute" : "unmute", name]);
+        pending = queue;
+        drain();
+    }
+    function setNotificationHistory(on) {
+        const queue = pending.filter(item => item[1] !== "notifications" || item[2] !== "history");
+        queue.push(["prismctl", "notifications", "history", on ? "yes" : "no"]);
+        pending = queue;
+        drain();
+    }
+    function screenshot(mode) {
+        if (shooter.running)
+            return;
+        shooter.command = ["prismctl", "screenshot", mode];
+        shooter.running = true;
+    }
+    signal screenshotFinished(bool success, string message)
+    property Process shooter: Process {
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const data = JSON.parse(text);
+                    if (data.ok === false)
+                        root.screenshotFinished(false, data.error);
+                    else
+                        root.screenshotFinished(true, data.copied ? "Screenshot copied and saved to Pictures" : "Screenshot saved to Pictures");
+                } catch (e) {
+                    root.screenshotFinished(false, "The screenshot did not finish");
+                }
+            }
+        }
+    }
+    function setScheme(scheme) {
+        const queue = pending.slice();
+        queue.push(["prismctl", "theme", "--scheme", scheme]);
+        pending = queue;
+        drain();
+    }
+    function setFontScale(scale) {
+        const queue = pending.slice();
+        queue.push(["prismctl", "theme", "--font-scale", String(scale)]);
+        pending = queue;
+        drain();
+    }
     function favorite(operation, id) {
         const queue = pending.slice();
         queue.push(["prismctl", "favorites", operation, id]);
         pending = queue;
         drain();
+    }
+    function webSearch(query) {
+        if (webSearcher.running)
+            return;
+        webSearcher.command = ["prismctl", "websearch", query];
+        webSearcher.running = true;
+    }
+    property Process webSearcher: Process {
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const data = JSON.parse(text);
+                    if (data.ok === false)
+                        root.error = data.error;
+                } catch (e) {
+                    root.error = "Could not open the browser";
+                }
+            }
+        }
     }
     function launch(id) {
         if (launcher.running)

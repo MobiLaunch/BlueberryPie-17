@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import "."
 import "../services"
 
 Switch {
@@ -8,7 +9,10 @@ Switch {
     implicitHeight: 42
     hoverEnabled: true
     Accessible.name: "Enable Android apps"
-    padding: 0
+    leftPadding: 0
+    rightPadding: 0
+    topPadding: 0
+    bottomPadding: 0
     spacing: 0
     indicator: Rectangle {
         implicitWidth: 64
@@ -16,7 +20,7 @@ Switch {
         x: root.leftPadding
         y: (root.height - height) / 2
         radius: height / 2
-        color: root.checked ? Theme.primaryStrong : Theme.surfaceHigh
+        color: root.checked ? Theme.primary : Theme.surfaceContainerHigh
         border.width: root.checked ? 0 : 2
         border.color: Theme.outline
         opacity: root.enabled ? 1 : .45
@@ -27,7 +31,7 @@ Switch {
             radius: height / 2
             x: root.checked ? parent.width - width - 4 : 8
             anchors.verticalCenter: parent.verticalCenter
-            color: root.checked ? Theme.onPrimaryStrong : Theme.onSurfaceHigh
+            color: root.checked ? Theme.primaryInk : Theme.surfaceInk
             Behavior on x {
                 NumberAnimation { duration: Theme.standard; easing.type: Easing.OutBack }
             }

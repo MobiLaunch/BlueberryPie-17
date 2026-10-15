@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import "."
 import "../services"
 
 // Shared rounded menu behavior for dock, launcher, desktop and future system apps.
@@ -21,13 +22,13 @@ Menu {
     }
     delegate: MenuItem {
         id: item
-        implicitHeight: 46
+        implicitHeight: visible ? 46 : 0
         implicitWidth: 210
         contentItem: Label {
             text: item.text
             font.pixelSize: 14
             font.weight: item.highlighted ? Font.DemiBold : Font.Normal
-            color: item.highlighted ? Theme.onPrimary : Theme.onSurface
+            color: item.highlighted ? Theme.primaryContainerInk : Theme.surfaceInk
             leftPadding: 14
             rightPadding: 10
             verticalAlignment: Text.AlignVCenter
@@ -35,7 +36,7 @@ Menu {
         }
         background: Rectangle {
             radius: 16
-            color: item.highlighted ? Theme.primary : "transparent"
+            color: item.highlighted ? Theme.primaryContainer : "transparent"
             Behavior on color { ColorAnimation { duration: Theme.fast } }
         }
     }

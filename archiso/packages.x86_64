@@ -30,5 +30,20 @@ vulkan-radeon
 intel-ucode
 amd-ucode
 flatpak
+hyprsunset
+power-profiles-daemon
+grim
+slurp
+wl-clipboard
+sound-theme-freedesktop
+cliphist
 waydroid
 xdg-desktop-portal-gtk
+# Disk installer (prismos/installer.py); releng ships most of these, listed so they are never dropped.
+arch-install-scripts
+gptfdisk
+dosfstools
+e2fsprogs
+grub
+efibootmgr
+polkit

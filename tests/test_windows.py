@@ -1,0 +1,170 @@
+import json
+import unittest
+from unittest.mock import patch
+
+from prismos import cli, windows
+from prismos.system import CommandError
+
+CLIENTS = [
+    {"address": "0xAB12", "mapped": True, "hidden": False, "class": "firefox", "title": "Docs, drafts",
+     "workspace": {"id": 2}, "pid": 10, "focusHistoryID": 0},
+    {"address": "0xcd34", "mapped": True, "class": "foot", "title": "~", "workspace": {"id": 1}, "pid": 11, "focusHistoryID": 3},
+    {"address": "0xdead", "mapped": False, "class": "ghost", "title": "unmapped", "workspace": {"id": 1}},
+    {"address": "not-hex", "mapped": True, "class": "evil", "workspace": {"id": 1}},
+    {"address": "0xbeef", "mapped": True, "class": "", "title": "no app id", "workspace": {"id": 1}},
+]
+
+
+def fake_run(args, timeout=4):
+    if args[:3] == ["hyprctl", "-j", "clients"]:
+        return json.dumps(CLIENTS)
+    if args[:3] == ["hyprctl", "-j", "activewindow"]:
+        return json.dumps({"address": "0xAB12"})
+    if args[:2] == ["hyprctl", "dispatch"]:
+        return fake_run.reply
+    raise AssertionError(args)
+
+
+fake_run.reply = "ok"
+
+
+class WindowTests(unittest.TestCase):
+    def setUp(self):
+        patcher = patch("prismos.windows.run", side_effect=fake_run)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        fake_run.reply = "ok"
+
+    def test_only_mapped_valid_windows_with_app_ids_are_listed_in_order(self):
+        result = windows.clients()
+        self.assertEqual([w["class"] for w in result], ["foot", "firefox"])
+        self.assertTrue(result[1]["focused"])
+        self.assertEqual(result[1]["title"], "Docs, drafts")
+
+    def test_recency_comes_from_focus_history(self):
+        by_class = {w["class"]: w["recency"] for w in windows.clients()}
+        self.assertEqual(by_class, {"firefox": 0, "foot": 3})
+
+    def test_focus_sends_fixed_arguments_for_known_window(self):
+        with patch("prismos.windows.run", side_effect=fake_run) as run:
+            windows.dispatch("focus", "0xAB12")
+        run.assert_called_with(["hyprctl", "dispatch", "focuswindow", "address:0xab12"], timeout=5)
+
+    def test_unknown_or_malformed_windows_never_reach_the_compositor(self):
+        for address in ("0x9999", "x; reboot", "", None, "0xAB12 --batch"):
+            with self.subTest(address=address), patch("prismos.windows.run", side_effect=fake_run) as run:
+                with self.assertRaises(ValueError):
+                    windows.dispatch("close", address)
+                self.assertNotIn("dispatch", [call.args[0][1] for call in run.call_args_list])
+
+    def test_unknown_operation_rejected(self):
+        with self.assertRaises(ValueError):
+            windows.dispatch("kill", "0xAB12")
+
+    def test_rejected_dispatch_is_reported(self):
+        fake_run.reply = "Invalid dispatcher"
+        with self.assertRaises(CommandError):
+            windows.dispatch("focus", "0xcd34")
+
+    def test_missing_hyprctl_returns_structured_error(self):
+        with patch("prismos.windows.run", side_effect=CommandError("hyprctl is not installed")):
+            self.assertEqual(windows.status()["ok"], False)
+
+    def test_cli_lists_windows_as_json(self):
+        import contextlib
+        import io
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            code = cli.main(["windows", "list"])
+        self.assertEqual(code, 0)
+        self.assertEqual(len(json.loads(out.getvalue())["windows"]), 2)
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+
+MONITORS = [{"id": 0, "x": 0, "y": 0, "width": 2560, "height": 1600, "scale": 2.0, "reserved": [0, 44, 0, 92]}]
+CLIENTS_STATE = [
+    {"address": "0xaa01", "mapped": True, "class": "firefox", "title": "Docs", "workspace": {"id": 1, "name": "1"},
+     "pid": 1, "floating": False, "fullscreen": 0, "monitor": 0, "focusHistoryID": 0},
+    {"address": "0xaa02", "mapped": True, "class": "foot", "title": "~", "workspace": {"id": -98, "name": "special:minimized"},
+     "pid": 2, "floating": True, "fullscreen": 0, "monitor": 0, "focusHistoryID": 2},
+    {"address": "0xaa03", "mapped": True, "class": "thunar", "title": "Files", "workspace": {"id": 1, "name": "1"},
+     "pid": 3, "floating": True, "fullscreen": 1, "monitor": 0, "focusHistoryID": 1},
+]
+
+
+class WindowManagementTests(unittest.TestCase):
+    def setUp(self):
+        self.sent = []
+
+        def fake(args, timeout=4):
+            if args[:3] == ["hyprctl", "-j", "clients"]:
+                return json.dumps(CLIENTS_STATE)
+            if args[:3] == ["hyprctl", "-j", "activewindow"]:
+                return json.dumps({"address": "0xaa01"})
+            if args[:3] == ["hyprctl", "-j", "monitors"]:
+                return json.dumps(MONITORS)
+            if args[:3] == ["hyprctl", "-j", "activeworkspace"]:
+                return json.dumps({"id": 3})
+            if args[:2] == ["hyprctl", "dispatch"]:
+                self.sent.append(args[2:])
+                return "ok"
+            raise AssertionError(args)
+        patcher = patch("prismos.windows.run", side_effect=fake)
+        patcher.start(); self.addCleanup(patcher.stop)
+
+    def test_state_reports_floating_maximized_and_minimized(self):
+        state = {w["class"]: w for w in windows.clients()}
+        self.assertTrue(state["foot"]["minimized"])
+        self.assertFalse(state["firefox"]["minimized"])
+        self.assertTrue(state["thunar"]["maximized"] and state["thunar"]["floating"])
+
+    def test_minimize_moves_to_the_special_workspace_silently(self):
+        windows.dispatch("minimize", "0xaa01")
+        self.assertEqual(self.sent, [["movetoworkspacesilent", "special:minimized,address:0xaa01"]])
+
+    def test_restore_returns_to_current_workspace_and_focuses(self):
+        windows.dispatch("restore", "0xaa02")
+        self.assertEqual(self.sent, [["movetoworkspace", "3,address:0xaa02"], ["focuswindow", "address:0xaa02"]])
+
+    def test_maximize_focuses_then_toggles(self):
+        windows.dispatch("maximize", "0xaa01")
+        self.assertEqual(self.sent, [["focuswindow", "address:0xaa01"], ["fullscreen", "1"]])
+
+    def test_active_alias_targets_the_focused_window_only(self):
+        windows.dispatch("close", "active")
+        self.assertEqual(self.sent, [["closewindow", "address:0xaa01"]])
+
+    def test_snap_left_floats_then_sizes_to_half_the_usable_area(self):
+        windows.dispatch("snap-left", "0xaa01")
+        # 2560x1600 at 2x is 1280x800; usable 1280x664; half = (1280-36)//2 = 622
+        self.assertEqual(self.sent, [["togglefloating", "address:0xaa01"],
+                                     ["resizewindowpixel", "exact 622 640,address:0xaa01"],
+                                     ["movewindowpixel", "exact 12 56,address:0xaa01"]])
+
+    def test_snap_right_and_leaving_maximized_state(self):
+        windows.dispatch("snap-right", "0xaa03")
+        self.assertEqual(self.sent[:2], [["focuswindow", "address:0xaa03"], ["fullscreen", "1"]])
+        self.assertEqual(self.sent[-1], ["movewindowpixel", "exact 646 56,address:0xaa03"])
+        self.assertNotIn(["togglefloating", "address:0xaa03"], self.sent)  # already floating
+
+    def test_minimized_windows_cannot_be_snapped_or_maximized(self):
+        for operation in ("snap-left", "maximize"):
+            with self.subTest(operation=operation), self.assertRaises(ValueError):
+                windows.dispatch(operation, "0xaa02")
+        self.assertEqual(self.sent, [])
+
+    def test_tiny_screens_refuse_to_snap(self):
+        tiny = [dict(MONITORS[0], width=420, height=600, scale=1.0, reserved=[0, 44, 0, 92])]
+        with patch.object(windows, "_json", side_effect=lambda c: tiny if c[2] == "monitors" else
+                          json.loads(windows.run(c))):
+            with self.assertRaises(CommandError):
+                windows.dispatch("snap-left", "0xaa01")
+
+    def test_hostile_addresses_and_operations_never_dispatch(self):
+        for operation, address in (("close", "0xaa01; reboot"), ("snap-up", "0xaa01"), ("float", "active\n"), ("focus", "0xAA99")):
+            with self.subTest(operation=operation, address=address), self.assertRaises(ValueError):
+                windows.dispatch(operation, address)
+        self.assertEqual(self.sent, [])

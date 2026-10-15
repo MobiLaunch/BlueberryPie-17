@@ -1,12 +1,13 @@
 # Maintainer: MobiLaunch
 pkgname=prism-shell
-pkgver=0.8.0
+pkgver=0.9.0
 pkgrel=1
 pkgdesc='PrismOS expressive native desktop shell and dedicated Wayland session'
 arch=('any')
 url='https://github.com/MobiLaunch/BlueberryPie-17'
 license=('MIT')
-depends=('quickshell>=0.3.2' 'hyprland>=0.56' 'python' 'python-pillow' 'qt6-declarative' 'qt6-svg' 'qt6-shadertools' 'networkmanager' 'nm-connection-editor' 'bluez' 'bluez-utils' 'blueman' 'pipewire' 'pipewire-pulse' 'wireplumber' 'brightnessctl' 'glib2' 'hyprlock' 'hypridle' 'dbus' 'foot' 'thunar' 'xdg-utils' 'udisks2' 'util-linux' 'polkit-kde-agent' 'ttf-roboto' 'xdg-desktop-portal-hyprland' 'xdg-desktop-portal-gtk' 'flatpak' 'waydroid' 'polkit')
+depends=('quickshell>=0.3.2' 'hyprland>=0.56' 'python' 'python-pillow' 'qt6-declarative' 'qt6-svg' 'qt6-shadertools' 'networkmanager' 'nm-connection-editor' 'bluez' 'bluez-utils' 'blueman' 'pipewire' 'pipewire-pulse' 'wireplumber' 'brightnessctl' 'glib2' 'hyprlock' 'hypridle' 'dbus' 'foot' 'thunar' 'xdg-utils' 'udisks2' 'util-linux' 'polkit-kde-agent' 'ttf-roboto' 'xdg-desktop-portal-hyprland' 'xdg-desktop-portal-gtk' 'flatpak' 'waydroid' 'polkit' 'grim' 'slurp' 'wl-clipboard' 'sound-theme-freedesktop' 'cliphist')
+optdepends=('hyprsunset: Night Light tile' 'power-profiles-daemon: Battery Saver tile')
 source=("PrismOS-${pkgver}.tar.gz")
 sha256sums=('GENERATED_BY_BUILD_SCRIPT')
 
@@ -16,6 +17,8 @@ package() {
     cp -r shell design config docs "${pkgdir}/usr/share/prismos/"
     cp -r prismos "${pkgdir}/usr/lib/prismos/"
     install -Dm755 bin/prism-android-helper "${pkgdir}/usr/libexec/prism-android-helper"
+    install -Dm755 bin/prism-installer-helper "${pkgdir}/usr/libexec/prism-installer-helper"
+    install -Dm644 packaging/polkit/org.prismos.installer.policy "${pkgdir}/usr/share/polkit-1/actions/org.prismos.installer.policy"
     install -Dm644 packaging/polkit/org.prismos.android.policy "${pkgdir}/usr/share/polkit-1/actions/org.prismos.android.policy"
     install -Dm644 packaging/portals/prismos-portals.conf "${pkgdir}/usr/share/xdg-desktop-portal/prismos-portals.conf"
     install -Dm755 bin/prism-style-env "${pkgdir}/usr/bin/prism-style-env"
@@ -26,5 +29,7 @@ package() {
     install -Dm755 bin/prism-session "${pkgdir}/usr/bin/prism-session"
     install -Dm644 packaging/session/prismos.desktop "${pkgdir}/usr/share/wayland-sessions/prismos.desktop"
     install -Dm644 packaging/session/prismos-files.desktop "${pkgdir}/usr/share/applications/prismos-files.desktop"
+    install -Dm644 packaging/session/prismos-calculator.desktop "${pkgdir}/usr/share/applications/prismos-calculator.desktop"
+    install -Dm644 packaging/session/prismos-clock.desktop "${pkgdir}/usr/share/applications/prismos-clock.desktop"
     install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
 }

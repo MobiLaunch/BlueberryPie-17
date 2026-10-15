@@ -13,7 +13,24 @@ HARDWARE = real compositor/device testing still required, GAP = missing.
 
 | Surface | Status | Expected next acceptance |
 | --- | --- | --- |
-| Top bar, wallpaper, dock, app launcher | SOURCE / QA | monitor DPI + touch hardware |
+| Status bar, theme-following wallpaper, running-app dock, ranked launcher | SOURCE / QA | monitor DPI + touch hardware |
+| Window caption controls, snap, minimize / restore, float | SOURCE / QA | `hyprctl dispatch` names and `special:minimized` unverified on Hyprland 0.56 Lua; snap math assumes the monitor's reserved area |
+| Desktop widgets (glance, clock, search, calendar, system, analog, media, weather) | SOURCE / QA | classic-style original designs; weather network path and layout on real monitors unverified |
+| Disk installer wizard + polkit helper | SOURCE / QA | never run on a disk; needs UEFI/BIOS VM and hardware passes (`docs/INSTALLER.md`) |
+| Color schemes (5) and text size | SOURCE / QA | Vibrant/Expressive hues approximate Material's tables |
+| Quick Settings tile editor; airplane, battery saver, night light, screenshot, lock tiles | SOURCE / QA | needs power-profiles-daemon, hyprsunset, grim/slurp on hardware |
+| Per-app notification mute | SOURCE / QA | real notification clients |
+| Calculator, timer, stopwatch | SOURCE / QA | no alarms; timer has no sound |
+| Alarms, quiet hours, clipboard history, converter | SOURCE / QA | no snooze or looping ringer; real cliphist and audio unverified |
+| Date & time page, 12/24-hour clock, keyboard layouts, world clock, ringing banner | SOURCE / QA | timedatectl/polkit and live layout changes unverified |
+| Lock screen layout and glance alarm/timer | SOURCE / QA | hyprlock rendering unverified |
+| Notes widget, Night Light warmth, power modes, clipboard search | SOURCE / QA | hyprsunset and power-profiles-daemon on hardware |
+| Clipboard pins, tile detail panels, widget sizes, live Recents | SOURCE / QA | ScreencopyView and toplevel address matching unverified on real Quickshell |
+| Storage page (usage breakdown, clear previews) | SOURCE / QA | block accounting on btrfs/compressed filesystems, very large homes |
+| Recents overview (windows via hyprctl) with window previews | SOURCE / QA | verify focus/close dispatch and grim captures on Hyprland 0.56 Lua; previews are snapshots, not live |
+| Heads-up banners and grouped swipe-dismiss shade | SOURCE / QA | real notification clients, long text, many apps |
+| Settings app (11 sections) | SOURCE / QA | real adapters on hardware; per-app notification controls missing |
+| Hardware volume / brightness / mute keys | SOURCE | real keyboard; bind flags unverified |
 | Quick Settings: Wi-Fi, Bluetooth, brightness, microphone, volume | SOURCE / QA | pairing, secure network, backlight hardware |
 | Desktop right-click background menu | SOURCE / QA | right-click positioning and high DPI |
 | Dock and launcher app menus | SOURCE / QA | keyboard/long press/right click |
@@ -32,9 +49,11 @@ HARDWARE = real compositor/device testing still required, GAP = missing.
 | Display scaling and arrangement with rollback | SOURCE / QA | physical multi-monitor hotplug and arrangement checks |
 | Printer, monitor arrangement, audio streams, permissions | GAP | settings panels with service APIs |
 | Installer, disk manager, Wi-Fi first boot, persistence | GAP | supervised destructive disk QA |
-| HCT dynamic material color across GTK/Qt | GAP | implement supported accent handoff, live reapply |
+| HCT dynamic material color in the shell | SOURCE / QA | other scheme variants (Vibrant, Expressive); GTK/Qt accent handoff stays a GAP |
+| Dynamic color across GTK/Qt/Electron apps | GAP | supported accent handoff, live reapply |
 | Secure Android APK trust and seamless native install | GAP | publisher signatures, authorized F-Droid API |
-| Notification history, clipboard, share sheet / portal UI | PARTIAL / GAP | full action tests |
+| Notification history (opt-in, in memory) | SOURCE / QA | in-place replacements from real clients |
+| Clipboard, share sheet / portal UI | PARTIAL / GAP | full action tests |
 | ISO and USB boot | HARDWARE | Arch mkarchiso, real USB, Intel+AMD |
 
 ## Rules for future passes
@@ -86,3 +105,15 @@ HARDWARE = real compositor/device testing still required, GAP = missing.
   rename resolution, removable-drive hotplug push notifications, drag across
   processes, actual touchscreen edge gestures, display rotation/duplicate mode
   with rollback, and real hardware testing.
+
+
+## v0.9 engineering status
+
+- Color: validated CAM16/HCT Tonal Spot with the full M3 role set; `*Ink` content roles
+  (an `onX` property naming collision made default text black in Qt 6.12).
+- UI: the harness-detected defects (clipped labels, 62 px dock overflow, black text in
+  dark mode, glyph icons) are fixed and covered by tests that scan the live item tree.
+- Wallpaper picker (home pictures, accent extraction) is SOURCE / QA; videos, folders
+  outside `~/Pictures`, and per-monitor wallpapers are not supported.
+- Open: Recents thumbnails (needs screencopy), Quick Settings edit/reorder, notification history persistence, on-screen keyboard and accessibility
+  settings, and every hardware or compositor check listed in `docs/VALIDATION.md`.

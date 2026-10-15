@@ -1,5 +1,6 @@
 pragma Singleton
 import QtQuick
+import "LaunchTracking.js" as LaunchTracking
 
 QtObject {
     readonly property var installed: SystemBridge.apps
@@ -22,6 +23,30 @@ QtObject {
         return selected;
     }
     readonly property var dockApps: favoriteIds.map(id => installed.find(app => app.id === id)).filter(app => app !== undefined)
+    // Windows whose app is not pinned, grouped per app, for the dock's running section.
+    readonly property var extraRunning: {
+        const seen = {};
+        const result = [];
+        for (const window of Windows.list) {
+            if (dockApps.some(app => LaunchTracking.matches(app, window.class)))
+                continue;
+            if (seen[window.class]) {
+                seen[window.class].windows.push(window);
+                continue;
+            }
+            const match = installed.find(app => LaunchTracking.matches(app, window.class));
+            const entry = {
+                id: match ? match.id : "",
+                name: match ? match.name : window.class,
+                icon: match ? match.icon : window.class.toLowerCase(),
+                startupClass: match ? match.startupClass : window.class,
+                windows: [window]
+            };
+            seen[window.class] = entry;
+            result.push(entry);
+        }
+        return result;
+    }
     function isPinned(id) {
         return favoriteIds.includes(id);
     }

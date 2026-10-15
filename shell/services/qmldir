@@ -9,3 +9,14 @@ singleton AudioState 1.0 AudioState.qml
 singleton AndroidState 1.0 AndroidState.qml
 singleton InputState 1.0 InputState.qml
 singleton DisplayState 1.0 DisplayState.qml
+singleton Windows 1.0 Windows.qml
+singleton AboutState 1.0 AboutState.qml
+singleton WallpaperState 1.0 WallpaperState.qml
+singleton WidgetsState 1.0 WidgetsState.qml
+singleton InstallerState 1.0 InstallerState.qml
+singleton TilesState 1.0 TilesState.qml
+singleton ClockState 1.0 ClockState.qml
+singleton ClipboardState 1.0 ClipboardState.qml
+singleton DateTimeState 1.0 DateTimeState.qml
+singleton WorldClockState 1.0 WorldClockState.qml
+singleton StorageState 1.0 StorageState.qml

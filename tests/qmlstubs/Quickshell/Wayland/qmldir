@@ -1,0 +1,4 @@
+module Quickshell.Wayland
+singleton WlrLayer 1.0 WlrLayer.qml
+singleton WlrKeyboardFocus 1.0 WlrKeyboardFocus.qml
+ScreencopyView 1.0 ScreencopyView.qml

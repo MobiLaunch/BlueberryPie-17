@@ -1,7 +1,9 @@
 pragma ComponentBehavior: Bound
 import QtQuick
+import "."
 import "../services"
 
+// Device list, level and mute for either outputs or microphones.
 Column {
     id: root
     property string kind: "output"
@@ -11,37 +13,54 @@ Column {
     spacing: 8
     Label {
         width: parent.width
+        leftPadding: 4
         text: root.kind === "output" ? "Play through" : "Microphone"
-        font.weight: Font.DemiBold
+        role: "titleSmall"
+        color: Theme.primary
     }
     Label {
         width: parent.width
+        leftPadding: 4
         visible: root.devices.length === 0
         text: root.kind === "output" ? "No playback devices available" : "No microphones available"
-        font.pixelSize: 12
+        role: "bodyMedium"
+        color: Theme.surfaceVariantInk
         wrapMode: Text.WordWrap
     }
     Repeater {
         model: root.devices
-        delegate: PillButton {
+        delegate: ListRow {
             required property var modelData
             width: root.width
-            implicitHeight: 54
-            filled: modelData.selected
+            implicitHeight: 60
+            title: modelData.label
+            supporting: modelData.selected ? "Selected" : ""
+            symbol: root.kind === "output" ? "volume" : "microphone"
+            selected: modelData.selected
+            chipColor: modelData.selected ? Theme.primary : Theme.secondaryContainer
+            chipInk: modelData.selected ? Theme.primaryInk : Theme.secondaryContainerInk
             enabled: !AudioState.busy && !AudioState.adjusting
-            text: modelData.label + (modelData.selected ? "\nSelected" : "")
             Accessible.name: (root.kind === "output" ? "Play through " : "Use microphone ") + modelData.label + (modelData.selected ? ", selected" : "")
             Accessible.checkable: true
             Accessible.checked: modelData.selected
             onClicked: AudioState.change("select", root.kind, modelData)
+            Symbol {
+                visible: modelData.selected
+                width: 20
+                height: 20
+                name: "check"
+                color: Theme.primaryContainerInk
+            }
         }
     }
     Label {
         width: parent.width
+        leftPadding: 4
         visible: root.current !== null
         text: root.current ? root.current.label + (root.current.muted ? " · Muted" : " · " + root.current.value + "%") : ""
         wrapMode: Text.WordWrap
-        font.pixelSize: 12
+        role: "bodySmall"
+        color: Theme.surfaceVariantInk
     }
     ExpressiveSlider {
         width: parent.width
@@ -59,10 +78,10 @@ Column {
     }
     PillButton {
         width: parent.width
-        implicitHeight: 40
         visible: root.current !== null
         enabled: root.current !== null && root.current.available && !AudioState.busy
-        filled: root.current !== null && root.current.muted
+        variant: root.current !== null && root.current.muted ? "filled" : "tonal"
+        symbol: root.kind === "output" ? (root.current && root.current.muted ? "volume" : "volume_off") : (root.current && root.current.muted ? "microphone" : "microphone_off")
         text: root.kind === "output" ? (root.current && root.current.muted ? "Unmute output" : "Mute output") : (root.current && root.current.muted ? "Unmute microphone" : "Mute microphone")
         onClicked: if (root.current)
             AudioState.change("mute", root.kind, root.current, root.current.muted ? 0 : 1)

@@ -9,6 +9,10 @@ bash -n build.sh
 node --check preview/app.js
 node tests/launch.spec.cjs
 node tests/audio-events.spec.cjs
+node tests/appsearch.spec.cjs
+node tests/calculator.spec.cjs
+node tests/units.spec.cjs
+node tests/alarmmath.spec.cjs
 python3 -m compileall -q prismos scripts/generate-design.py
 prism_qmlformat="$(command -v qmlformat || true)"
 if [[ -z "$prism_qmlformat" && -x /usr/lib/qt6/bin/qmlformat ]]; then

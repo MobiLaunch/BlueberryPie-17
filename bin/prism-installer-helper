@@ -1,0 +1,31 @@
+#!/usr/bin/python3 -I
+"""PrismOS disk installer helper; only invokable after polkit approval.
+
+Reads one JSON request on stdin (it contains the new account's password, so it is
+never an argument), re-validates it against a fresh disk listing, and runs the fixed
+installation steps. It refuses to run anywhere except the live USB.
+"""
+import os
+import sys
+from pathlib import Path
+
+# Installed: /usr/libexec/prism-installer-helper -> /usr/lib/prismos. A source checkout
+# keeps prismos/ beside bin/. Both locations are root-owned when this runs as root.
+_checkout = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(_checkout if (_checkout / "prismos").is_dir() else Path("/usr/lib/prismos")))
+
+
+def main():
+    if os.geteuid() != 0 or sys.argv[1:] != ["install"]:
+        print("Only an authorized install operation is permitted", file=sys.stderr)
+        return 2
+    from prismos import installer
+    try:
+        return installer.run_install(sys.stdin.read(65536))
+    except installer.CommandError as error:
+        print(f"PrismOS installer: {error}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

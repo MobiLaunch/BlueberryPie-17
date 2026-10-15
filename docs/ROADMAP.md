@@ -89,7 +89,7 @@ The list below retains the full acceptance scope.
    app-close animation; validate slow launches, already-running apps and errors.
 5. Add touch drag physics, dismiss gestures and desktop-friendly overscroll.
 6. Replace initial tonal generator with a licensed Material HCT adapter.
-7. Add wallpaper picker/extraction, themed symbolic icons and font variants.
+7. Themed symbolic icons and font variants (a wallpaper picker with accent extraction shipped in v0.9).
 
 **Gate:** reference comparisons and slow-motion recordings. "Exact" is a measured
 acceptance target, not a claim about the first prototype.
@@ -100,6 +100,7 @@ acceptance target, not a claim about the first prototype.
 2. Verify UEFI and legacy BIOS, Intel/AMD graphics, laptops and physical USB.
 3. Add a first-run wizard: language, keyboard, account, network, accessibility.
 4. Build a disk installer with explicit target selection, review and progress.
+   *Source slice delivered after v0.9 (`docs/INSTALLER.md`); not yet run on a disk or VM.*
 5. Add transactional configuration updates, logs, rollback and recovery shell.
 6. Sign packages, publish a distribution repository and record ISO manifests.
 
@@ -147,3 +148,75 @@ working permissions and predictable error/retry handling across every app.
 Follow-on acceptance: boot and run PrismOS on real Arch hardware, test
 touchscreen gestures, external displays, live drag/drop, XDG portals, and
 review large file transfers, media indexing and hotplug behavior.
+
+
+## v0.9 delivered development slice
+
+- Material 3 dynamic color (CAM16/HCT Tonal Spot), M3 type, shape and state-layer tokens.
+- Rebuilt shared component set; icons recolored at runtime from one original SVG set.
+- Quick Settings (large/compact tiles), dual shade, grouped swipe-dismiss notifications,
+  heads-up banners, MPRIS card.
+- Status bar with live status, running-app dock, ranked launcher, Recents (Super + Tab).
+- Settings app (11 sections incl. About and Shortcuts), restyled Files, Store, power
+  menu and first-run wizard; theme-following wallpaper; refreshed lock screen.
+- Wallpaper picker with accent extraction; hardware volume/brightness/mute keys; offscreen QML runtime harness.
+
+Follow-on acceptance: run the packaged session on real Arch + Hyprland hardware,
+verify `hyprctl` focus/close and hardware-key binds, then M2 reference measurements
+(Pixel SystemUI proportions), Recents thumbnails, tile edit/reorder,
+other Material scheme variants and per-app notification controls.
+
+## Delivered after v0.9 (development slice)
+
+- Window management: caption controls in the status bar, snap/maximize/minimize/float,
+  minimized state in the dock and Recents, `Super + arrows/F` binds.
+- Desktop widgets (glance, clock, search, calendar, system, analog clock, media, opt-in weather).
+- Disk installer (whole disk, UEFI/BIOS, GRUB, polkit helper) and a live-USB entry point.
+
+Follow-on acceptance: run all three on Arch + Hyprland; install into UEFI and BIOS VMs and
+on hardware; measure caption-control hit areas against the reference; add resizable
+widgets, thumbnails in Recents, an offline install mode and a published package repository.
+
+## Round two (development slice)
+
+- Five Material color schemes, a four-step text size, Quick Settings tile editor and five more tiles.
+- Screenshot adapter and keys, per-app notification mute, calculator/timer/stopwatch panel.
+
+Still open from the M2 list: Recents thumbnails (needs a screencopy path), per-tile detail panels,
+bit-exact Vibrant/Expressive hue tables, alarms, and measurements against the reference.
+
+## Round three (development slice)
+
+- Alarms with sound, scheduled Do Not Disturb, opt-in clipboard history, unit converter.
+
+Still open: Recents thumbnails, per-tile detail panels, looping alarm ringing screen, snooze,
+clipboard search and pinning, world clock.
+
+## Round four (development slice)
+
+- Date & time settings with a 12/24-hour clock, keyboard layout picker, world clock, alarm snooze and ringing banner.
+
+## Round five (development slice)
+
+- Recents window previews, refreshed lock screen, next alarm and timer on the desktop glance.
+
+Still open: per-tile detail panels, clipboard search/pinning, resizable widgets, true live thumbnails
+(needs a screencopy client), measurements against the Android reference.
+
+## Round six (development slice)
+
+- Notes widget, Night Light warmth, power modes, clipboard search.
+
+## Round seven (development slice)
+
+- Clipboard pinning, Quick Settings tile detail panels, widget sizes, live Recents when screencopy is available.
+
+## Round eight (development slice)
+
+- Settings Storage page: bounded usage breakdown and clearing of window previews.
+
+## Round nine (development slice)
+
+- Opt-in, in-memory notification history in Settings.
+
+Still open: measurements against the Android reference and everything listed under "Not executed" in `docs/VALIDATION.md`.

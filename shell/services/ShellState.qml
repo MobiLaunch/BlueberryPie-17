@@ -8,13 +8,21 @@ QtObject {
     id: root
     property var activeScreen: Quickshell.screens.length ? Quickshell.screens[0] : null
     property bool onboardingOpen: false
+    property bool installerOpen: false
+    property bool utilitiesOpen: false
+    property string utilitiesTab: "calculator"
     property bool firstRunChecked: false
     property bool shadeOpen: false
     property bool drawerOpen: false
     property bool settingsOpen: false
+    // Settings page to show when Settings opens ("" keeps the last one).
+    property string settingsPage: ""
+    // Text to prefill in the launcher search when it opens.
+    property string launcherQuery: ""
     property bool powerOpen: false
     property bool storeOpen: false
     property bool filesOpen: false
+    property bool recentsOpen: false
     property var launching: null
     property point launchOrigin: Qt.point(200, 200)
     property bool launchReady: false
@@ -47,6 +55,8 @@ QtObject {
         powerOpen = false;
         storeOpen = false;
         filesOpen = false;
+        recentsOpen = false;
+        utilitiesOpen = false;
     }
     function cancelLaunch() {
         launching = null;
@@ -80,9 +90,49 @@ QtObject {
         if (open)
             SystemBridge.refreshApps();
     }
-    function openSettings(screen) {
+    function openLauncher(screen, query) {
+        close();
+        activeScreen = screen || focusedScreen();
+        launcherQuery = query || "";
+        drawerOpen = true;
+        SystemBridge.refreshApps();
+    }
+    // Capture after the panels have faded so they are not in the picture.
+    property string screenshotMode: "area"
+    function screenshot(mode) {
+        close();
+        screenshotMode = mode;
+        shotTimer.restart();
+    }
+    property Timer shotTimer: Timer {
+        interval: 380
+        onTriggered: SystemBridge.screenshot(root.screenshotMode)
+    }
+    function openInstaller(screen) {
+        if (!InstallerState.live) {
+            toast = "Installing is only available from the PrismOS live USB";
+            toastTimer.restart();
+            return;
+        }
+        close();
+        activeScreen = screen || focusedScreen();
+        InstallerState.open();
+        installerOpen = true;
+    }
+    function openUtilities(screen, tab) {
+        const same = utilitiesOpen && activeScreen === screen && utilitiesTab === tab;
+        close();
+        if (same)
+            return;
+        activeScreen = screen || focusedScreen();
+        utilitiesTab = tab || "calculator";
+        utilitiesOpen = true;
+    }
+    function openSettings(screen, page) {
         close();
         activeScreen = screen;
+        if (page)
+            settingsPage = page;
         settingsOpen = true;
     }
     function openStore(screen) {
@@ -94,6 +144,46 @@ QtObject {
         close();
         activeScreen = screen;
         filesOpen = true;
+    }
+    // Recents takes fresh window previews first (the overview itself must not be in them).
+    property var pendingRecents: null
+    function toggleRecents(screen) {
+        const open = !recentsOpen || activeScreen !== screen;
+        close();
+        pendingRecents = null;
+        recentsFallback.stop();
+        if (!open)
+            return;
+        Windows.refresh();
+        if (SystemBridge.snapshot.settings.recents_previews === false || !Windows.capture()) {
+            showRecents(screen);
+            return;
+        }
+        pendingRecents = screen;
+        recentsFallback.restart();
+    }
+    function showRecents(screen) {
+        activeScreen = screen;
+        recentsOpen = true;
+        Windows.refresh();
+    }
+    function finishRecents() {
+        recentsFallback.stop();
+        if (pendingRecents === null)
+            return;
+        const screen = pendingRecents;
+        pendingRecents = null;
+        showRecents(screen);
+    }
+    property Timer recentsFallback: Timer {
+        interval: 1500
+        onTriggered: root.finishRecents()
+    }
+    property Connections previewsReady: Connections {
+        target: Windows
+        function onCaptured() {
+            root.finishRecents();
+        }
     }
     function openPower(screen) {
         close();
@@ -150,6 +240,12 @@ QtObject {
         function onErrorChanged() {
             if (SystemBridge.error) {
                 root.toast = SystemBridge.error;
+                toastTimer.restart();
+            }
+        }
+        function onScreenshotFinished(success, message) {
+            if (success || message !== "Screenshot cancelled") {
+                root.toast = message;
                 toastTimer.restart();
             }
         }

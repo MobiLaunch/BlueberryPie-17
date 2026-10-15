@@ -37,7 +37,7 @@ PanelWindow {
         width: 64 + (Math.min(760, root.width - 60) - 64) * progress
         height: 64 + (Math.min(520, root.height - 120) - 64) * progress
         radius: 30 + (10 * progress)
-        color: Theme.primary
+        color: Theme.primaryContainer
         opacity: root.opened ? 1 : 0
         Behavior on opacity {
             NumberAnimation {
@@ -56,7 +56,7 @@ PanelWindow {
             }
             Label {
                 text: root.lastApp.name
-                color: Theme.onPrimary
+                color: Theme.primaryContainerInk
                 font.pixelSize: 20
                 font.weight: Font.DemiBold
                 anchors.horizontalCenter: parent.horizontalCenter

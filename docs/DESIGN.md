@@ -18,9 +18,13 @@ requires a frozen Pixel reference and side-by-side geometry/motion measurements.
 ## Visual rules
 
 1. Expressive color comes from semantic tokens, not separate hardcoded app themes.
-2. Active Quick Settings tiles use the primary container and a tighter rounded
-   shape; inactive tiles use a neutral container with fuller pill corners.
-3. A large brightness track sits above a dense, regular Quick Settings grid.
+2. Active Quick Settings tiles are pills in the `primary` role; inactive tiles are
+   squircles on `surfaceContainerHighest`; a pressed tile tightens its corners
+   (Android 12+ behavior). Large tiles carry a title and state; compact tiles are
+   icon-only with a tooltip and accessible name.
+3. A large brightness track sits above a regular Quick Settings grid (two large
+   tiles per row, then four compact tiles). Wide screens split notifications into
+   their own card beside Quick Settings, as Android does on large displays.
 4. Display type gets emphasis; labels stay readable and avoid excessive weight.
 5. Icons use consistent rounded strokes. Original SVG symbols are bundled;
    Google marks and proprietary assets are not copied.
@@ -44,16 +48,40 @@ Initial timings are 160 ms for effects, 320 ms for ordinary spatial movement and
 500 ms for slower transitions. These are prototype choices inspired by the motion
 system, not a claim to reproduce Google's spring token values exactly.
 
+## Roles, naming and tokens
+
+Components read semantic roles from `Theme.qml`, never hex values. The role names
+are Material 3's, with one deliberate exception: **content colors are `*Ink`**
+(`Theme.primaryInk` is M3 `onPrimary`, `Theme.surfaceInk` is `onSurface`). In Qt 6.12
+a property named `onX` beside a property `x` silently loses its binding and renders
+black, which made default text unreadable in dark mode. Do not reintroduce `on…`
+property names; `tests/test_shell_runtime.py` guards this.
+
+Also in `Theme.qml`: the M3 type scale (`Theme.type`, used through `Label.role`),
+the M3 shape scale (`Theme.shape`), and motion durations that collapse to zero
+under reduced motion. Shared components: `PillButton` (filled, tonal, neutral,
+outlined, text), `IconButton`, `QuickTile`, `ListRow`, `ToggleRow`, `SliderRow`,
+`SettingsGroup`/`SettingsPage`, `FilterChip`, `SearchField`, `AppTile`, `DockItem`,
+`PaletteSwatch`, `KeyCap`, `NotificationCard`/`Group`/`List`, `MediaCard`, `StateLayer`.
+
+Qt's Material style pins `Button` paddings, so controls that draw their own
+content set all four paddings explicitly. Inside `components/`, import `"."` after
+`QtQuick.Controls` so `Label` is the themed one.
+
 ## Color generation
 
-`prismos/theme.py` owns the generator. `scripts/generate-design.py` generates the
-preview palette data and original vector assets. Native QML reads the same
-generator through `prismctl theme`. Body text color is selected using WCAG
-contrast; generated pairs are regression tested.
+`prismos/hct.py` implements CAM16 and the HCT solver; `prismos/theme.py` builds the
+Material 3 Tonal Spot scheme (primary chroma 36, secondary 16, tertiary 24 at +60°,
+neutrals 6/8) with M3's tone mapping for the light and dark role sets.
+`scripts/generate-design.py` writes preview tokens (a documented legacy mapping of
+the same scheme) and the original vector icons, including `IconData.js` for the
+native recolored symbols. QML reads the scheme through `prismctl theme`.
 
-The current algorithm extracts a sample seed with Pillow and constructs HSL
-tones. HCT/Monet, automatic wallpaper updates, themed application icons and
-third-party GTK/Qt application theming are explicit later work.
+Because tone fixes luminance, role pairs meet contrast by construction; the pairs
+are also regression tested, and the solver is tested against the published scheme
+for source `#6750A4`. Not implemented: Monet's wallpaper quantizer (a simplified
+Material-style scorer is used), other scheme variants (Vibrant, Expressive, Fidelity),
+themed application icons and third-party GTK/Qt/Electron theming.
 
 ## Fidelity and preview boundaries
 
@@ -64,5 +92,6 @@ supported system controls. The v0.4 native shell includes power/session actions,
 tray, MPRIS, inline wireless selection/passwords and sound-device controls.
 Output and microphone tabs keep the sound surface compact on narrow screens.
 PIN pairing uses Blueman and
-advanced network configuration uses NetworkManager's editor. Native wallpaper
-customization and actual app-surface morphs remain planned.
+advanced network configuration uses NetworkManager's editor. Actual app-surface morphs remain planned. The preview has
+not been rebuilt to match the v0.9 dual shade and Settings app; it shares tokens and
+icons with the native shell but is otherwise the v0.8 review aid.

@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
@@ -14,161 +15,252 @@ PanelWindow {
     property bool saving: finisher.running
     property string error: ""
     property bool opened: ShellState.onboardingOpen && ShellState.activeScreen === screen
-    anchors { top: true; left: true; right: true; bottom: true }
+    readonly property string seed: SystemBridge.snapshot.settings.seed || "#8469cf"
+    readonly property var presets: [
+        {
+            name: "Lilac",
+            seed: "#8469cf"
+        },
+        {
+            name: "Mint",
+            seed: "#47846a"
+        },
+        {
+            name: "Tangerine",
+            seed: "#c27443"
+        },
+        {
+            name: "Rose",
+            seed: "#b85c80"
+        }
+    ]
+    anchors {
+        top: true
+        left: true
+        right: true
+        bottom: true
+    }
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "prism-welcome"
     WlrLayershell.keyboardFocus: opened ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
     visible: opened
     color: Theme.surface
-
     Rectangle {
         anchors.fill: parent
-        color: Theme.dark ? "#20182a" : "#f5f0fb"
+        color: Theme.surfaceContainerLow
+        // Soft shapes in the current palette; they recolor live as the user picks.
+        Rectangle {
+            x: parent.width - 360
+            y: -140
+            width: 520
+            height: 520
+            radius: 260
+            color: Theme.primaryContainer
+            opacity: 0.8
+        }
+        Rectangle {
+            x: -160
+            y: parent.height - 300
+            width: 460
+            height: 460
+            radius: 150
+            color: Theme.tertiaryContainer
+            opacity: 0.7
+        }
+        Rectangle {
+            x: parent.width * 0.62
+            y: parent.height - 190
+            width: 220
+            height: 220
+            radius: 70
+            rotation: 18
+            color: Theme.secondaryContainer
+            opacity: 0.8
+        }
     }
     Rectangle {
         id: card
         anchors.centerIn: parent
-        width: Math.min(720, root.width - 32)
-        height: Math.min(570, root.height - 48)
-        radius: 42
-        color: Theme.surfaceContainer
-        Column {
-            x: 30
-            y: 27
-            width: parent.width - 60
-            spacing: 17
+        width: Math.min(760, root.width - 32)
+        height: Math.min(600, root.height - 48)
+        radius: Theme.shape.extraExtraLarge - 6
+        color: Theme.surface
+        border.width: 1
+        border.color: Theme.withAlpha(Theme.outlineVariant, 0.7)
+        ColumnLayout {
+            anchors.fill: parent
+            anchors.margins: 32
+            spacing: 18
             Row {
+                Layout.fillWidth: true
                 spacing: 8
                 Repeater {
                     model: 3
                     delegate: Rectangle {
                         required property int index
-                        width: (card.width - 92) / 3
+                        width: (card.width - 64 - 16) / 3
                         height: 6
                         radius: 3
-                        color: index <= root.step ? Theme.primaryStrong : Theme.surfaceHigh
-                        Behavior on color { ColorAnimation { duration: Theme.fast } }
+                        color: index <= root.step ? Theme.primary : Theme.surfaceContainerHigh
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: Theme.fast
+                            }
+                        }
                     }
                 }
             }
             Item {
-                height: Math.min(405, card.height - 155)
-                width: parent.width
-                Column {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                // Step 0: welcome
+                ColumnLayout {
                     anchors.fill: parent
-                    spacing: 15
+                    spacing: 16
                     visible: root.step === 0
-                    Label { text: "✦"; font.pixelSize: 64; color: Theme.primaryStrong }
-                    Label { text: "Welcome to PrismOS"; font.pixelSize: 34; font.weight: Font.Bold }
+                    Item {
+                        Layout.preferredHeight: 8
+                    }
+                    Rectangle {
+                        Layout.preferredWidth: 96
+                        Layout.preferredHeight: 96
+                        radius: 32
+                        color: Theme.primaryContainer
+                        Symbol {
+                            anchors.centerIn: parent
+                            width: 52
+                            height: 52
+                            name: "spark"
+                            color: Theme.primaryContainerInk
+                        }
+                    }
                     Label {
-                        width: parent.width
+                        text: "Welcome to PrismOS"
+                        role: "displaySmall"
+                        font.weight: Font.DemiBold
+                    }
+                    Label {
+                        Layout.fillWidth: true
                         text: "A colorful, expressive desktop made for your computer."
-                        font.pixelSize: 19
+                        role: "titleLarge"
                         wrapMode: Text.WordWrap
                     }
                     Label {
-                        width: parent.width
-                        text: "Personalize your experience, then choose whether you'd like Android apps. You can always change that later."
+                        Layout.fillWidth: true
+                        text: "Personalize your colors, then choose whether you'd like Android apps. You can change any of this later in Settings."
+                        role: "bodyLarge"
+                        color: Theme.surfaceVariantInk
                         wrapMode: Text.WordWrap
-                        opacity: .75
                     }
                 }
-                Column {
+                // Step 1: colors
+                ColumnLayout {
                     anchors.fill: parent
-                    spacing: 15
+                    spacing: 14
                     visible: root.step === 1
-                    Label { text: "Make it yours"; font.pixelSize: 33; font.weight: Font.Bold }
-                    Label { text: "Pick a color. Your desktop will follow."; font.pixelSize: 16 }
+                    Label {
+                        text: "Make it yours"
+                        role: "headlineLarge"
+                    }
+                    Label {
+                        Layout.fillWidth: true
+                        text: "Pick an accent color. The whole desktop follows."
+                        role: "bodyLarge"
+                        color: Theme.surfaceVariantInk
+                        wrapMode: Text.WordWrap
+                    }
                     Flow {
-                        width: parent.width
-                        spacing: 10
+                        Layout.fillWidth: true
+                        spacing: 12
                         Repeater {
-                            model: [
-                                {name: "Lilac", seed: "#8469cf"},
-                                {name: "Mint", seed: "#47846a"},
-                                {name: "Tangerine", seed: "#c27443"},
-                                {name: "Rose", seed: "#b85c80"}
-                            ]
-                            delegate: PillButton {
+                            model: root.presets
+                            delegate: PaletteSwatch {
                                 required property var modelData
                                 text: modelData.name
-                                filled: true
+                                seed: modelData.seed
+                                current: root.seed === modelData.seed
                                 onClicked: SystemBridge.setSeed(modelData.seed)
                             }
                         }
                     }
-                    Label {
-                        width: parent.width
-                        wrapMode: Text.WordWrap
-                        text: "You can change the theme and accessibility settings later."
-                        opacity: .75
+                    SettingsGroup {
+                        Layout.fillWidth: true
+                        ToggleRow {
+                            width: parent.width
+                            title: "Dark theme"
+                            supporting: "Easier on the eyes in low light"
+                            symbol: "moon"
+                            on: Theme.dark
+                            onSwitched: SystemBridge.action("dark")
+                        }
+                    }
+                    Item {
+                        Layout.fillHeight: true
                     }
                 }
-                Column {
+                // Step 2: Android apps
+                ColumnLayout {
                     anchors.fill: parent
-                    spacing: 15
+                    spacing: 14
                     visible: root.step === 2
-                    Label { text: "More apps, more fun"; font.pixelSize: 33; font.weight: Font.Bold }
                     Label {
-                        width: parent.width
+                        text: "More apps, more fun"
+                        role: "headlineLarge"
+                    }
+                    Label {
+                        Layout.fillWidth: true
+                        text: "Would you like to run Android apps and games? PrismOS runs them alongside Linux apps using Waydroid."
+                        role: "bodyLarge"
+                        color: Theme.surfaceVariantInk
                         wrapMode: Text.WordWrap
-                        text: "Would you like to enable Android apps and games? PrismOS runs them alongside Linux apps using Waydroid."
-                        font.pixelSize: 17
                     }
-                    Rectangle {
-                        width: parent.width
-                        height: 100
-                        radius: 28
-                        color: Theme.surfaceHigh
-                        Label {
-                            x: 17; y: 15
-                            text: "Enable Android apps"
-                            font.pixelSize: 17; font.weight: Font.DemiBold
-                        }
-                        Label {
-                            x: 17; y: 48
-                            width: parent.width - 120
-                            wrapMode: Text.WordWrap
-                            text: "Optional system image download and first-time setup"
-                            font.pixelSize: 13
-                        }
-                        AndroidToggle {
-                            checked: root.includeAndroid
-                            anchors.right: parent.right
-                            anchors.rightMargin: 18
-                            anchors.verticalCenter: parent.verticalCenter
-                            onClicked: root.includeAndroid = checked
+                    SettingsGroup {
+                        Layout.fillWidth: true
+                        ToggleRow {
+                            width: parent.width
+                            title: "Enable Android apps"
+                            supporting: "Optional system image download and first-time setup"
+                            symbol: "android"
+                            on: root.includeAndroid
+                            onSwitched: value => root.includeAndroid = value
                         }
                     }
                     Label {
-                        width: parent.width
+                        Layout.fillWidth: true
+                        text: "If enabled, you'll be asked to approve one-time setup. Settings shows progress while it runs, and F-Droid can be added afterward."
+                        role: "bodyMedium"
+                        color: Theme.surfaceVariantInk
                         wrapMode: Text.WordWrap
-                        opacity: .75
-                        text: "If enabled, you'll be asked to approve one-time setup. A small progress indicator in Settings shows what's happening. F-Droid can be added afterward."
                     }
                     Label {
-                        width: parent.width
+                        Layout.fillWidth: true
                         text: root.error
                         visible: root.error.length > 0
                         wrapMode: Text.WordWrap
-                        color: Theme.roles.error
+                        color: Theme.error
+                    }
+                    Item {
+                        Layout.fillHeight: true
                     }
                 }
             }
-            Row {
-                width: parent.width
+            RowLayout {
+                Layout.fillWidth: true
                 spacing: 12
                 PillButton {
                     text: "Back"
+                    variant: "text"
                     enabled: root.step > 0 && !root.saving
                     onClicked: root.step -= 1
                 }
-                Item { width: Math.max(0, parent.width - nextButton.width - 115); height: 1 }
+                Item {
+                    Layout.fillWidth: true
+                }
                 PillButton {
                     id: nextButton
                     text: root.step < 2 ? "Continue" : root.saving ? "Saving…" : "Enter PrismOS"
-                    filled: true
+                    variant: "filled"
                     enabled: !root.saving
                     onClicked: {
                         if (root.step < 2)
@@ -196,7 +288,7 @@ PanelWindow {
                     ShellState.onboardingOpen = false;
                     SystemBridge.refresh();
                     if (root.includeAndroid) {
-                        ShellState.openSettings(root.screen);
+                        ShellState.openSettings(root.screen, "apps");
                         AndroidState.setEnabled(true);
                     }
                 } catch (e) {
