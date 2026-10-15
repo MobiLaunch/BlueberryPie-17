@@ -56,7 +56,7 @@ PanelWindow {
             }
             Label {
                 text: root.lastApp.name
-                color: Theme.onPrimaryContainer
+                color: Theme.primaryContainerInk
                 font.pixelSize: 20
                 font.weight: Font.DemiBold
                 anchors.horizontalCenter: parent.horizontalCenter

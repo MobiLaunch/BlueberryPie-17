@@ -18,7 +18,7 @@ Column {
             Layout.leftMargin: 8
             text: root.group.app + " · " + root.count
             role: "labelLarge"
-            color: Theme.onSurfaceVariant
+            color: Theme.surfaceVariantInk
             elide: Text.ElideRight
         }
         PillButton {

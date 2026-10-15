@@ -14,7 +14,7 @@ Button {
     checkable: toggle
     readonly property bool selected: toggle && checked
     readonly property color containerColor: variant === "filled" ? (toggle && !checked ? Theme.surfaceContainerHighest : Theme.primary) : variant === "tonal" ? (selected || !toggle ? Theme.secondaryContainer : Theme.surfaceContainerHighest) : selected ? Theme.primaryContainer : "transparent"
-    readonly property color contentColor: variant === "filled" ? (toggle && !checked ? Theme.primary : Theme.onPrimary) : variant === "tonal" ? Theme.onSecondaryContainer : selected ? Theme.onPrimaryContainer : Theme.onSurfaceVariant
+    readonly property color contentColor: variant === "filled" ? (toggle && !checked ? Theme.primary : Theme.primaryInk) : variant === "tonal" ? Theme.secondaryContainerInk : selected ? Theme.primaryContainerInk : Theme.surfaceVariantInk
     implicitWidth: 48
     implicitHeight: 48
     leftPadding: 0
@@ -38,7 +38,7 @@ Button {
         radius: root.down ? Theme.shape.medium : width / 2
         color: root.containerColor
         opacity: root.enabled ? 1 : 0.38
-        border.width: root.activeFocus ? 2 : 0
+        border.width: root.visualFocus ? 2 : 0
         border.color: Theme.primary
         Behavior on radius {
             NumberAnimation {

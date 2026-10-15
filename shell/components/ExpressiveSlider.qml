@@ -8,6 +8,7 @@ Slider {
     property string symbol: "brightness"
     property string label: "Brightness"
     property real modelValue: 0
+    property real keyStep: 5
     signal committed(real level)
     from: symbol === "brightness" ? 1 : 0
     to: 100
@@ -26,11 +27,11 @@ Slider {
     onPressedChanged: if (!pressed)
         committed(value)
     Keys.onLeftPressed: {
-        value = Math.max(from, value - 5);
+        value = Math.max(from, value - keyStep);
         committed(value);
     }
     Keys.onRightPressed: {
-        value = Math.min(to, value + 5);
+        value = Math.min(to, value + keyStep);
         committed(value);
     }
     background: Rectangle {
@@ -65,10 +66,10 @@ Slider {
             anchors.verticalCenter: parent.verticalCenter
             text: root.enabled ? Math.round(root.value) + "%" : "Unavailable"
             font.pixelSize: 12
-            color: Theme.onSurface
+            color: Theme.surfaceInk
         }
         opacity: root.enabled ? 1 : .5
-        border.width: root.activeFocus ? 2 : 0
+        border.width: root.visualFocus ? 2 : 0
         border.color: Theme.primary
     }
     handle: Rectangle {

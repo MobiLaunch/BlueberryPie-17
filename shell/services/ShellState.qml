@@ -12,6 +12,8 @@ QtObject {
     property bool shadeOpen: false
     property bool drawerOpen: false
     property bool settingsOpen: false
+    // Settings page to show when Settings opens ("" keeps the last one).
+    property string settingsPage: ""
     property bool powerOpen: false
     property bool storeOpen: false
     property bool filesOpen: false
@@ -80,9 +82,11 @@ QtObject {
         if (open)
             SystemBridge.refreshApps();
     }
-    function openSettings(screen) {
+    function openSettings(screen, page) {
         close();
         activeScreen = screen;
+        if (page)
+            settingsPage = page;
         settingsOpen = true;
     }
     function openStore(screen) {

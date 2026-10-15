@@ -31,7 +31,7 @@ Switch {
             radius: height / 2
             x: root.checked ? parent.width - width - 4 : 8
             anchors.verticalCenter: parent.verticalCenter
-            color: root.checked ? Theme.onPrimary : Theme.onSurface
+            color: root.checked ? Theme.primaryInk : Theme.surfaceInk
             Behavior on x {
                 NumberAnimation { duration: Theme.standard; easing.type: Easing.OutBack }
             }

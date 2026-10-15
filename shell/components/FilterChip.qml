@@ -22,8 +22,8 @@ Button {
     background: Rectangle {
         radius: root.down ? Theme.shape.medium : height / 2
         color: root.selected ? Theme.secondaryContainer : "transparent"
-        border.width: root.activeFocus ? 2 : root.selected ? 0 : 1
-        border.color: root.activeFocus ? Theme.primary : Theme.outlineVariant
+        border.width: root.visualFocus ? 2 : root.selected ? 0 : 1
+        border.color: root.visualFocus ? Theme.primary : Theme.outlineVariant
         Behavior on color {
             ColorAnimation {
                 duration: Theme.fast
@@ -32,7 +32,7 @@ Button {
         StateLayer {
             anchors.fill: parent
             radius: parent.radius
-            tint: root.selected ? Theme.onSecondaryContainer : Theme.onSurfaceVariant
+            tint: root.selected ? Theme.secondaryContainerInk : Theme.surfaceVariantInk
             hovered: root.hovered
             pressed: root.down
             focused: root.visualFocus
@@ -51,13 +51,13 @@ Button {
                 width: 18
                 height: 18
                 name: "check"
-                color: Theme.onSecondaryContainer
+                color: Theme.secondaryContainerInk
             }
             Label {
                 anchors.verticalCenter: parent.verticalCenter
                 text: root.text
                 role: "labelLarge"
-                color: root.selected ? Theme.onSecondaryContainer : Theme.onSurfaceVariant
+                color: root.selected ? Theme.secondaryContainerInk : Theme.surfaceVariantInk
             }
         }
     }

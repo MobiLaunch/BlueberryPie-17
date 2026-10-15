@@ -30,7 +30,7 @@ PanelWindow {
             anchors.rightMargin: 20
             text: ShellState.toast
             role: "bodyMedium"
-            color: Theme.inverseOnSurface
+            color: Theme.inverseSurfaceInk
             wrapMode: Text.WordWrap
             maximumLineCount: 3
             elide: Text.ElideRight

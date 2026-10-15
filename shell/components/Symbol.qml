@@ -7,7 +7,7 @@ import "IconData.js" as IconData
 Item {
     id: root
     property string name: "spark"
-    property color color: Theme.onSurface
+    property color color: Theme.surfaceInk
     property real weight: 1.9
     // 0..1 fill for the battery glyph; ignored by other symbols.
     property real level: -1

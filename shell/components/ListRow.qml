@@ -13,9 +13,10 @@ Button {
     property string supporting: ""
     property string symbol: ""
     property bool selected: false
+    property bool interactive: true
     property string shapePosition: "single"
     property color chipColor: Theme.secondaryContainer
-    property color chipInk: Theme.onSecondaryContainer
+    property color chipInk: Theme.secondaryContainerInk
     default property alias trailing: slot.data
     readonly property real outer: Theme.shape.extraLarge - 4
     readonly property real inner: Theme.shape.extraSmall + 2
@@ -26,7 +27,7 @@ Button {
     topPadding: 8
     bottomPadding: 8
     hoverEnabled: true
-    focusPolicy: Qt.StrongFocus
+    focusPolicy: interactive ? Qt.StrongFocus : Qt.NoFocus
     Accessible.name: title + (supporting ? ", " + supporting : "")
     background: Rectangle {
         topLeftRadius: root.shapePosition === "single" || root.shapePosition === "top" ? root.outer : root.inner
@@ -35,7 +36,7 @@ Button {
         bottomRightRadius: bottomLeftRadius
         color: root.selected ? Theme.primaryContainer : Theme.surfaceContainer
         opacity: root.enabled ? 1 : 0.5
-        border.width: root.activeFocus ? 2 : 0
+        border.width: root.visualFocus ? 2 : 0
         border.color: Theme.primary
         Behavior on color {
             ColorAnimation {
@@ -45,9 +46,9 @@ Button {
         StateLayer {
             anchors.fill: parent
             radius: parent.topLeftRadius
-            tint: root.selected ? Theme.onPrimaryContainer : Theme.onSurface
-            hovered: root.hovered && root.enabled && root.checkable === false
-            pressed: root.down
+            tint: root.selected ? Theme.primaryContainerInk : Theme.surfaceInk
+            hovered: root.hovered && root.enabled && root.interactive
+            pressed: root.down && root.interactive
             focused: root.visualFocus
         }
     }
@@ -75,7 +76,7 @@ Button {
                 Layout.fillWidth: true
                 text: root.title
                 role: "bodyLarge"
-                color: root.selected ? Theme.onPrimaryContainer : Theme.onSurface
+                color: root.selected ? Theme.primaryContainerInk : Theme.surfaceInk
                 elide: Text.ElideRight
             }
             Label {
@@ -83,7 +84,7 @@ Button {
                 visible: text.length > 0
                 text: root.supporting
                 role: "bodyMedium"
-                color: root.selected ? Theme.onPrimaryContainer : Theme.onSurfaceVariant
+                color: root.selected ? Theme.primaryContainerInk : Theme.surfaceVariantInk
                 elide: Text.ElideRight
                 maximumLineCount: 2
                 wrapMode: Text.WordWrap

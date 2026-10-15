@@ -34,14 +34,14 @@ Column {
             width: 40
             height: 40
             name: SystemBridge.snapshot.settings.dnd ? "notifications_off" : "notifications"
-            color: Theme.onSurfaceVariant
+            color: Theme.surfaceVariantInk
         }
         Label {
             width: parent.width
             horizontalAlignment: Text.AlignHCenter
             text: SystemBridge.snapshot.settings.dnd ? "Do Not Disturb is on" : "You're all caught up"
             role: "bodyLarge"
-            color: Theme.onSurfaceVariant
+            color: Theme.surfaceVariantInk
         }
     }
     Repeater {

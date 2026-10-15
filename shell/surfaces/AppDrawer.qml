@@ -151,7 +151,7 @@ PanelWindow {
                     Label {
                         text: "Recent"
                         role: "titleSmall"
-                        color: Theme.onSurfaceVariant
+                        color: Theme.surfaceVariantInk
                         leftPadding: 8
                         topPadding: 2
                     }
@@ -170,7 +170,7 @@ PanelWindow {
                     Label {
                         text: "All apps"
                         role: "titleSmall"
-                        color: Theme.onSurfaceVariant
+                        color: Theme.surfaceVariantInk
                         leftPadding: 8
                         topPadding: 6
                     }
@@ -198,12 +198,12 @@ PanelWindow {
                         width: 40
                         height: 40
                         name: "search"
-                        color: Theme.onSurfaceVariant
+                        color: Theme.surfaceVariantInk
                     }
                     Label {
                         text: SystemBridge.apps.length ? "No apps match your search" : "No desktop applications found"
                         role: "bodyLarge"
-                        color: Theme.onSurfaceVariant
+                        color: Theme.surfaceVariantInk
                     }
                 }
             }
@@ -214,7 +214,7 @@ PanelWindow {
                     Layout.leftMargin: 8
                     text: root.results.length + (root.results.length === 1 ? " app" : " apps")
                     role: "labelMedium"
-                    color: Theme.onSurfaceVariant
+                    color: Theme.surfaceVariantInk
                 }
                 PillButton {
                     text: "Get more apps"

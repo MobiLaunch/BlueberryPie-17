@@ -28,7 +28,7 @@ Scope {
     Files {
         screen: root.screen
     }
-    Appearance {
+    Settings {
         screen: root.screen
     }
     FirstRun {

@@ -93,24 +93,24 @@ QtObject {
         })
 
     readonly property color primary: roles.primary
-    readonly property color onPrimary: roles.onPrimary
+    readonly property color primaryInk: roles.onPrimary
     readonly property color primaryContainer: roles.primaryContainer
-    readonly property color onPrimaryContainer: roles.onPrimaryContainer
+    readonly property color primaryContainerInk: roles.onPrimaryContainer
     readonly property color inversePrimary: roles.inversePrimary
     readonly property color secondary: roles.secondary
-    readonly property color onSecondary: roles.onSecondary
+    readonly property color secondaryInk: roles.onSecondary
     readonly property color secondaryContainer: roles.secondaryContainer
-    readonly property color onSecondaryContainer: roles.onSecondaryContainer
+    readonly property color secondaryContainerInk: roles.onSecondaryContainer
     readonly property color tertiary: roles.tertiary
-    readonly property color onTertiary: roles.onTertiary
+    readonly property color tertiaryInk: roles.onTertiary
     readonly property color tertiaryContainer: roles.tertiaryContainer
-    readonly property color onTertiaryContainer: roles.onTertiaryContainer
+    readonly property color tertiaryContainerInk: roles.onTertiaryContainer
     readonly property color error: roles.error
-    readonly property color onError: roles.onError
+    readonly property color errorInk: roles.onError
     readonly property color errorContainer: roles.errorContainer
-    readonly property color onErrorContainer: roles.onErrorContainer
+    readonly property color errorContainerInk: roles.onErrorContainer
     readonly property color surface: roles.surface
-    readonly property color onSurface: roles.onSurface
+    readonly property color surfaceInk: roles.onSurface
     readonly property color surfaceDim: roles.surfaceDim
     readonly property color surfaceBright: roles.surfaceBright
     readonly property color surfaceContainerLowest: roles.surfaceContainerLowest
@@ -119,15 +119,15 @@ QtObject {
     readonly property color surfaceContainerHigh: roles.surfaceContainerHigh
     readonly property color surfaceContainerHighest: roles.surfaceContainerHighest
     readonly property color surfaceVariant: roles.surfaceVariant
-    readonly property color onSurfaceVariant: roles.onSurfaceVariant
+    readonly property color surfaceVariantInk: roles.onSurfaceVariant
     readonly property color outline: roles.outline
     readonly property color outlineVariant: roles.outlineVariant
     readonly property color inverseSurface: roles.inverseSurface
-    readonly property color inverseOnSurface: roles.inverseOnSurface
+    readonly property color inverseSurfaceInk: roles.inverseOnSurface
     readonly property color scrim: roles.scrim
 
     // Wallpaper-adjacent text must hold contrast against any wallpaper art.
-    readonly property color onWallpaper: dark ? "#f5eafa" : "#3b2b53"
+    readonly property color wallpaperInk: dark ? "#f5eafa" : "#3b2b53"
 
     function withAlpha(color, alpha) {
         return Qt.rgba(color.r, color.g, color.b, alpha);

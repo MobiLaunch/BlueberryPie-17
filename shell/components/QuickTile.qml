@@ -36,12 +36,12 @@ Button {
             easing.type: Easing.OutBack
         }
     }
-    readonly property color inkColor: activated ? Theme.onPrimary : Theme.onSurface
+    readonly property color inkColor: activated ? Theme.primaryInk : Theme.surfaceInk
     background: Rectangle {
         radius: root.down ? Theme.shape.large : root.activated ? height / 2 : Theme.shape.extraLarge - 4
         color: root.activated ? Theme.primary : Theme.surfaceContainerHighest
         opacity: root.enabled ? 1 : 0.5
-        border.width: root.activeFocus ? 2 : 0
+        border.width: root.visualFocus ? 2 : 0
         border.color: Theme.primary
         Behavior on radius {
             NumberAnimation {

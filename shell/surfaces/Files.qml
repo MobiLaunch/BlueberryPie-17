@@ -404,7 +404,7 @@ PanelWindow {
                     text: root.busy ? "Loading…" : root.error ? root.error :
                           root.message ? root.message :
                           root.filtered.length + " items" + (root.more ? " · more in folder" : "")
-                    color: root.error ? Theme.error : Theme.onSurface
+                    color: root.error ? Theme.error : Theme.surfaceInk
                     font.pixelSize: 12
                     width: parent.width - 34
                     elide: Text.ElideRight
@@ -491,7 +491,7 @@ PanelWindow {
                             text: modelData.name
                             elide: Text.ElideRight
                             color: root.selectedPath === modelData.path ?
-                                   Theme.onPrimaryContainer : Theme.onSurface
+                                   Theme.primaryContainerInk : Theme.surfaceInk
                             font.pixelSize: 15
                             font.weight: Font.DemiBold
                         }
@@ -500,7 +500,7 @@ PanelWindow {
                             width: parent.width - 136
                             text: modelData.directory ? "Folder" : modelData.size
                             color: root.selectedPath === modelData.path ?
-                                   Theme.onPrimaryContainer : Theme.onSurface
+                                   Theme.primaryContainerInk : Theme.surfaceInk
                             opacity: .7
                             font.pixelSize: 12
                         }

@@ -70,7 +70,7 @@ PanelWindow {
                     anchors.verticalCenter: parent.verticalCenter
                     text: root.dateText
                     role: "bodyMedium"
-                    color: Theme.onSurfaceVariant
+                    color: Theme.surfaceVariantInk
                 }
             }
             MouseArea {
@@ -98,7 +98,7 @@ PanelWindow {
                         anchors.centerIn: parent
                         text: (modelData.app || "?").charAt(0).toUpperCase()
                         role: "labelMedium"
-                        color: Theme.onTertiaryContainer
+                        color: Theme.tertiaryContainerInk
                     }
                 }
             }
@@ -107,7 +107,7 @@ PanelWindow {
                 anchors.verticalCenter: parent.verticalCenter
                 text: "+" + (Notifications.groups.length - 4)
                 role: "labelMedium"
-                color: Theme.onSurfaceVariant
+                color: Theme.surfaceVariantInk
             }
         }
     }
@@ -117,7 +117,7 @@ PanelWindow {
         horizontalAlignment: Text.AlignHCenter
         text: Windows.focused ? Windows.focused.title || Windows.focused.class : ""
         role: "labelLarge"
-        color: Theme.onSurfaceVariant
+        color: Theme.surfaceVariantInk
         elide: Text.ElideRight
         opacity: text.length > 0 && root.width > 900 ? 1 : 0
     }
@@ -207,14 +207,14 @@ PanelWindow {
                     width: 18
                     height: 18
                     name: "notifications_off"
-                    color: Theme.onSurface
+                    color: Theme.surfaceInk
                 }
                 Symbol {
                     anchors.verticalCenter: parent.verticalCenter
                     width: 18
                     height: 18
                     name: root.snap.wifi.enabled ? "wifi" : "wifi_off"
-                    color: Theme.onSurface
+                    color: Theme.surfaceInk
                     opacity: root.snap.wifi.available ? 1 : 0.5
                 }
                 Symbol {
@@ -223,7 +223,7 @@ PanelWindow {
                     width: 18
                     height: 18
                     name: "bluetooth"
-                    color: Theme.onSurface
+                    color: Theme.surfaceInk
                 }
                 Symbol {
                     visible: root.snap.volume.available
@@ -231,7 +231,7 @@ PanelWindow {
                     width: 18
                     height: 18
                     name: root.snap.volume.muted ? "volume_off" : "volume"
-                    color: Theme.onSurface
+                    color: Theme.surfaceInk
                 }
                 Row {
                     visible: root.snap.battery.available
@@ -243,7 +243,7 @@ PanelWindow {
                         height: 22
                         name: root.snap.battery.charging ? "battery_charging" : "battery"
                         level: root.snap.battery.available ? root.snap.battery.value / 100 : -1
-                        color: root.snap.battery.value <= 15 && !root.snap.battery.charging ? Theme.error : Theme.onSurface
+                        color: root.snap.battery.value <= 15 && !root.snap.battery.charging ? Theme.error : Theme.surfaceInk
                     }
                     Label {
                         anchors.verticalCenter: parent.verticalCenter

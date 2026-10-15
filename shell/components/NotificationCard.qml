@@ -84,7 +84,7 @@ Item {
                     height: 22
                     visible: !appIcon.visible
                     name: root.critical ? "info" : "notifications"
-                    color: root.critical ? Theme.onError : Theme.onTertiaryContainer
+                    color: root.critical ? Theme.errorInk : Theme.tertiaryContainerInk
                 }
             }
             ColumnLayout {
@@ -94,14 +94,14 @@ Item {
                     Layout.fillWidth: true
                     text: root.notification.appName + (root.critical ? " · Important" : "")
                     role: "labelMedium"
-                    color: root.critical ? Theme.onErrorContainer : Theme.onSurfaceVariant
+                    color: root.critical ? Theme.errorContainerInk : Theme.surfaceVariantInk
                     elide: Text.ElideRight
                 }
                 Label {
                     Layout.fillWidth: true
                     text: root.notification.summary
                     role: "titleSmall"
-                    color: root.critical ? Theme.onErrorContainer : Theme.onSurface
+                    color: root.critical ? Theme.errorContainerInk : Theme.surfaceInk
                     wrapMode: Text.WordWrap
                     maximumLineCount: 2
                     elide: Text.ElideRight
@@ -111,7 +111,7 @@ Item {
                     visible: text.length > 0 && !root.compact
                     text: root.notification.body
                     role: "bodyMedium"
-                    color: root.critical ? Theme.onErrorContainer : Theme.onSurfaceVariant
+                    color: root.critical ? Theme.errorContainerInk : Theme.surfaceVariantInk
                     wrapMode: Text.WordWrap
                     maximumLineCount: 4
                     elide: Text.ElideRight

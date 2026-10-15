@@ -28,7 +28,7 @@ Menu {
             text: item.text
             font.pixelSize: 14
             font.weight: item.highlighted ? Font.DemiBold : Font.Normal
-            color: item.highlighted ? Theme.onPrimaryContainer : Theme.onSurface
+            color: item.highlighted ? Theme.primaryContainerInk : Theme.surfaceInk
             leftPadding: 14
             rightPadding: 10
             verticalAlignment: Text.AlignVCenter

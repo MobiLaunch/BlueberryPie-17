@@ -9,10 +9,10 @@ TextField {
     implicitHeight: 50
     font.family: Theme.font
     font.pixelSize: 15
-    color: Theme.onSurface
+    color: Theme.surfaceInk
     placeholderTextColor: Theme.outline
     selectionColor: Theme.primaryContainer
-    selectedTextColor: Theme.onPrimaryContainer
+    selectedTextColor: Theme.primaryContainerInk
     leftPadding: 18
     rightPadding: 18
     selectByMouse: true

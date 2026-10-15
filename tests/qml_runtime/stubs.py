@@ -203,16 +203,16 @@ class Process(QObject):
     def _done(self, proc, code, status):
         if self._proc is not proc:
             return
-        self._pump(proc)
-        self._proc = None
-        if self._stdout is not None and hasattr(self._stdout, "finish"):
-            self._stdout.finish()
-        self.runningChanged.emit()
-        self.exited.emit(code, status)
         try:
+            self._pump(proc)
+            self._proc = None
+            if self._stdout is not None and hasattr(self._stdout, "finish"):
+                self._stdout.finish()
+            self.runningChanged.emit()
+            self.exited.emit(code, status)
             proc.deleteLater()
-        except RuntimeError:
-            pass
+        except RuntimeError:  # the QML owner was destroyed while the command ran
+            self._proc = None
 
     @Slot(str)
     def write(self, data):

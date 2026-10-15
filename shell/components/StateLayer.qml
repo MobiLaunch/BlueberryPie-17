@@ -8,7 +8,7 @@ Rectangle {
     property bool hovered: false
     property bool pressed: false
     property bool focused: false
-    property color tint: Theme.onSurface
+    property color tint: Theme.surfaceInk
     color: tint
     opacity: pressed ? 0.12 : focused ? 0.12 : hovered ? 0.08 : 0
     Behavior on opacity {

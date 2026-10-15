@@ -12,7 +12,7 @@ Button {
     property string variant: filled ? "filled" : "neutral"
     property string symbol: ""
     readonly property color containerColor: variant === "filled" ? Theme.primary : variant === "tonal" ? Theme.secondaryContainer : variant === "neutral" ? Theme.surfaceContainerHigh : "transparent"
-    readonly property color contentColor: variant === "filled" ? Theme.onPrimary : variant === "tonal" ? Theme.onSecondaryContainer : variant === "text" || variant === "outlined" ? Theme.primary : Theme.onSurface
+    readonly property color contentColor: variant === "filled" ? Theme.primaryInk : variant === "tonal" ? Theme.secondaryContainerInk : variant === "text" || variant === "outlined" ? Theme.primary : Theme.surfaceInk
     leftPadding: text.length > 0 ? (symbol ? 16 : 20) : 12
     rightPadding: text.length > 0 ? 20 : 12
     topPadding: 0
@@ -41,8 +41,8 @@ Button {
         radius: root.down ? Theme.shape.large : height / 2
         color: root.containerColor
         opacity: root.enabled ? 1 : 0.38
-        border.width: root.activeFocus ? 2 : root.variant === "outlined" ? 1 : 0
-        border.color: root.activeFocus ? Theme.primary : Theme.outline
+        border.width: root.visualFocus ? 2 : root.variant === "outlined" ? 1 : 0
+        border.color: root.visualFocus ? Theme.primary : Theme.outline
         Behavior on radius {
             NumberAnimation {
                 duration: Theme.fast

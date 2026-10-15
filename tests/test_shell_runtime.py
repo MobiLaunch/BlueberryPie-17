@@ -9,6 +9,7 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 try:
     from qml_runtime.harness import Harness
@@ -42,6 +43,17 @@ class ShellRuntimeTests(unittest.TestCase):
     def test_first_run_opens_and_loads_cleanly(self):
         harness = self.boot(onboarded=False)
         self.assertEqual(harness.problems(), [])
+
+    def test_theme_ink_roles_resolve_to_scheme_values(self):
+        """Regression: properties named `onX` next to `x` silently stayed black."""
+        harness = self.boot()
+        harness.pump(1500)
+        harness.eval('console.log("INK", [Theme.primaryInk, Theme.surfaceInk, Theme.surfaceVariantInk, '
+                     'Theme.errorInk, Theme.inverseSurfaceInk].join(" "))')
+        from prismos import theme
+        scheme = theme.palette("#8469cf", False)
+        expected = " ".join(scheme[name] for name in ("onPrimary", "onSurface", "onSurfaceVariant", "onError", "inverseOnSurface"))
+        self.assertIn("INK " + expected, harness.messages)
 
     def test_no_text_is_elided_on_any_surface(self):
         harness = self.boot()

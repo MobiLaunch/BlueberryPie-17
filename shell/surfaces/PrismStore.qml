@@ -225,7 +225,7 @@ PanelWindow {
             x: 26; y: 153
             width: parent.width - 52; height: 50
             placeholderText: "Find Linux and Android games or apps"
-            color: Theme.onSurface
+            color: Theme.surfaceInk
             font.family: Theme.font
             font.pixelSize: 16
             leftPadding: 20
@@ -283,7 +283,7 @@ PanelWindow {
                         anchors.centerIn: parent
                         font.pixelSize: 26
                         text: resultRow.modelData.kind === "android" ? "◈" : "✦"
-                        color: Theme.onPrimaryContainer
+                        color: Theme.primaryContainerInk
                     }
                 }
                 Label {

@@ -6,7 +6,7 @@ import "../services"
 Text {
     property string role: ""
     readonly property var spec: role ? Theme.type[role] : null
-    color: Theme.onSurface
+    color: Theme.surfaceInk
     font.family: Theme.font
     font.pixelSize: spec ? spec.size : 14
     font.weight: spec ? spec.weight : Font.Normal

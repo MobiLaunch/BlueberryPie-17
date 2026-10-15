@@ -170,7 +170,7 @@ PanelWindow {
                         Label {
                             text: root.dateText + (root.batteryText ? "  ·  " + root.batteryText : "")
                             role: "bodyMedium"
-                            color: Theme.onSurfaceVariant
+                            color: Theme.surfaceVariantInk
                         }
                     }
                     IconButton {

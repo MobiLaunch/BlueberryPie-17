@@ -101,3 +101,30 @@ class LauncherDataTests(unittest.TestCase):
         self.assertEqual(recents[0], "ok.desktop")
         self.assertEqual(len(recents), 8)
         self.assertNotIn("../etc/passwd", recents)
+
+
+class AboutTests(unittest.TestCase):
+    def test_reads_system_files_without_running_commands(self):
+        from prismos import about
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / "os-release").write_text('NAME="Arch Linux"\nPRETTY_NAME="Arch Linux"\n# comment\nBROKEN\n')
+            (root / "cpuinfo").write_text("processor\t: 0\nmodel name\t: Fake   CPU @ 3GHz\n")
+            (root / "meminfo").write_text("MemTotal:       16384000 kB\n")
+            (root / "uptime").write_text("3600.55 100.0\n")
+            with patch("subprocess.run") as run, patch("subprocess.Popen") as popen:
+                result = about.info(root / "os-release", root / "cpuinfo", root / "meminfo", root / "uptime")
+            run.assert_not_called(); popen.assert_not_called()
+        self.assertEqual(result["base"], "Arch Linux")
+        self.assertEqual(result["cpu"], "Fake CPU @ 3GHz")
+        self.assertEqual(result["memory_gib"], 15.6)
+        self.assertEqual(result["uptime_seconds"], 3600)
+
+    def test_missing_files_degrade_to_empty_values(self):
+        from prismos import about
+        missing = "/nonexistent/prism"
+        result = about.info(missing, missing, missing, missing)
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["cpu"], "")
+        self.assertIsNone(result["memory_gib"])
+        self.assertIsNone(result["uptime_seconds"])

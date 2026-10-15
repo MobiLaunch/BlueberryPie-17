@@ -32,7 +32,7 @@ Rectangle {
         width: 22
         height: 22
         name: "search"
-        color: Theme.onSurfaceVariant
+        color: Theme.surfaceVariantInk
     }
     Basic.TextField {
         id: field
@@ -46,10 +46,10 @@ Rectangle {
         verticalAlignment: TextInput.AlignVCenter
         font.family: Theme.font
         font.pixelSize: 16
-        color: Theme.onSurface
-        placeholderTextColor: Theme.onSurfaceVariant
+        color: Theme.surfaceInk
+        placeholderTextColor: Theme.surfaceVariantInk
         selectionColor: Theme.primaryContainer
-        selectedTextColor: Theme.onPrimaryContainer
+        selectedTextColor: Theme.primaryContainerInk
         selectByMouse: true
         background: Item {}
         Accessible.name: root.placeholderText

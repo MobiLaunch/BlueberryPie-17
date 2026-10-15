@@ -35,7 +35,7 @@ Rectangle {
                 width: 36
                 height: 36
                 name: "music"
-                color: Theme.onPrimaryContainer
+                color: Theme.primaryContainerInk
                 visible: !root.player || !root.player.trackArtUrl
             }
         }
@@ -47,7 +47,7 @@ Rectangle {
                 Layout.fillWidth: true
                 text: root.player ? root.player.identity : ""
                 role: "labelMedium"
-                color: Theme.onSecondaryContainer
+                color: Theme.secondaryContainerInk
                 opacity: 0.8
                 elide: Text.ElideRight
             }
@@ -55,14 +55,14 @@ Rectangle {
                 Layout.fillWidth: true
                 text: root.player ? (root.player.trackTitle || "Now playing") : ""
                 role: "titleMedium"
-                color: Theme.onSecondaryContainer
+                color: Theme.secondaryContainerInk
                 elide: Text.ElideRight
             }
             Label {
                 Layout.fillWidth: true
                 text: root.player ? root.player.trackArtist : ""
                 role: "bodySmall"
-                color: Theme.onSecondaryContainer
+                color: Theme.secondaryContainerInk
                 opacity: 0.85
                 elide: Text.ElideRight
             }

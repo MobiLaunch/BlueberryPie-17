@@ -36,12 +36,12 @@ Button {
     background: Rectangle {
         radius: 20
         color: root.focusedApp ? Theme.secondaryContainer : "transparent"
-        border.width: root.activeFocus ? 2 : 0
+        border.width: root.visualFocus ? 2 : 0
         border.color: Theme.primary
         StateLayer {
             anchors.fill: parent
             radius: parent.radius
-            tint: Theme.onSurface
+            tint: Theme.surfaceInk
             hovered: root.hovered
             pressed: root.down
             focused: root.visualFocus

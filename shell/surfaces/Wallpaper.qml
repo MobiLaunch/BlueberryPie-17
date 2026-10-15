@@ -103,19 +103,19 @@ PanelWindow {
         Label {
             text: root.dateText
             role: "titleLarge"
-            color: Theme.onWallpaper
+            color: Theme.wallpaperInk
         }
         Label {
             text: root.timeText
             font.pixelSize: Math.min(130, root.width * .12)
             font.weight: Font.Black
             font.letterSpacing: -6
-            color: Theme.onWallpaper
+            color: Theme.wallpaperInk
         }
         Label {
             text: "A little more you."
             role: "titleMedium"
-            color: Theme.onWallpaper
+            color: Theme.wallpaperInk
         }
     }
 }

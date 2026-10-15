@@ -75,6 +75,19 @@ class Harness:
         QTest.mouseClick(self.view, button, Qt.NoModifier, QPoint(int(x), int(y)))
         self.pump(120)
 
+    def reveal(self, item):
+        """Scroll the nearest flickable ancestor so `item` is on screen."""
+        parent = item.parentItem()
+        while parent is not None:
+            if parent.property("contentY") is not None and parent.property("contentItem") is not None:
+                content = parent.property("contentItem")
+                top = item.mapToItem(content, 0, 0).y()
+                limit = max(0, parent.property("contentHeight") - parent.height())
+                parent.setProperty("contentY", max(0, min(top - 24, limit)))
+                self.pump(60)
+                return
+            parent = parent.parentItem()
+
     def scene_pos(self, item):
         """Center of an item in desk coordinates."""
         point = item.mapToScene(item.boundingRect().center())
@@ -150,6 +163,21 @@ class Harness:
                 return True
         raise RuntimeError(f"No IPC function {function}")
 
+    def eval(self, body):
+        """Run JavaScript inside the shell's engine with the services singletons in scope.
+
+        Used to put the shell into states the sandbox cannot produce (networks,
+        audio devices, monitors). Throwing surfaces as a QML error in `problems()`."""
+        source = ('import QtQuick\nimport "file://%s/services"\n'
+                  'QtObject { Component.onCompleted: { %s } }' % (self.shell_dir, body))
+        component = QQmlComponent(self.engine)
+        component.setData(source.encode(), QUrl("file:///harness-eval.qml"))
+        instance = component.create()
+        if instance is None:
+            raise RuntimeError("; ".join(e.toString() for e in component.errors()))
+        instance.deleteLater()
+        self.pump(150)
+
     def screenshot(self, path):
         self.pump(120)
         image = self.view.grabWindow()
@@ -177,9 +205,15 @@ class Harness:
         return found
 
     def find(self, name):
-        """First QML object whose objectName matches."""
-        return self.shell.findChild(QObject, name, Qt.FindChildrenRecursively) or \
-            self.view.rootObject().findChild(QObject, name, Qt.FindChildrenRecursively)
+        """First item (visible or not) whose objectName matches, searched through the desk."""
+        stack = [self.view.rootObject()]
+        while stack:
+            item = stack.pop()
+            for child in item.childItems():
+                if child.objectName() == name:
+                    return child
+                stack.append(child)
+        return None
 
     def close(self):
         self.view.close()

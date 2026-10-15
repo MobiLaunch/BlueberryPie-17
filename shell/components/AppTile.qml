@@ -29,12 +29,12 @@ Button {
     background: Rectangle {
         radius: Theme.shape.extraLarge - 4
         color: "transparent"
-        border.width: root.activeFocus ? 2 : 0
+        border.width: root.visualFocus ? 2 : 0
         border.color: Theme.primary
         StateLayer {
             anchors.fill: parent
             radius: parent.radius
-            tint: Theme.onSurface
+            tint: Theme.surfaceInk
             hovered: root.hovered
             pressed: root.down
             focused: root.visualFocus
@@ -83,7 +83,7 @@ Button {
                     height: 10
                     name: "check"
                     weight: 3
-                    color: Theme.onPrimary
+                    color: Theme.primaryInk
                 }
             }
             Rectangle {

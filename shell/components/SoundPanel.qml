@@ -1,13 +1,16 @@
 import QtQuick
 import QtQuick.Layouts
+import "."
 import "../services"
 
+// Output and microphone device chooser (shared by Quick Settings and Settings).
 Rectangle {
     id: root
+    property bool showClose: true
     signal closeRequested
     implicitHeight: content.implicitHeight + 32
-    radius: 28
-    color: Theme.surfaceContainerHigh
+    radius: Theme.shape.extraLarge
+    color: Theme.surfaceContainer
     Column {
         id: content
         x: 16
@@ -16,70 +19,65 @@ Rectangle {
         spacing: 12
         RowLayout {
             width: parent.width
-            Symbol {
-                name: "headphones"
-                Layout.preferredWidth: 24
-                Layout.preferredHeight: 24
-            }
+            spacing: 8
             Label {
-                text: "Sound & microphone"
-                font.weight: Font.DemiBold
+                text: "Sound devices"
+                role: "titleMedium"
                 Layout.fillWidth: true
-                wrapMode: Text.WordWrap
+                Layout.leftMargin: 4
             }
-            PillButton {
-                text: "×"
-                implicitWidth: 36
-                implicitHeight: 36
-                Accessible.name: "Close sound devices"
-                onClicked: root.closeRequested()
-            }
-        }
-        RowLayout {
-            width: parent.width
             ExpressiveLoader {
                 Layout.preferredWidth: 24
                 Layout.preferredHeight: 24
                 visible: AudioState.busy
             }
-            Label {
-                text: AudioState.busy ? "Just a moment…" : AudioState.notice
-                Layout.fillWidth: true
-                wrapMode: Text.WordWrap
-                font.pixelSize: 12
-            }
             PillButton {
                 text: "Refresh"
-                implicitHeight: 36
+                symbol: "refresh"
+                variant: "tonal"
+                implicitHeight: 40
                 enabled: !AudioState.busy && !AudioState.adjusting
                 onClicked: AudioState.refresh(true)
+            }
+            IconButton {
+                visible: root.showClose
+                symbol: "close"
+                implicitWidth: 40
+                implicitHeight: 40
+                iconSize: 20
+                Accessible.name: "Close sound devices"
+                onClicked: root.closeRequested()
             }
         }
         Label {
             width: parent.width
+            leftPadding: 4
+            visible: text.length > 0
+            text: AudioState.busy ? "Just a moment…" : AudioState.notice
+            wrapMode: Text.WordWrap
+            role: "bodySmall"
+            color: Theme.surfaceVariantInk
+        }
+        Label {
+            width: parent.width
+            leftPadding: 4
             text: AudioState.error || (!AudioState.devices.available ? AudioState.devices.error || "Sound service unavailable" : "")
             visible: text.length > 0
             wrapMode: Text.WordWrap
-            font.pixelSize: 12
+            role: "bodySmall"
             color: Theme.error
             Accessible.role: Accessible.AlertMessage
         }
-        RowLayout {
-            width: parent.width
-            PillButton {
+        Row {
+            spacing: 8
+            FilterChip {
                 text: "Output"
-                Layout.fillWidth: true
-                filled: AudioState.tab === "output"
-                Accessible.checkable: true
-                Accessible.checked: filled
+                selected: AudioState.tab === "output"
                 onClicked: AudioState.tab = "output"
             }
-            PillButton {
+            FilterChip {
                 text: "Microphone"
-                Layout.fillWidth: true
-                filled: AudioState.tab === "input"
-                Accessible.checkable: true
-                Accessible.checked: filled
+                selected: AudioState.tab === "input"
                 onClicked: AudioState.tab = "input"
             }
         }
@@ -97,10 +95,12 @@ Rectangle {
         }
         Label {
             width: parent.width
+            leftPadding: 4
             visible: AudioState.tab === "input"
             text: "Muting affects the selected microphone. Other microphones can remain available to apps."
             wrapMode: Text.WordWrap
-            font.pixelSize: 11
+            role: "bodySmall"
+            color: Theme.surfaceVariantInk
         }
     }
 }
