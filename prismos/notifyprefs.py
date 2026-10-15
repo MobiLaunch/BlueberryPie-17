@@ -18,7 +18,8 @@ def clean(name):
 
 
 def status():
-    return {"ok": True, "muted": settings.load()["muted_apps"]}
+    data = settings.load()
+    return {"ok": True, "muted": data["muted_apps"], "focus": data["focus"], "focus_apps": data["focus_apps"]}
 
 
 def mute(name):
@@ -33,6 +34,20 @@ def mute(name):
 def unmute(name):
     name = clean(name)
     settings.modify(lambda data: {**data, "muted_apps": [item for item in data["muted_apps"] if item != name]})
+    return status()
+
+
+def focus_app(name, paused):
+    """Choose whether Focus mode quiets this app's notifications while it is on."""
+    name = clean(name)
+    if paused not in ("yes", "no"):
+        raise ValueError("Paused must be yes or no")
+    current = settings.load()["focus_apps"]
+    if paused == "yes" and name not in current and len(current) >= LIMIT:
+        raise ValueError("Too many applications")
+    settings.modify(lambda data: {**data, "focus_apps": (
+        list(dict.fromkeys([*data["focus_apps"], name])) if paused == "yes"
+        else [item for item in data["focus_apps"] if item != name])})
     return status()
 
 

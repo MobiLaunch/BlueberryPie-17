@@ -73,6 +73,18 @@
 
 - Real touchpad swipes (libinput finger counts, conflicts with app gestures), `hyprctl dispatch` behaviour for `movetoworkspacesilent` with `special:minimized` on a Lua-configured Hyprland, and the look of tiled windows being floated into halves.
 
+### Slice 7: Focus mode — executed
+
+| Check | Result |
+| --- | --- |
+| Settings | `focus` and `focus_apps` default off/empty, load validated (non-boolean flag, control characters, duplicates, overlong names dropped), toggle through the bridge, app list separate from the muted list, 50-app cap, bad names/flags refused |
+| Tile | In the tile catalog; answers at once with "N apps paused"; with no apps chosen it opens Settings → Notifications instead of switching on |
+| Notifications | While on, a chosen app gets no banner yet still appears in the shade; other apps and critical notifications still banner; turning it off restores banners; per-app switches in the Settings page persist |
+
+### Not executed (slice 7)
+
+- A schedule or timer for Focus mode, pausing the apps themselves (only their notifications are quieted), and notification sounds (the shell has no per-notification sound path to silence).
+
 ### Not executed (slice 2)
 
 - Real messengers: whether their notifications set the inline-reply capability and how they react to a reply or to a dismissal; the lock screen label in a real `hyprlock` (the config is only checked for structure).

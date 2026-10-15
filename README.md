@@ -206,6 +206,11 @@ One slice per gap an Android user notices first.
   ones you had minimized yourself). In Recents each card has a **split** button: pick one app, then another,
   and they take the left and right halves of the screen (windows on other workspaces or minimized are
   brought here first). Without the shell running, the keys and gestures fall back to `prismctl windows`.
+- **Focus mode** (the **Focus mode** tile, or Settings → Notifications → Focus mode): pick the apps that
+  distract you, then switch Focus on. Their notifications get no banner while it is on, but still wait in
+  the shade; every other app behaves as usual and important notifications always break through. With no
+  apps chosen the tile takes you to the page to choose them. (PrismOS quiets notifications; it does not
+  freeze or hide the apps themselves.)
 
 ## Build the ISO on Windows
 

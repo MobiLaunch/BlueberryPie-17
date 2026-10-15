@@ -193,7 +193,7 @@ def action(name, value=None):
         run(["wpctl", "set-mute", "@DEFAULT_AUDIO_SINK@", "toggle"])
     elif name == "microphone-mute":
         run(["wpctl", "set-mute", "@DEFAULT_AUDIO_SOURCE@", "toggle"])
-    elif name in ("dark", "reduced_motion", "dnd"):
+    elif name in ("dark", "reduced_motion", "dnd", "focus"):
         settings.toggle(name)
     elif name == "airplane":
         radios = {"wifi": wifi(), "bluetooth": bluetooth()}

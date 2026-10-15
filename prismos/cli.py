@@ -85,9 +85,10 @@ def main(argv=None):
     tile.add_argument("operation", choices=("list", "set", "reset"))
     tile.add_argument("ids", nargs="*")
     alerts = sub.add_parser("notifications")
-    alerts.add_argument("operation", choices=("list", "mute", "unmute", "history", "count", "lock-count"))
+    alerts.add_argument("operation", choices=("list", "mute", "unmute", "history", "count", "lock-count", "focus-app"))
     sub.add_parser("lock-summary")
     alerts.add_argument("app", nargs="?")
+    alerts.add_argument("flag", nargs="?")
     gadget = sub.add_parser("widgets")
     gadget.add_argument("operation", choices=("list", "set", "size"))
     gadget.add_argument("ids", nargs="*")
@@ -259,7 +260,8 @@ def main(argv=None):
                       notifyprefs.mute(args.app) if args.operation == "mute" else
                       notifyprefs.set_history(args.app) if args.operation == "history" else
                       notifyprefs.set_count(args.app) if args.operation == "count" else
-                      notifyprefs.set_lock_count(args.app) if args.operation == "lock-count" else notifyprefs.unmute(args.app))
+                      notifyprefs.set_lock_count(args.app) if args.operation == "lock-count" else
+                      notifyprefs.focus_app(args.app, args.flag) if args.operation == "focus-app" else notifyprefs.unmute(args.app))
         elif args.command == "lock-summary":
             # Plain text for the lock screen, not JSON.
             result = notifyprefs.summary()

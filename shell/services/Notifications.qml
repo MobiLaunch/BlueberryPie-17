@@ -132,6 +132,12 @@ QtObject {
         if (name && seenApps.indexOf(name) < 0)
             seenApps = seenApps.concat([name]).slice(-30);
     }
+    // Focus mode: the chosen apps stay quiet (no banner) while it is on; they still reach the shade.
+    readonly property var focusApps: SystemBridge.snapshot.settings.focus_apps || []
+    readonly property bool focusOn: SystemBridge.snapshot.settings.focus === true
+    function isPaused(name) {
+        return focusOn && focusApps.indexOf(name || "Other") >= 0;
+    }
     function isMuted(name) {
         return mutedApps.indexOf(name || "Other") >= 0;
     }
@@ -156,7 +162,7 @@ QtObject {
                 oldest.dismiss();
             }
             // Banner unless Do Not Disturb is on; important ones always break through.
-            if (!root.quiet || notification.urgency === NotificationUrgency.Critical) {
+            if (notification.urgency === NotificationUrgency.Critical || (!root.quiet && !root.isPaused(notification.appName))) {
                 root.headsUp = notification;
                 headsUpTimer.interval = notification.urgency === NotificationUrgency.Critical ? 12000 : 6000;
                 headsUpTimer.restart();

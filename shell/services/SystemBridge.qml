@@ -113,6 +113,7 @@ QtObject {
         case "dark":
         case "reduced_motion":
         case "dnd":
+        case "focus":
             {
                 const change = {};
                 change[name] = !s.settings[name];
@@ -331,6 +332,19 @@ QtObject {
     function muteApp(name, muted) {
         const queue = pending.slice();
         queue.push(["prismctl", "notifications", muted ? "mute" : "unmute", name]);
+        pending = queue;
+        drain();
+    }
+    // Pause (or stop pausing) one app's notifications while Focus mode is on.
+    function setFocusApp(name, paused) {
+        const current = snapshot.settings.focus_apps || [];
+        applyGuess(patched({
+            settings: {
+                focus_apps: paused ? current.filter(item => item !== name).concat([name]) : current.filter(item => item !== name)
+            }
+        }));
+        const queue = pending.filter(item => !(item[1] === "notifications" && item[2] === "focus-app" && item[3] === name));
+        queue.push(["prismctl", "notifications", "focus-app", name, paused ? "yes" : "no"]);
         pending = queue;
         drain();
     }

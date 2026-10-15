@@ -84,6 +84,11 @@ QtObject {
             id: "screen_record",
             title: "Screen record",
             large: false
+        },
+        {
+            id: "focus",
+            title: "Focus mode",
+            large: false
         }
     ]
     readonly property var defaults: ["wifi", "bluetooth", "sound", "microphone", "dnd", "dark", "reduced_motion", "audio_devices"]
@@ -261,6 +266,16 @@ QtObject {
                 activated: s.recording.recording === true,
                 enabled: s.recording.available === true,
                 hasDetails: true
+            };
+        case "focus":
+            return {
+                title: base.title,
+                large: false,
+                subtitle: s.settings.focus ? Notifications.focusApps.length + (Notifications.focusApps.length === 1 ? " app paused" : " apps paused") : Notifications.focusApps.length === 0 ? "Choose apps" : "Off",
+                symbol: "focus",
+                activated: s.settings.focus === true,
+                enabled: true,
+                hasDetails: false
             };
         case "lock":
             return {

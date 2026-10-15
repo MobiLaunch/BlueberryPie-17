@@ -1736,6 +1736,76 @@ class ShellRuntimeTests(unittest.TestCase):
         self.assertTrue(harness.wait_for(lambda: ["prismctl", "windows", "show-desktop"] in Process.log, 6000), Process.log)
         self.assertEqual(harness.problems(), [])
 
+    def test_focus_mode_quiets_only_the_chosen_apps_and_important_ones_still_break_through(self):
+        from qml_runtime import stubs
+        from prismos import settings
+        harness = Harness()
+        self.addCleanup(harness.close)
+        harness.write_settings(onboarding_complete=True, tiles=["focus", "dnd"], focus_apps=["Messages"])
+        harness.load()
+        harness.pump(2500)
+        server = stubs.NotificationServer.instances[0]
+        now = harness.eval_value
+        harness.ipc("shade")
+        harness.pump(700)
+
+        def tile():
+            return next(item for item in harness.visible_items()
+                        if item.metaObject().className().startswith("QuickTile") and item.property("title") == "Focus mode")
+        self.assertEqual(tile().property("subtitle"), "Off")
+        server.post(appName="Messages", summary="Before focus")
+        self.assertEqual(now("Notifications.headsUp !== null"), "true", "off means normal banners")
+        harness.eval("Notifications.headsUp = null;")
+        harness.click(*harness.scene_pos(tile()))
+        self.assertTrue(tile().property("activated"), "the tile answers at once")
+        self.assertEqual(tile().property("subtitle"), "1 app paused")
+        self.assertTrue(harness.wait_for(lambda: settings.load()["focus"] is True, 8000))
+        server.post(appName="Messages", summary="Quiet one")
+        self.assertEqual(now("Notifications.headsUp !== null"), "false", "no banner for a paused app")
+        self.assertEqual(now("Notifications.count"), "2", "it still waits in the shade")
+        server.post(appName="Calendar", summary="Meeting")
+        self.assertEqual(now("Notifications.headsUp !== null"), "true", "other apps are not affected")
+        harness.eval("Notifications.headsUp = null;")
+        server.post(appName="Messages", summary="Alarm", urgency=2)
+        self.assertEqual(now("Notifications.headsUp !== null"), "true", "important notifications break through")
+        harness.eval("Notifications.headsUp = null;")
+        harness.click(*harness.scene_pos(tile()))
+        self.assertTrue(harness.wait_for(lambda: settings.load()["focus"] is False, 8000))
+        server.post(appName="Messages", summary="After focus")
+        self.assertEqual(now("Notifications.headsUp !== null"), "true")
+        self.assertEqual(harness.problems(), [])
+
+    def test_focus_tile_with_no_apps_opens_the_page_where_they_are_chosen(self):
+        from qml_runtime import stubs
+        from prismos import settings
+        harness = Harness()
+        self.addCleanup(harness.close)
+        harness.write_settings(onboarding_complete=True, tiles=["focus"])
+        harness.load()
+        harness.pump(2500)
+        stubs.NotificationServer.instances[0].post(appName="Chat", summary="Hi")
+        harness.ipc("shade")
+        harness.pump(700)
+        tile = next(item for item in harness.visible_items()
+                    if item.metaObject().className().startswith("QuickTile") and item.property("title") == "Focus mode")
+        self.assertEqual(tile.property("subtitle"), "Choose apps")
+        harness.click(*harness.scene_pos(tile))
+        self.assertTrue(harness.wait_for(lambda: harness.eval_value("ShellState.settingsOpen") == "true", 4000))
+        self.assertEqual(harness.eval_value("ShellState.settingsPage"), "notifications")
+        self.assertEqual(settings.load()["focus"], False, "nothing is switched on yet")
+        harness.pump(600)
+        row = harness.find("focus-app-0")
+        self.assertIsNotNone(row)
+        harness.reveal(row)
+        harness.click(*harness.scene_pos(row))
+        self.assertTrue(harness.wait_for(lambda: settings.load()["focus_apps"] == ["Chat"], 8000))
+        toggle = harness.find("focus-toggle")
+        harness.reveal(toggle)
+        harness.click(*harness.scene_pos(toggle))
+        self.assertTrue(harness.wait_for(lambda: settings.load()["focus"] is True, 8000))
+        self.assertEqual(harness.truncated_texts(), [])
+        self.assertEqual(harness.problems(), [])
+
     def test_every_surface_opens_without_qml_errors(self):
         harness = self.boot()
         for surface in SURFACES:

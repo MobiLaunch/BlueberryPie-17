@@ -51,6 +51,13 @@ PanelWindow {
         case "dark":
             SystemBridge.action("dark");
             break;
+        case "focus":
+            // With no apps chosen there is nothing to pause: go and choose some.
+            if (Notifications.focusApps.length === 0 && !SystemBridge.snapshot.settings.focus)
+                ShellState.openSettings(root.screen, "notifications");
+            else
+                SystemBridge.action("focus");
+            break;
         case "reduced_motion":
             SystemBridge.action("reduced_motion");
             break;
