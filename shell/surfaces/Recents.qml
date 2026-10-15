@@ -18,7 +18,7 @@ PanelWindow {
     }
     function focusWindow(window) {
         ShellState.close();
-        Windows.focus(window.address);
+        Windows.show(window);
     }
     anchors {
         top: true
@@ -187,7 +187,7 @@ PanelWindow {
                         Label {
                             id: wsLabel
                             anchors.centerIn: parent
-                            text: "Workspace " + slot.modelData.workspace
+                            text: slot.modelData.minimized ? "Minimized" : "Workspace " + slot.modelData.workspace
                             role: "labelMedium"
                             color: slot.modelData.focused ? Theme.primaryContainerInk : Theme.surfaceVariantInk
                         }

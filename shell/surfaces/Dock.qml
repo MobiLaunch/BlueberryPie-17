@@ -24,7 +24,7 @@ PanelWindow {
         }
         // Cycle through that app's windows, starting with the one after the focused.
         const index = open.findIndex(window => window.focused);
-        Windows.focus(open[(index + 1) % open.length].address);
+        Windows.show(open[(index + 1) % open.length]);
     }
     Rectangle {
         anchors.fill: parent

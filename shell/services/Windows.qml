@@ -10,6 +10,7 @@ QtObject {
     id: root
     property var list: []
     property bool available: false
+    readonly property bool busy: actor.running
     readonly property var focused: list.find(window => window.focused) || null
     function refresh() {
         if (reader.running)
@@ -24,6 +25,25 @@ QtObject {
     }
     function close(address) {
         return act("close", address);
+    }
+    function minimize(address) {
+        return act("minimize", address);
+    }
+    function restore(address) {
+        return act("restore", address);
+    }
+    function maximize(address) {
+        return act("maximize", address);
+    }
+    function toggleFloat(address) {
+        return act("float", address);
+    }
+    function snap(address, side) {
+        return act("snap-" + side, address);
+    }
+    // Focus a window, bringing it back first if it was minimized.
+    function show(window) {
+        return window.minimized ? restore(window.address) : focus(window.address);
     }
     function act(operation, address) {
         if (actor.running)

@@ -133,6 +133,31 @@ class ShellRuntimeTests(unittest.TestCase):
         self.assertIn("Close all", texts)
         self.assertLess(texts.index("Docs"), texts.index("~/code"))
 
+    def test_caption_controls_act_on_the_focused_window(self):
+        from qml_runtime.stubs import Process
+        harness = Harness(width=1440, height=900)
+        self.addCleanup(harness.close)
+        harness.write_settings(onboarding_complete=True)
+        harness.load()
+        harness.pump(1200)
+        state = ('Windows.available = true; Windows.list = ['
+                 '{address:"0xaa01", class:"firefox", title:"Docs", workspace:1, pid:1, recency:0, focused:true, '
+                 'floating:false, maximized:false, minimized:false, monitor:0},'
+                 '{address:"0xaa02", class:"foot", title:"~", workspace:1, pid:2, recency:1, focused:false, '
+                 'floating:true, maximized:false, minimized:true, monitor:0}];')
+        for symbol in ("minimize", "maximize", "close"):
+            # The sandbox has no hyprctl, so the bridge's refresh empties the list; restore it each time.
+            harness.eval(state)
+            harness.wait_for(lambda: all(i.property("enabled") for i in harness.visible_items()
+                                         if i.property("symbol") == "minimize"), 3000)
+            button = next(i for i in harness.visible_items()
+                          if i.property("symbol") == symbol and i.property("implicitWidth") == 32)
+            Process.log.clear()
+            harness.click(*harness.scene_pos(button))
+            self.assertTrue(harness.wait_for(lambda: ["prismctl", "windows", symbol, "0xaa01"] in Process.log, 3000), symbol)
+            harness.pump(600)
+        self.assertEqual(harness.problems(), [])
+
     def test_heads_up_respects_do_not_disturb_but_not_critical(self):
         from qml_runtime import stubs
         harness = Harness()

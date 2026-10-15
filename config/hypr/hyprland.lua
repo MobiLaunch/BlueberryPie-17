@@ -50,6 +50,12 @@ local function key_bind(keys, command, options)
     pcall(hl.bind, keys, hl.dsp.exec_cmd(command), options)
 end
 local held = { locked = true, repeating = true }
+-- Window management (acts on the focused window). Super + arrows, Android desktop style.
+key_bind("SUPER + UP", "prismctl windows maximize active")
+key_bind("SUPER + DOWN", "prismctl windows minimize active")
+key_bind("SUPER + LEFT", "prismctl windows snap-left active")
+key_bind("SUPER + RIGHT", "prismctl windows snap-right active")
+key_bind("SUPER + F", "prismctl windows float active")
 key_bind("XF86AudioRaiseVolume", "prismctl action volume-up", held)
 key_bind("XF86AudioLowerVolume", "prismctl action volume-down", held)
 key_bind("XF86AudioMute", "prismctl action mute", { locked = true })

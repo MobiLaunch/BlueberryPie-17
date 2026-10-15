@@ -82,3 +82,89 @@ class WindowTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+MONITORS = [{"id": 0, "x": 0, "y": 0, "width": 2560, "height": 1600, "scale": 2.0, "reserved": [0, 44, 0, 92]}]
+CLIENTS_STATE = [
+    {"address": "0xaa01", "mapped": True, "class": "firefox", "title": "Docs", "workspace": {"id": 1, "name": "1"},
+     "pid": 1, "floating": False, "fullscreen": 0, "monitor": 0, "focusHistoryID": 0},
+    {"address": "0xaa02", "mapped": True, "class": "foot", "title": "~", "workspace": {"id": -98, "name": "special:minimized"},
+     "pid": 2, "floating": True, "fullscreen": 0, "monitor": 0, "focusHistoryID": 2},
+    {"address": "0xaa03", "mapped": True, "class": "thunar", "title": "Files", "workspace": {"id": 1, "name": "1"},
+     "pid": 3, "floating": True, "fullscreen": 1, "monitor": 0, "focusHistoryID": 1},
+]
+
+
+class WindowManagementTests(unittest.TestCase):
+    def setUp(self):
+        self.sent = []
+
+        def fake(args, timeout=4):
+            if args[:3] == ["hyprctl", "-j", "clients"]:
+                return json.dumps(CLIENTS_STATE)
+            if args[:3] == ["hyprctl", "-j", "activewindow"]:
+                return json.dumps({"address": "0xaa01"})
+            if args[:3] == ["hyprctl", "-j", "monitors"]:
+                return json.dumps(MONITORS)
+            if args[:3] == ["hyprctl", "-j", "activeworkspace"]:
+                return json.dumps({"id": 3})
+            if args[:2] == ["hyprctl", "dispatch"]:
+                self.sent.append(args[2:])
+                return "ok"
+            raise AssertionError(args)
+        patcher = patch("prismos.windows.run", side_effect=fake)
+        patcher.start(); self.addCleanup(patcher.stop)
+
+    def test_state_reports_floating_maximized_and_minimized(self):
+        state = {w["class"]: w for w in windows.clients()}
+        self.assertTrue(state["foot"]["minimized"])
+        self.assertFalse(state["firefox"]["minimized"])
+        self.assertTrue(state["thunar"]["maximized"] and state["thunar"]["floating"])
+
+    def test_minimize_moves_to_the_special_workspace_silently(self):
+        windows.dispatch("minimize", "0xaa01")
+        self.assertEqual(self.sent, [["movetoworkspacesilent", "special:minimized,address:0xaa01"]])
+
+    def test_restore_returns_to_current_workspace_and_focuses(self):
+        windows.dispatch("restore", "0xaa02")
+        self.assertEqual(self.sent, [["movetoworkspace", "3,address:0xaa02"], ["focuswindow", "address:0xaa02"]])
+
+    def test_maximize_focuses_then_toggles(self):
+        windows.dispatch("maximize", "0xaa01")
+        self.assertEqual(self.sent, [["focuswindow", "address:0xaa01"], ["fullscreen", "1"]])
+
+    def test_active_alias_targets_the_focused_window_only(self):
+        windows.dispatch("close", "active")
+        self.assertEqual(self.sent, [["closewindow", "address:0xaa01"]])
+
+    def test_snap_left_floats_then_sizes_to_half_the_usable_area(self):
+        windows.dispatch("snap-left", "0xaa01")
+        # 2560x1600 at 2x is 1280x800; usable 1280x664; half = (1280-36)//2 = 622
+        self.assertEqual(self.sent, [["togglefloating", "address:0xaa01"],
+                                     ["resizewindowpixel", "exact 622 640,address:0xaa01"],
+                                     ["movewindowpixel", "exact 12 56,address:0xaa01"]])
+
+    def test_snap_right_and_leaving_maximized_state(self):
+        windows.dispatch("snap-right", "0xaa03")
+        self.assertEqual(self.sent[:2], [["focuswindow", "address:0xaa03"], ["fullscreen", "1"]])
+        self.assertEqual(self.sent[-1], ["movewindowpixel", "exact 646 56,address:0xaa03"])
+        self.assertNotIn(["togglefloating", "address:0xaa03"], self.sent)  # already floating
+
+    def test_minimized_windows_cannot_be_snapped_or_maximized(self):
+        for operation in ("snap-left", "maximize"):
+            with self.subTest(operation=operation), self.assertRaises(ValueError):
+                windows.dispatch(operation, "0xaa02")
+        self.assertEqual(self.sent, [])
+
+    def test_tiny_screens_refuse_to_snap(self):
+        tiny = [dict(MONITORS[0], width=420, height=600, scale=1.0, reserved=[0, 44, 0, 92])]
+        with patch.object(windows, "_json", side_effect=lambda c: tiny if c[2] == "monitors" else
+                          json.loads(windows.run(c))):
+            with self.assertRaises(CommandError):
+                windows.dispatch("snap-left", "0xaa01")
+
+    def test_hostile_addresses_and_operations_never_dispatch(self):
+        for operation, address in (("close", "0xaa01; reboot"), ("snap-up", "0xaa01"), ("float", "active\n"), ("focus", "0xAA99")):
+            with self.subTest(operation=operation, address=address), self.assertRaises(ValueError):
+                windows.dispatch(operation, address)
+        self.assertEqual(self.sent, [])

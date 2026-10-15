@@ -25,6 +25,10 @@ SettingsPage {
                 {label: "Move a window", keys: ["Alt", "drag"]},
                 {label: "Resize a window", keys: ["Alt", "right-drag"]},
                 {label: "Close the focused window", keys: ["Super", "Shift", "Q"]},
+                {label: "Maximize or restore", keys: ["Super", "↑"]},
+                {label: "Minimize", keys: ["Super", "↓"]},
+                {label: "Snap to left or right half", keys: ["Super", "←", "→"]},
+                {label: "Float or tile", keys: ["Super", "F"]},
                 {label: "Lock the screen", keys: ["Super", "L"]}
             ]
         },

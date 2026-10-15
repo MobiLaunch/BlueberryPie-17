@@ -12,6 +12,7 @@ Button {
     property var windows: Windows.forApp(app)
     readonly property bool running: windows.length > 0
     readonly property bool focusedApp: windows.some(window => window.focused)
+    readonly property bool allMinimized: running && windows.every(window => window.minimized)
     property bool held: false
     signal activated(real x, real y)
     implicitWidth: 56
@@ -25,7 +26,7 @@ Button {
     Accessible.name: app.name + (running ? ", " + windows.length + (windows.length === 1 ? " window open" : " windows open") : "")
     ToolTip.visible: hovered && !menu.opened
     ToolTip.delay: 450
-    ToolTip.text: app.name + (windows.length === 1 && windows[0].title ? " — " + windows[0].title : "")
+    ToolTip.text: app.name + (windows.length === 1 && windows[0].title ? " — " + windows[0].title : "") + (allMinimized ? " (minimized)" : "")
     scale: down ? 0.9 : hovered ? 1.06 : 1
     Behavior on scale {
         NumberAnimation {
@@ -65,7 +66,9 @@ Button {
             width: root.focusedApp ? 18 : 6
             height: 4
             radius: 2
-            color: Theme.primary
+            color: root.allMinimized ? "transparent" : Theme.primary
+            border.width: root.allMinimized ? 1 : 0
+            border.color: Theme.outline
             Behavior on width {
                 NumberAnimation {
                     duration: Theme.fast

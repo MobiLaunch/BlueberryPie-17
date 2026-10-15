@@ -55,6 +55,17 @@ class HyprlandConfigTests(unittest.TestCase):
         for key, command in expected.items():
             self.assertEqual(self.binds.get(key), command, key)
 
+    def test_window_management_binds_target_the_focused_window(self):
+        expected = {
+            "SUPER + UP": "prismctl windows maximize active",
+            "SUPER + DOWN": "prismctl windows minimize active",
+            "SUPER + LEFT": "prismctl windows snap-left active",
+            "SUPER + RIGHT": "prismctl windows snap-right active",
+            "SUPER + F": "prismctl windows float active",
+        }
+        for keys, command in expected.items():
+            self.assertEqual(self.binds.get(keys), command, keys)
+
     def test_every_ipc_target_exists_in_wrapper_and_shell(self):
         targets = {match.split()[-1] for command in self.binds.values()
                    for match in re.findall(r"prism-shell ipc \w+", command)}

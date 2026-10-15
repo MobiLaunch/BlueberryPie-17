@@ -111,15 +111,11 @@ PanelWindow {
             }
         }
     }
-    Label {
+    WindowCaption {
         anchors.centerIn: parent
-        width: Math.max(0, Math.min(root.width * 0.3, 420))
-        horizontalAlignment: Text.AlignHCenter
-        text: Windows.focused ? Windows.focused.title || Windows.focused.class : ""
-        role: "labelLarge"
-        color: Theme.surfaceVariantInk
-        elide: Text.ElideRight
-        opacity: text.length > 0 && root.width > 900 ? 1 : 0
+        // Needs room between the left cluster and the status pill.
+        visible: Windows.focused !== null && root.width >= 1100
+        width: Math.min(implicitWidth, root.width * 0.42)
     }
     RowLayout {
         anchors.right: parent.right
