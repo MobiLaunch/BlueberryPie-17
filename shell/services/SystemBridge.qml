@@ -183,17 +183,19 @@ QtObject {
         }
         return null;
     }
+    // Show a predicted snapshot now. The next real reading always replaces it, even when it equals
+    // the previous reading (a command that failed), and a read already in flight is discarded: it
+    // predates the click and would flip the control back.
+    function applyGuess(next) {
+        snapshot = next;
+        lastStatus = "";
+        if (reader.running)
+            staleRead = true;
+    }
     function action(name, value) {
         const guess = predict(name, value);
-        if (guess) {
-            snapshot = guess;
-            // The guess is not what was last read, so the next real answer must always replace it
-            // (even when it equals the previous reading, as after a command that failed).
-            lastStatus = "";
-            // A status read already in flight predates this click; its answer would flip the tile back.
-            if (reader.running)
-                staleRead = true;
-        }
+        if (guess)
+            applyGuess(guess);
         let args = ["prismctl", "action", name];
         if (value !== undefined)
             args.push(String(Math.round(value)));
@@ -225,6 +227,11 @@ QtObject {
         drain();
     }
     function setTiles(ids) {
+        applyGuess(patched({
+            settings: {
+                tiles: ids
+            }
+        }));
         const queue = pending.filter(item => item[1] !== "tiles");
         queue.push(["prismctl", "tiles", "set"].concat(ids));
         pending = queue;

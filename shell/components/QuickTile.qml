@@ -92,6 +92,9 @@ Button {
                 text: root.title
                 role: "titleSmall"
                 color: root.inkColor
+                // Narrow screens shrink a long name (Microphone) a little before cutting it.
+                fontSizeMode: Text.HorizontalFit
+                minimumPixelSize: 10
                 elide: Text.ElideRight
             }
             Label {

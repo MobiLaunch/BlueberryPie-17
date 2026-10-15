@@ -27,6 +27,9 @@ HARDWARE = real compositor/device testing still required, GAP = missing.
 | Notes widget, Night Light warmth, power modes, clipboard search | SOURCE / QA | hyprsunset and power-profiles-daemon on hardware |
 | Clipboard pins, tile detail panels, widget sizes, live Recents | SOURCE / QA | ScreencopyView and toplevel address matching unverified on real Quickshell |
 | Storage page (usage breakdown, clear previews) | SOURCE / QA | block accounting on btrfs/compressed filesystems, very large homes |
+| Material Symbols icon set, filled active states, battery levels | SOURCE / QA | compare optical size and weight against Android 17 on a real display |
+| Application icons (icon theme + letter fallback) | SOURCE / QA | `QS_ICON_THEME` honoured by real Quickshell; Papirus coverage for each installed app |
+| Immediate toggles (predicted state) | SOURCE / QA | real radios and audio on hardware |
 | Recents overview (windows via hyprctl) with window previews | SOURCE / QA | verify focus/close dispatch and grim captures on Hyprland 0.56 Lua; previews are snapshots, not live |
 | Heads-up banners and grouped swipe-dismiss shade | SOURCE / QA | real notification clients, long text, many apps |
 | Settings app (11 sections) | SOURCE / QA | real adapters on hardware; per-app notification controls missing |

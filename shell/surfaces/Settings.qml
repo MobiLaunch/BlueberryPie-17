@@ -81,7 +81,7 @@ PanelWindow {
         {
             id: "shortcuts",
             title: "Shortcuts & gestures",
-            symbol: "keyboard",
+            symbol: "shortcuts",
             page: "ShortcutsPage",
             keywords: "shortcuts keys keyboard gestures touchpad swipe bindings hotkeys"
         },

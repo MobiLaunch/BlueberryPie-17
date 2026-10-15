@@ -1,4 +1,28 @@
-# Validation record — 2026-10-15 (v0.9 through round nine)
+# Validation record — 2026-10-15 (v0.9 through round ten)
+
+## Addendum: round ten (icons, Hyprland errors, responsiveness, polish)
+
+### Executed
+
+| Check | Result |
+| --- | --- |
+| Hyprland Lua config | The mock now rejects a spring without numeric `mass`, `stiffness` and `dampening` and an animation naming a curve that does not exist. The previous config fails it with exactly the reported `dampening expects a number`; the new one passes, registers the spring and names it for `windowsIn`; a variant that Hyprland would refuse falls back to the bezier and the binds after it still run; with curves, animations and gestures all refused the file still finishes, registers every bind and still starts the shell at `hyprland.start` |
+| Icon set | Generated data equals the vendored SVGs; every icon name used by the shell exists (a test scans the QML); every mapped symbol has outlined and filled variants; each vendored file is a single path; Apache-2.0 license and notice present; battery has all seven level glyphs |
+| Icon theme | The shell wrapper selects Papirus when installed, leaves the system theme alone otherwise and lets an explicit `QS_ICON_THEME` win; the theme is in the PKGBUILD and ISO package list |
+| App icons | An app with no `Icon=` key, or one the theme lacks, gets a letter tile with the right initial; nothing in the shell references the generic executable icon |
+| Responsiveness | Dark mode, Wi-Fi, mute, volume and brightness clicks change the snapshot before the command returns; sliders stay in range; unavailable hardware and unknown actions are not guessed; a read that began before a click is discarded; a guess the system does not confirm is replaced by the real state; the command really runs and the final state matches |
+| Bridge speed | Median `prismctl` call: about 150 ms to about 90 ms (`about`), 216 ms to 123 ms (`status`), 136 ms to 87 ms (`tiles list`) on the build machine |
+| Layout | Slider rows show their value once, in their own units; no elided text on the Settings pages at normal and largest text size |
+| Browser preview | `tests/preview.spec.cjs` passes with the new icons |
+| `scripts/check.sh` | Passed |
+
+### Not executed
+
+- A real Hyprland session: whether 0.56 accepts the spring exactly as written (the field name comes from the error text you reported and the Hyprland wiki, which itself spells it both ways).
+- Whether Quickshell honours `QS_ICON_THEME` and finds Papirus icons for every installed app; the harness uses a stand-in theme lookup.
+- Optical comparison of the icons against Android 17 on a real display.
+
+## Previous record — 2026-10-15 (through round nine)
 
 ## Addendum: round nine (notification history)
 

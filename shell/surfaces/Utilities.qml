@@ -129,6 +129,8 @@ PanelWindow {
                     }
                 }
                 IconButton {
+                    // Stays at the top right when the tabs wrap onto a second row.
+                    Layout.alignment: Qt.AlignTop
                     symbol: "close"
                     variant: "tonal"
                     Accessible.name: "Close"

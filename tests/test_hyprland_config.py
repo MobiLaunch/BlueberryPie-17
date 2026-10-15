@@ -41,7 +41,8 @@ local function animation(opts)
   log[#log + 1] = "animation\t" .. opts.leaf .. "\t" .. tostring(opts.spring or opts.bezier or "-")
 end
 hl = {
-  monitor = noop, env = noop, config = noop, curve = curve, animation = animation, gesture = noop, on = noop,
+  monitor = noop, env = noop, config = noop, curve = curve, animation = animation, gesture = noop,
+  on = function(event) log[#log + 1] = "on\t" .. event end,
   exec_cmd = noop,
   bind = function(keys, action, options)
     binds[#binds + 1] = keys .. "\t" .. tostring(action and (action.arg or action.kind) or "?")
@@ -49,14 +50,23 @@ hl = {
   dsp = { exec_cmd = descriptor("exec"),
           window = { drag = descriptor("drag"), resize = descriptor("resize"), close = descriptor("close") } },
 }
+if arg[2] then dofile(arg[2]) end  -- optional sabotage: make some API calls fail
 dofile(arg[1])
 for _, line in ipairs(binds) do print(line) end
 for _, line in ipairs(log) do print("@" .. line) end
 '''
 
 
-def run_config(path):
-    return subprocess.run([LUA, "-", str(path)], input=PRELUDE, capture_output=True, text=True, timeout=10)
+def run_config(path, sabotage=None):
+    """Run the config against the mock; `sabotage` is Lua that runs first (to make API calls fail)."""
+    import tempfile
+    with tempfile.TemporaryDirectory() as folder:
+        extra = []
+        if sabotage:
+            script = Path(folder) / "sabotage.lua"
+            script.write_text(sabotage)
+            extra = [str(script)]
+        return subprocess.run([LUA, "-", str(path), *extra], input=PRELUDE, capture_output=True, text=True, timeout=10)
 
 
 @unittest.skipIf(LUA is None, "lua interpreter not installed")
@@ -94,6 +104,19 @@ class HyprlandConfigTests(unittest.TestCase):
         self.assertNotIn(["curve", "prismSpring", "spring"], log)
         self.assertIn(["animation", "windowsIn", "prismFade"], log)
         self.assertIn("SUPER + SPACE", result.stdout, "binds after the animations still run")
+
+    def test_autostart_and_binds_survive_every_new_api_being_refused(self):
+        sabotage = """
+            local real_curve = hl.curve
+            hl.curve = function() error("curves are not supported here") end
+            hl.animation = function() error("animations are not supported here") end
+            hl.gesture = function() error("gestures are not supported here") end
+        """
+        result = run_config(ROOT / "config/hypr/hyprland.lua", sabotage)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("@on\thyprland.start", result.stdout, "the shell must still be started")
+        self.assertIn("SUPER + SPACE", result.stdout)
+        self.assertIn("XF86AudioRaiseVolume", result.stdout)
 
     def test_hardware_keys_drive_fixed_prismctl_actions(self):
         expected = {

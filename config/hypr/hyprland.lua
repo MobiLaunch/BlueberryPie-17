@@ -17,24 +17,28 @@ hl.config({
     animations = { enabled = true },
     input = { kb_layout = "us", follow_mouse = 1, touchpad = { natural_scroll = true } },
 })
--- Spring curves are new in 0.55+: the damping field is spelled `dampening`, and an
--- animation can only name a spring that was created. Register the spring under pcall
--- and fall back to the bezier when it is refused, so a mistake here can never break
--- window animations or abort the rest of the session configuration.
-hl.curve("prismFade", { type = "bezier", points = {{0.2, 0}, {0, 1}} })
-local spring_ok = pcall(hl.curve, "prismSpring", { type = "spring", mass = 1, stiffness = 340, dampening = 29 })
+-- Animation curves and touchpad gestures are the newest parts of the Lua API. Each call runs
+-- under pcall so one option a given Hyprland build refuses can never abort the file: the binds
+-- and the autostart below (which launches the shell) always run.
+local function try(fn, ...)
+    return (pcall(fn, ...))
+end
+-- Springs: the damping field is spelled `dampening`, and an animation can only name a spring
+-- that was created, so fall back to the bezier when the spring is refused.
+try(hl.curve, "prismFade", { type = "bezier", points = {{0.2, 0}, {0, 1}} })
+local spring_ok = try(hl.curve, "prismSpring", { type = "spring", mass = 1, stiffness = 340, dampening = 29 })
 local opening = spring_ok and { spring = "prismSpring" } or { bezier = "prismFade" }
-hl.animation({ leaf = "windowsIn", enabled = true, speed = 3.2, spring = opening.spring, bezier = opening.bezier, style = "popin 90%" })
-hl.animation({ leaf = "windowsOut", enabled = true, speed = 1.6, bezier = "prismFade", style = "popin 95%" })
-hl.animation({ leaf = "fade", enabled = true, speed = 1.6, bezier = "prismFade" })
-hl.animation({ leaf = "layers", enabled = false }) -- The shell animates its own panels.
+try(hl.animation, { leaf = "windowsIn", enabled = true, speed = 3.2, spring = opening.spring, bezier = opening.bezier, style = "popin 90%" })
+try(hl.animation, { leaf = "windowsOut", enabled = true, speed = 1.6, bezier = "prismFade", style = "popin 95%" })
+try(hl.animation, { leaf = "fade", enabled = true, speed = 1.6, bezier = "prismFade" })
+try(hl.animation, { leaf = "layers", enabled = false }) -- The shell animates its own panels.
 -- Hyprland 0.56 native trackpad gestures: continuous workspace movement
 -- plus Android-like 4-finger launcher / Quick Settings reveals.
 -- These do not intercept ordinary two-finger app scrolling.
-hl.gesture({ fingers = 3, direction = "horizontal", action = "workspace" })
-hl.gesture({ fingers = 4, direction = "up",
+try(hl.gesture, { fingers = 3, direction = "horizontal", action = "workspace" })
+try(hl.gesture, { fingers = 4, direction = "up",
     action = function() hl.exec_cmd("prism-shell ipc launcher") end })
-hl.gesture({ fingers = 4, direction = "down",
+try(hl.gesture, { fingers = 4, direction = "down",
     action = function() hl.exec_cmd("prism-shell ipc shade") end })
 hl.bind("SUPER + SPACE", hl.dsp.exec_cmd("prism-shell ipc launcher"))
 hl.bind("SUPER + A", hl.dsp.exec_cmd("prism-shell ipc launcher"))

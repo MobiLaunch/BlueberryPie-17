@@ -219,4 +219,9 @@ Still open: per-tile detail panels, clipboard search/pinning, resizable widgets,
 
 - Opt-in, in-memory notification history in Settings.
 
+## Round ten (development slice)
+
+- Hyprland spring config fixed; Material Symbols icon set; app icon theme and letter fallback;
+  optimistic toggles and a faster bridge; layout polish.
+
 Still open: measurements against the Android reference and everything listed under "Not executed" in `docs/VALIDATION.md`.

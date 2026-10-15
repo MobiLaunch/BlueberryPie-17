@@ -8,6 +8,8 @@ Slider {
     property string symbol: "brightness"
     property string label: "Brightness"
     property real modelValue: 0
+    // Shown inside the track. A host that prints its own value (SliderRow) turns this off.
+    property bool showValue: true
     property real keyStep: 5
     signal committed(real level)
     from: symbol === "brightness" ? 1 : 0
@@ -64,6 +66,7 @@ Slider {
             anchors.right: parent.right
             anchors.rightMargin: 14
             anchors.verticalCenter: parent.verticalCenter
+            visible: root.showValue || !root.enabled
             text: root.enabled ? Math.round(root.value) + "%" : "Unavailable"
             font.pixelSize: 12
             color: Theme.surfaceInk

@@ -5,6 +5,7 @@ reference/binding errors and layout regressions without a compositor. It does
 not qualify Quickshell, layer-shell focus, Hyprland or hardware.
 """
 import json
+import re
 import sys
 import unittest
 from pathlib import Path
@@ -185,9 +186,12 @@ class ShellRuntimeTests(unittest.TestCase):
         harness.click(*harness.scene_pos(switch))
         self.assertTrue(harness.wait_for(lambda: "screenshot" in (settings.load()["tiles"] or []), 6000))
         self.assertTrue(harness.wait_for(lambda: chevron("chevron_up") is not None, 6000))
+        settled = lambda: harness.eval_value("!SystemBridge.busy && SystemBridge.pending.length === 0 && !SystemBridge.staleRead") == "true"
+        self.assertTrue(harness.wait_for(settled, 8000))  # the editor has finished re-laying out
         harness.reveal(chevron("chevron_up"))
         harness.click(*harness.scene_pos(chevron("chevron_up")))
         self.assertTrue(harness.wait_for(lambda: settings.load()["tiles"][-2:] == ["screenshot", "audio_devices"], 6000))
+        self.assertTrue(harness.wait_for(settled, 8000))
         done = next(item for item in harness.visible_items()
                     if item.metaObject().className().startswith("PillButton") and item.property("text") == "Done")
         harness.reveal(done)
@@ -897,6 +901,8 @@ class ShellRuntimeTests(unittest.TestCase):
         # Sliders stay inside their range.
         self.assertEqual(clicked("SystemBridge.action('volume', 400)", "SystemBridge.snapshot.volume.value"), "100")
         self.assertEqual(clicked("SystemBridge.action('brightness', 0)", "SystemBridge.snapshot.brightness.value"), "1")
+        # Editing the tile list answers at once as well.
+        self.assertEqual(clicked("SystemBridge.setTiles(['dnd', 'wifi'])", "JSON.stringify(SystemBridge.snapshot.settings.tiles)"), '["dnd","wifi"]')
         # Unavailable hardware is left alone, and unknown actions predict nothing.
         self.assertEqual(clicked("SystemBridge.action('microphone-mute')", "SystemBridge.snapshot.microphone.muted"), "false")
         self.assertEqual(now("SystemBridge.predict('lock') === null"), "true")
@@ -929,6 +935,24 @@ class ShellRuntimeTests(unittest.TestCase):
         self.assertEqual(now("(function () { SystemBridge.snapshot = SystemBridge.patched({settings: {dnd: true}}); "
                              "SystemBridge.lastStatus = ''; SystemBridge.refresh(); return SystemBridge.snapshot.settings.dnd; })()"), "true")
         self.assertTrue(harness.wait_for(lambda: now("SystemBridge.snapshot.settings.dnd") == "false", 8000))
+
+    def test_slider_rows_show_their_value_once_in_their_own_units(self):
+        harness = self.boot()
+        harness.ipc("settings")
+        harness.pump(600)
+        for section, expect_percent in (("input", False), ("sound", True)):
+            row = harness.find("section-" + section)
+            harness.reveal(row)
+            harness.click(*harness.scene_pos(row))
+            harness.pump(700)
+            texts = [str(item.property("text")) for item in harness.visible_items() if item.property("text") is not None]
+            percents = [text for text in texts if re.fullmatch(r"-?\d+(\.\d+)?%", text)]
+            if expect_percent:
+                self.assertEqual(len(percents), 1, f"{section}: the same value must not appear twice: {percents}")
+            else:
+                self.assertEqual(percents, [], f"{section}: speeds and rates are not percentages")
+            self.assertEqual(harness.truncated_texts(), [], section)
+        self.assertEqual(harness.problems(), [])
 
     def test_settings_search_filters_sections(self):
         harness = self.boot()

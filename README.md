@@ -23,8 +23,8 @@ ISO and hardware qualification have not been completed in this release.
   scheme produces the full M3 role set, validated against published reference values.
   The wallpaper, Settings preview and every surface follow the palette and dark mode.
 - **Fixed**: clipped button labels, unreadable dark mode (content-color roles rendered
-  black), a dock that clipped its last button, and glyph icons. Icons are now a 68-symbol
-  original set recolored at runtime.
+  black), a dock that clipped its last button, and glyph icons. Icons were first a hand-drawn
+  set; they are now Material Symbols (see "Round ten" below).
 - **Quick Settings**: large and compact tiles (active = pill, inactive = squircle),
   brightness/volume sliders, MPRIS media card, and Android's dual shade on wide
   screens with grouped, swipe-to-dismiss notifications and heads-up banners.
@@ -137,6 +137,33 @@ ISO and hardware qualification have not been completed in this release.
   can look back after dismissing them, and clear the list.
 - The history lives in the shell's memory only. It is never written to disk, is dropped when you turn the
   setting off or log out, and notifications from muted apps are not recorded.
+
+### Round ten: icons, Hyprland errors and responsiveness
+
+- **Hyprland errors fixed**: `dampening expects a number` and `no such spring prismSpring` came from
+  one typo. Hyprland 0.56 spells the spring field `dampening`, and the animation that named the spring
+  failed because the spring was never created. The config now uses `dampening`, creates the spring
+  under `pcall`, and falls back to a bezier if Hyprland ever refuses it. Curves, animations and gestures (the newest
+  parts of the Lua API) all run under `pcall`, so one refused option can no longer stop the binds or the
+  autostart that launches the shell. The Lua test mock rejects the old config the way Hyprland does.
+- **Icons**: every UI glyph is now a **Material Symbols (Rounded)** icon, taken unmodified from the
+  Apache-2.0 `@material-symbols/svg-400` package (`design/icons/NOTICE.md`). Active tiles and
+  selected rows use the filled variant, and the battery has real glyphs for seven charge levels.
+  `design/icons/material-map.json` maps names to symbols and `python3 scripts/generate-design.py`
+  regenerates the shell and preview data.
+- **Application icons** come from the installed icon theme. **Papirus** (GPL-3.0-or-later) is now a
+  package dependency and is selected for the shell through `QS_ICON_THEME` (an explicit value wins).
+  An app the theme has no icon for gets a tonal letter tile instead of a generic "executable" icon.
+- **Things answer at once**: toggles, sliders and tile edits update from a predicted state the moment you click
+  (the real state replaces it a moment later, and corrects it if the command failed); a status read
+  that started before the click can no longer flip the tile back; `prismctl` loads only the modules a
+  command needs (about 150 ms down to about 90 ms per call) and no longer scans the time zone database on
+  every settings read.
+- **Polish**: slider cards show their value once and in their own units (Pointer speed and Key repeat
+  used to read as percentages), the Quick Settings date line no longer runs under its buttons, the
+  notification card fits its content, long tile names shrink before they are cut, Power saver /
+  Balanced / Performance and Pointer / Shortcuts have distinct icons, and the Utilities close button
+  stays at the top right.
 
 ## Build the ISO on Windows
 

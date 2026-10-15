@@ -50,6 +50,8 @@ Rectangle {
             id: slider
             Layout.fillWidth: true
             label: heading.text
+            // The header already shows the value, in this row's own units.
+            showValue: false
             onCommitted: level => root.committed(level)
         }
     }
