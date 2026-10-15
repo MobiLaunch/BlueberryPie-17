@@ -51,6 +51,10 @@ QtObject {
         return fontFamilies.find(name => installed.indexOf(name) >= 0) || "sans-serif";
     }
 
+    readonly property bool clock24: SystemBridge.snapshot.settings.clock_24h !== false
+    function timeText(date) {
+        return Qt.formatTime(date, clock24 ? "hh:mm" : "h:mm AP");
+    }
     readonly property bool reducedMotion: SystemBridge.snapshot.settings.reduced_motion || false
     readonly property bool dark: SystemBridge.snapshot.settings.dark || false
     readonly property int fast: reducedMotion ? 0 : 160

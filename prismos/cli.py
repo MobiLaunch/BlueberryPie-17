@@ -3,7 +3,7 @@ import json
 import sys
 
 from . import sound as alert_sound
-from . import about, alarms, android, apps, audio, clipboard, displays, drives, favorites, fdroid, files, inputs, installer, notifyprefs, screenshot, settings, stats, store, system, theme, tiles, wallpaper, weather, websearch, widgets, windows, wireless
+from . import about, alarms, android, apps, audio, clipboard, clockset, worldclock, displays, drives, favorites, fdroid, files, inputs, installer, notifyprefs, screenshot, settings, stats, store, system, theme, tiles, wallpaper, weather, websearch, widgets, windows, wireless
 
 
 def main(argv=None):
@@ -23,6 +23,12 @@ def main(argv=None):
     clock.add_argument("--time")
     clock.add_argument("--days", default="")
     clock.add_argument("--label", default="")
+    when = sub.add_parser("datetime")
+    when.add_argument("operation", choices=("get", "timezone", "ntp", "24h"))
+    when.add_argument("value", nargs="?")
+    world = sub.add_parser("worldclock")
+    world.add_argument("operation", choices=("list", "add", "remove"))
+    world.add_argument("zone", nargs="?")
     clip = sub.add_parser("clipboard")
     clip.add_argument("operation", choices=("list", "copy", "delete", "clear", "enable", "disable", "resume"))
     clip.add_argument("id", nargs="?")
@@ -145,6 +151,13 @@ def main(argv=None):
                 if args.id is None or not args.id.isdigit():
                     raise ValueError("An alarm number is required")
                 result = alarms.toggle(args.id) if args.operation == "toggle" else alarms.remove(args.id)
+        elif args.command == "datetime":
+            op = args.operation
+            result = (clockset.status() if op == "get" else clockset.set_timezone(args.value) if op == "timezone"
+                      else clockset.set_ntp(args.value) if op == "ntp" else clockset.set_24h(args.value))
+        elif args.command == "worldclock":
+            result = (worldclock.status() if args.operation == "list"
+                      else worldclock.add(args.zone) if args.operation == "add" else worldclock.remove(args.zone))
         elif args.command == "clipboard":
             op = args.operation
             result = (clipboard.status() if op == "list" else clipboard.copy(args.id) if op == "copy"

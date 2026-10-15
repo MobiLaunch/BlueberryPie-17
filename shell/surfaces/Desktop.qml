@@ -52,6 +52,9 @@ Scope {
     HeadsUp {
         screen: root.screen
     }
+    AlarmRinging {
+        screen: root.screen
+    }
     Toast {
         screen: root.screen
     }

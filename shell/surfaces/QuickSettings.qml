@@ -10,7 +10,8 @@ import "../services"
 PanelWindow {
     id: root
     property bool opened: ShellState.shadeOpen && ShellState.activeScreen === screen
-    property string clockText: Qt.formatTime(new Date(), "hh:mm")
+    property date now: new Date()
+    readonly property string clockText: Theme.timeText(now)
     property string dateText: Qt.formatDate(new Date(), "dddd, MMMM d")
     property string connectionKind: ""
     property bool soundOpen: false
@@ -92,7 +93,7 @@ PanelWindow {
         repeat: true
         triggeredOnStart: true
         onTriggered: {
-            root.clockText = Qt.formatTime(new Date(), "hh:mm");
+            root.now = new Date();
             root.dateText = Qt.formatDate(new Date(), "dddd, MMMM d");
         }
     }

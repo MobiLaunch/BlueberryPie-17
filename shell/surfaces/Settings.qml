@@ -65,6 +65,13 @@ PanelWindow {
             keywords: "widgets desktop clock calendar weather search glance system analog"
         },
         {
+            id: "datetime",
+            title: "Date & time",
+            symbol: "calendar",
+            page: "DateTimePage",
+            keywords: "date time clock 24-hour 12-hour timezone time zone ntp automatic"
+        },
+        {
             id: "input",
             title: "Pointer & keyboard",
             symbol: "keyboard",
@@ -121,8 +128,10 @@ PanelWindow {
             return (Theme.dark ? "Dark" : "Light") + " theme";
         case "widgets":
             return WidgetsState.enabled.length + (WidgetsState.enabled.length === 1 ? " widget" : " widgets") + " on the desktop";
+        case "datetime":
+            return (Theme.clock24 ? "24-hour" : "12-hour") + " clock";
         case "input":
-            return "Touchpad, speed, repeat";
+            return "Touchpad, layout, repeat";
         case "shortcuts":
             return "Keys and touchpad gestures";
         case "apps":

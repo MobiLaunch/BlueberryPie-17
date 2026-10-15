@@ -6,7 +6,8 @@ Label {
     id: root
     property color ink: Theme.wallpaperInk
     property real size: 120
-    text: Qt.formatTime(new Date(), "hh:mm")
+    property date now: new Date()
+    text: Theme.timeText(now)
     font.pixelSize: size
     font.weight: Font.Black
     font.letterSpacing: -size * 0.05
@@ -15,6 +16,6 @@ Label {
         interval: 1000
         running: true
         repeat: true
-        onTriggered: root.text = Qt.formatTime(new Date(), "hh:mm")
+        onTriggered: root.now = new Date()
     }
 }

@@ -51,10 +51,23 @@ def apply_one(name, selected):
 
 def list_settings():
     current = settings.load()
-    return {"ok": True, "settings": {name: current[name] for name in KEYS}}
+    return {"ok": True, "settings": {**{name: current[name] for name in KEYS}, "keyboard": current["keyboard"]},
+            "layouts": [{"id": item[0], "label": item[1]} for item in regional.KEYBOARDS]}
+
+
+def apply_keyboard(identifier):
+    layout = regional.keyboard(identifier)
+    run(["hyprctl", "keyword", "input:kb_layout", layout["layout"]], timeout=5)
+    run(["hyprctl", "keyword", "input:kb_variant", layout["variant"]], timeout=5)
 
 
 def change(name, raw):
+    if name == "keyboard":
+        if raw not in regional.KEYBOARD_IDS:
+            raise ValueError("Unknown keyboard layout")
+        apply_keyboard(raw)  # an error here must not persist a layout that did not apply
+        settings.update(keyboard=raw)
+        return list_settings()
     new_value = value(name, raw)
     # An error should be visible rather than falsely persisting a failed change.
     apply_one(name, new_value)
@@ -67,7 +80,5 @@ def apply():
     current = settings.load()
     for name in KEYS:
         apply_one(name, current[name])
-    layout = regional.keyboard(current["keyboard"])
-    run(["hyprctl", "keyword", "input:kb_layout", layout["layout"]], timeout=5)
-    run(["hyprctl", "keyword", "input:kb_variant", layout["variant"]], timeout=5)
+    apply_keyboard(current["keyboard"])
     return {"ok": True, "applied": True}

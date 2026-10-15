@@ -1,4 +1,25 @@
-# Validation record — 2026-10-15 (v0.9 through round three)
+# Validation record — 2026-10-15 (v0.9 through round four)
+
+## Addendum: round four (Date & time, keyboard layout, world clock, snooze)
+
+### Executed
+
+| Check | Result |
+| --- | --- |
+| `scripts/check.sh` | Python suites, Node specs, shell syntax and the QML runtime suite passed |
+| Date & time adapter | Mocked `timedatectl`: only listed zones and fixed booleans reach the command; 12/24-hour preference persists; clicked through in Settings |
+| 12-hour clock | Every visible clock (bar, desktop widget) shows AM/PM with no elided text |
+| Keyboard layout | Applies through `hyprctl keyword` before saving; failure is not persisted; unknown ids refused; the Settings row sends the right command |
+| World clock | Day and offset arithmetic (including next-day) checked; adding a zone from the panel persisted; corrupt saved zones filtered |
+| Ringing banner | Alarm and timer banners, Snooze → ring again, Dismiss; timers have no snooze |
+
+### Not executed
+
+- `timedatectl` and polkit approval on a real system; changing the zone while the shell runs.
+- Live `input:kb_layout` changes on Hyprland 0.56 with a Lua config.
+- Ringing on multiple monitors or over a locked screen; the repeated sound is not a looping clip.
+
+## Previous record — 2026-10-15 (through round three)
 
 ## Addendum: round three (alarms, quiet hours, clipboard history, converter)
 

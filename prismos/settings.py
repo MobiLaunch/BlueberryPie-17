@@ -12,6 +12,7 @@ from .theme import SCHEME_SPECS
 FONT_SCALES = (0.9, 1.0, 1.15, 1.3)
 TIME = re.compile(r"(?:[01]\d|2[0-3]):[0-5]\d\Z")
 MAX_ALARMS = 10
+MAX_WORLD_CLOCKS = 6
 
 
 def clean_alarms(items):
@@ -36,7 +37,7 @@ TILE_IDS = ("wifi", "bluetooth", "sound", "microphone", "dnd", "dark", "reduced_
             "airplane", "battery_saver", "night_light", "screenshot", "lock")
 WIDGET_IDS = ("glance", "clock", "search", "calendar", "media", "weather", "system", "analog")
 DEFAULTS = {"seed": "#8469cf", "dark": False, "reduced_motion": False, "dnd": False,
-            "favorites": None, "recent_apps": [], "wallpaper": "", "widgets": None, "weather": {}, "keyboard": "us", "tiles": None, "alarms": [], "dnd_schedule": {"enabled": False, "start": "22:00", "end": "07:00"}, "clipboard_history": False, "muted_apps": [], "night_light": False, "scheme": "tonal_spot", "font_scale": 1.0, "android_enabled": False, "onboarding_complete": False,
+            "favorites": None, "recent_apps": [], "wallpaper": "", "widgets": None, "weather": {}, "keyboard": "us", "clock_24h": True, "world_clocks": [], "tiles": None, "alarms": [], "dnd_schedule": {"enabled": False, "start": "22:00", "end": "07:00"}, "clipboard_history": False, "muted_apps": [], "night_light": False, "scheme": "tonal_spot", "font_scale": 1.0, "android_enabled": False, "onboarding_complete": False,
             "natural_scroll": True, "tap_to_click": True,
             "pointer_speed": 0.0, "repeat_rate": 25, "display_scales": {}, "display_positions": {}}
 
@@ -51,7 +52,7 @@ def load():
         if not isinstance(data, dict):
             return dict(DEFAULTS)
         valid = {}
-        for key in ("dark", "reduced_motion", "dnd", "night_light", "clipboard_history", "android_enabled", "onboarding_complete",
+        for key in ("dark", "reduced_motion", "dnd", "night_light", "clipboard_history", "clock_24h", "android_enabled", "onboarding_complete",
                     "natural_scroll", "tap_to_click"):
             if isinstance(data.get(key), bool):
                 valid[key] = data[key]
@@ -91,6 +92,11 @@ def load():
         tiles = data.get("tiles")
         if isinstance(tiles, list):
             valid["tiles"] = [item for item in dict.fromkeys(tiles) if item in TILE_IDS]
+        zones = data.get("world_clocks")
+        if isinstance(zones, list):
+            from .regional import timezones
+            known = set(timezones())
+            valid["world_clocks"] = list(dict.fromkeys(z for z in zones if isinstance(z, str) and z in known))[:MAX_WORLD_CLOCKS]
         alarms = data.get("alarms")
         if isinstance(alarms, list):
             valid["alarms"] = clean_alarms(alarms)

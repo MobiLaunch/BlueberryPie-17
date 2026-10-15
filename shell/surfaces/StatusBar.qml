@@ -11,7 +11,8 @@ import "../services"
 // window in the middle, tray and a system-status pill (opens Quick Settings).
 PanelWindow {
     id: root
-    property string timeText: Qt.formatTime(new Date(), "hh:mm")
+    property date now: new Date()
+    readonly property string timeText: Theme.timeText(now)
     property string dateText: Qt.formatDate(new Date(), "ddd, MMM d")
     readonly property var snap: SystemBridge.snapshot
     anchors {
@@ -28,7 +29,7 @@ PanelWindow {
         running: true
         repeat: true
         onTriggered: {
-            root.timeText = Qt.formatTime(new Date(), "hh:mm");
+            root.now = new Date();
             root.dateText = Qt.formatDate(new Date(), "ddd, MMM d");
         }
     }

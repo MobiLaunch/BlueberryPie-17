@@ -10,6 +10,7 @@ QtObject {
         pointer_speed: 0,
         repeat_rate: 25
     })
+    property var layouts: []
     property string error: ""
     readonly property bool busy: reader.running || writer.running
     function refresh() {
@@ -32,8 +33,11 @@ QtObject {
                     const payload = JSON.parse(text);
                     if (payload.ok === false)
                         root.error = payload.error;
-                    else if (payload.settings)
+                    else if (payload.settings) {
                         root.values = payload.settings;
+                        if (payload.layouts)
+                            root.layouts = payload.layouts;
+                    }
                 } catch (e) { root.error = "Could not read input settings"; }
             }
         }
@@ -45,8 +49,11 @@ QtObject {
                     const payload = JSON.parse(text);
                     if (payload.ok === false)
                         root.error = payload.error;
-                    else if (payload.settings)
+                    else if (payload.settings) {
                         root.values = payload.settings;
+                        if (payload.layouts)
+                            root.layouts = payload.layouts;
+                    }
                 } catch (e) { root.error = "Could not save the input change"; }
             }
         }

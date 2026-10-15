@@ -25,6 +25,7 @@ ColumnLayout {
     onModelChanged: Qt.callLater(reveal)
     spacing: 8
     Label {
+        visible: root.title.length > 0
         text: root.title
         role: "titleSmall"
         color: Theme.primary

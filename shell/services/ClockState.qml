@@ -25,6 +25,7 @@ QtObject {
     property var fired: ({})
     onAlarmListChanged: checkAlarms(new Date())
     function checkAlarms(date) {
+        checkSnoozed(date.getTime());
         const stamp = date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
         const hhmm = pad(date.getHours()) + ":" + pad(date.getMinutes());
         const weekday = (date.getDay() + 6) % 7;
@@ -38,12 +39,56 @@ QtObject {
             ring(alarm);
         }
     }
-    function ring(alarm) {
-        ShellState.toast = alarm.label.length > 0 ? "Alarm: " + alarm.label : "Alarm " + alarm.time;
-        ShellState.toastTimer.restart();
+    // What is ringing right now ({title, detail, kind, alarm}) or null, and snoozed alarms waiting to ring again.
+    property var ringing: null
+    property var snoozed: []
+    property int plays: 0
+    function startRinging(info) {
+        ringing = info;
+        plays = 1;
         SystemBridge.playSound("alarm");
-        if (alarm.days.length === 0)
+    }
+    function ring(alarm, resumed) {
+        startRinging({
+            title: alarm.label.length > 0 ? alarm.label : "Alarm",
+            detail: alarm.time,
+            kind: "alarm",
+            alarm: alarm
+        });
+        if (alarm.days.length === 0 && !resumed)
             SystemBridge.toggleAlarm(alarm.id);
+    }
+    function dismiss() {
+        ringing = null;
+    }
+    function snooze(minutes) {
+        if (ringing && ringing.kind === "alarm")
+            snoozed = snoozed.concat([
+                {
+                    at: Date.now() + minutes * 60000,
+                    alarm: ringing.alarm
+                }
+            ]);
+        ringing = null;
+    }
+    function checkSnoozed(stamp) {
+        const due = snoozed.filter(item => item.at <= stamp);
+        if (due.length === 0 || ringing !== null)
+            return;
+        snoozed = snoozed.filter(item => item.at > stamp).concat(due.slice(1));
+        ring(due[0].alarm, true);
+    }
+    property Timer ringer: Timer {
+        interval: 5000
+        repeat: true
+        running: root.ringing !== null
+        onTriggered: {
+            root.plays += 1;
+            if (root.plays > 24)
+                root.dismiss();
+            else
+                SystemBridge.playSound("alarm");
+        }
     }
 
     function pad(value, digits) {
@@ -129,9 +174,12 @@ QtObject {
                 root.timerRunning = false;
                 root.timerFinished = true;
                 root.timerLeftWhenPaused = 0;
-                ShellState.toast = "Timer finished";
-                ShellState.toastTimer.restart();
-                SystemBridge.playSound("alarm");
+                root.startRinging({
+                    title: "Timer",
+                    detail: "Time's up",
+                    kind: "timer",
+                    alarm: null
+                });
             }
         }
     }

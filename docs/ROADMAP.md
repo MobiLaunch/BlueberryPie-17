@@ -191,3 +191,7 @@ bit-exact Vibrant/Expressive hue tables, alarms, and measurements against the re
 
 Still open: Recents thumbnails, per-tile detail panels, looping alarm ringing screen, snooze,
 clipboard search and pinning, world clock.
+
+## Round four (development slice)
+
+- Date & time settings with a 12/24-hour clock, keyboard layout picker, world clock, alarm snooze and ringing banner.

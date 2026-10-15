@@ -19,8 +19,8 @@ except ImportError as error:  # PySide6 or its system libraries are absent
 else:
     SKIP_REASON = ""
 
-SURFACES = ("shade", "launcher", "settings", "files", "store", "power", "recents", "calculator", "clock", "alarms", "converter", "clipboard")
-SECTIONS = ("network", "bluetooth", "display", "sound", "notifications", "style", "widgets", "input", "shortcuts", "apps", "power", "about")
+SURFACES = ("shade", "launcher", "settings", "files", "store", "power", "recents", "calculator", "clock", "alarms", "converter", "clipboard", "worldclock")
+SECTIONS = ("network", "bluetooth", "display", "sound", "notifications", "style", "widgets", "datetime", "input", "shortcuts", "apps", "power", "about")
 WINDOWS = ('Windows.available = true; Windows.list = ['
            '{address:"0xaa01", class:"firefox", title:"Docs", workspace:1, pid:1, recency:0, focused:true, hidden:false},'
            '{address:"0xaa02", class:"foot", title:"~/code", workspace:2, pid:2, recency:1, focused:false, hidden:false}];')
@@ -286,7 +286,7 @@ class ShellRuntimeTests(unittest.TestCase):
         harness.pump(300)
         self.assertEqual(harness.eval_value("ClockState.timerRunning"), "true")
         self.assertTrue(harness.wait_for(lambda: harness.eval_value("ClockState.timerFinished") == "true", 4000))
-        self.assertEqual(harness.eval_value("ShellState.toast"), "Timer finished")
+        self.assertEqual(harness.eval_value("ClockState.ringing.kind"), "timer")
         harness.eval("ClockState.startWatch(); ClockState.lap(); ClockState.lap()")
         harness.pump(200)
         self.assertEqual(harness.eval_value("ClockState.laps.length"), "2")
@@ -313,7 +313,7 @@ class ShellRuntimeTests(unittest.TestCase):
         Process.log.clear()
         harness.load()
         harness.pump(1800)
-        self.assertEqual(harness.eval_value("ShellState.toast"), "Alarm: Test")
+        self.assertEqual(harness.eval_value("ClockState.ringing.title"), "Test")
         self.assertIn(["prismctl", "sound", "alarm"], Process.log)
         self.assertTrue(harness.wait_for(lambda: settings.load()["alarms"][0]["enabled"] is False, 6000),
                         "a one-time alarm switches itself off")
@@ -408,6 +408,112 @@ class ShellRuntimeTests(unittest.TestCase):
         harness.click(*harness.scene_pos(row))
         self.assertTrue(harness.wait_for(lambda: ["prismctl", "clipboard", "copy", "12"] in Process.log, 3000))
         self.assertEqual(harness.truncated_texts(), [])
+
+    def test_twelve_hour_clock_setting_changes_every_clock(self):
+        import re
+        harness = Harness()
+        self.addCleanup(harness.close)
+        harness.write_settings(onboarding_complete=True, clock_24h=False)
+        harness.load()
+        harness.pump(1600)
+        texts = [str(item.property("text")) for item in harness.visible_items() if item.property("text")]
+        times = [text for text in texts if re.fullmatch(r"\d{1,2}:\d{2}( [AP]M)?", text)]
+        self.assertTrue(times and all(text.endswith(("AM", "PM")) for text in times), times)
+        self.assertEqual(harness.truncated_texts(), [])
+
+    def test_date_time_page_toggles_clock_format_through_the_bridge(self):
+        from prismos import settings
+        harness = self.boot()
+        harness.ipc("settings")
+        harness.pump(500)
+        row = harness.find("section-datetime")
+        harness.reveal(row)
+        harness.click(*harness.scene_pos(row))
+        harness.pump(800)
+        toggle = next(item for item in harness.visible_items()
+                      if item.metaObject().className().startswith("ToggleRow") and item.property("title") == "24-hour clock")
+        harness.reveal(toggle)
+        harness.click(*harness.scene_pos(toggle))
+        self.assertTrue(harness.wait_for(lambda: settings.load()["clock_24h"] is False, 6000))
+        self.assertTrue(harness.wait_for(lambda: harness.eval_value("Theme.clock24") == "false", 6000))
+        self.assertEqual(harness.truncated_texts(), [])
+        self.assertEqual(harness.problems(), [])
+
+    def test_keyboard_layout_choice_goes_to_the_bridge(self):
+        from qml_runtime.stubs import Process
+        harness = self.boot()
+        harness.ipc("settings")
+        harness.pump(500)
+        row = harness.find("section-input")
+        harness.reveal(row)
+        harness.click(*harness.scene_pos(row))
+        self.assertTrue(harness.wait_for(lambda: any(
+            item.metaObject().className().startswith("ListRow") and item.property("title") == "German"
+            for item in harness.visible_items()), 6000))
+        german = next(item for item in harness.visible_items()
+                      if item.metaObject().className().startswith("ListRow") and item.property("title") == "German")
+        harness.reveal(german)
+        Process.log.clear()
+        harness.click(*harness.scene_pos(german))
+        self.assertTrue(harness.wait_for(lambda: ["prismctl", "input", "set", "keyboard", "de"] in Process.log, 4000))
+        self.assertEqual(harness.truncated_texts(), [])
+
+    def test_ringing_banner_can_snooze_and_ring_again_then_dismiss(self):
+        harness = self.boot()
+        harness.eval('ClockState.ring({id: 7, time: "07:30", days: [0], label: "Gym", enabled: true}, true)')
+        harness.pump(400)
+        texts = lambda: {str(item.property("text")) for item in harness.visible_items() if item.property("text")}
+        self.assertTrue({"Gym", "07:30", "Snooze 10 min", "Dismiss"} <= texts())
+
+        def press(label):
+            button = next(item for item in harness.visible_items()
+                          if item.metaObject().className().startswith("PillButton") and item.property("text") == label)
+            harness.click(*harness.scene_pos(button))
+            harness.pump(300)
+        press("Snooze 10 min")
+        self.assertEqual(harness.eval_value("ClockState.ringing === null"), "true")
+        self.assertEqual(harness.eval_value("ClockState.snoozed.length"), "1")
+        harness.eval("ClockState.checkSnoozed(Date.now() + 11 * 60000)")
+        harness.pump(300)
+        self.assertEqual(harness.eval_value("ClockState.ringing.title"), "Gym")
+        self.assertEqual(harness.eval_value("ClockState.snoozed.length"), "0")
+        press("Dismiss")
+        self.assertEqual(harness.eval_value("ClockState.ringing === null"), "true")
+        self.assertEqual(harness.problems(), [])
+
+    def test_timer_banner_has_no_snooze(self):
+        harness = self.boot()
+        harness.eval('ClockState.startRinging({title: "Timer", detail: "Time\'s up", kind: "timer", alarm: null})')
+        harness.pump(400)
+        labels = [str(item.property("text")) for item in harness.visible_items()
+                  if item.metaObject().className().startswith("PillButton")]
+        self.assertIn("Dismiss", labels)
+        self.assertNotIn("Snooze 10 min", labels)
+        self.assertEqual(harness.truncated_texts(), [])
+
+    def test_world_clock_adds_a_zone_through_the_bridge(self):
+        from prismos import regional, settings
+        if "Asia/Tokyo" not in regional.timezones():
+            self.skipTest("tz database missing")
+        harness = self.boot()
+        harness.ipc("worldclock")
+        harness.pump(500)
+        self.assertTrue(harness.wait_for(lambda: harness.eval_value("InstallerState.timezones.length") != "0", 8000))
+        harness.pump(400)
+        self.type_into(harness, "Search", "Tokyo")
+        row = next(item for item in harness.visible_items()
+                   if item.metaObject().className().startswith("ListRow") and item.property("title") == "Asia/Tokyo")
+        harness.reveal(row)
+        harness.click(*harness.scene_pos(row))
+        harness.pump(200)
+        add = next(item for item in harness.visible_items()
+                   if item.metaObject().className().startswith("PillButton") and item.property("text") == "Add")
+        harness.click(*harness.scene_pos(add))
+        self.assertTrue(harness.wait_for(lambda: settings.load()["world_clocks"] == ["Asia/Tokyo"], 6000))
+        self.assertTrue(harness.wait_for(lambda: harness.eval_value("WorldClockState.clocks.length") == "1", 6000))
+        harness.pump(500)
+        self.assertEqual(harness.truncated_texts(), [])
+        self.assertEqual(harness.problems(), [])
 
     def test_settings_search_filters_sections(self):
         harness = self.boot()

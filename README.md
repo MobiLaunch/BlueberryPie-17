@@ -85,6 +85,16 @@ ISO and hardware qualification have not been completed in this release.
   keep text and images; entries are copied back by numeric id through a pipe.
 - **Converter**: length, mass, volume, speed, data and temperature.
 
+### Round four: Date & time, layouts, world clock and snooze
+
+- **Settings → Date & time**: 12/24-hour display everywhere (status bar, shade, desktop clock),
+  automatic time (NTP) and time zone through `timedatectl` (asks for administrator approval).
+- **Keyboard layout** (Settings → Pointer & keyboard): fourteen layouts, applied live to Hyprland
+  and kept for the next session.
+- **World clock** (Utilities → World): up to six time zones with day and offset.
+- **Alarm banner**: alarms and timers show a ringing banner on every screen with Dismiss, and
+  Snooze (10 minutes) for alarms; the sound repeats until dismissed or two minutes pass.
+
 ## Build the ISO on Windows
 
 See **[Windows build instructions](docs/WINDOWS-ISO.md)** for the

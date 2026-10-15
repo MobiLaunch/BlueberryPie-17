@@ -4,6 +4,7 @@ import "../../services"
 
 SettingsPage {
     title: "Pointer & keyboard"
+    Component.onCompleted: InputState.refresh()
     SettingsGroup {
         width: parent.width
         title: "Touchpad"
@@ -24,6 +25,24 @@ SettingsPage {
             on: InputState.values.tap_to_click === true
             enabled: !InputState.busy
             onSwitched: value => InputState.setValue("tap_to_click", value)
+        }
+    }
+    SettingsGroup {
+        width: parent.width
+        title: "Keyboard layout"
+        Repeater {
+            model: InputState.layouts
+            delegate: ListRow {
+                required property var modelData
+                width: parent ? parent.width : 600
+                implicitHeight: 52
+                title: modelData.label
+                symbol: "keyboard"
+                selected: InputState.values.keyboard === modelData.id
+                enabled: !InputState.busy
+                Accessible.role: Accessible.RadioButton
+                onClicked: InputState.setValue("keyboard", modelData.id)
+            }
         }
     }
     SliderRow {

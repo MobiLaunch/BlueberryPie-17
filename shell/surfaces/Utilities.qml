@@ -28,6 +28,10 @@ PanelWindow {
             title: "Alarms"
         },
         {
+            id: "world",
+            title: "World"
+        },
+        {
             id: "converter",
             title: "Convert"
         },
@@ -55,6 +59,8 @@ PanelWindow {
             calculator.focusInput();
         if (ShellState.utilitiesTab === "clipboard")
             clipboardPane.load();
+        if (ShellState.utilitiesTab === "world")
+            worldPane.load();
     }
     Rectangle {
         anchors.fill: parent
@@ -73,7 +79,7 @@ PanelWindow {
     Rectangle {
         id: card
         anchors.centerIn: parent
-        width: Math.min(Math.round(420 * Math.max(1, Theme.fontScale)), root.width - 24)
+        width: Math.min(Math.round(460 * Math.max(1, Theme.fontScale)), root.width - 24)
         height: Math.min(Math.round(640 * Math.max(1, Theme.fontScale)), root.height - 56)
         radius: Theme.shape.extraExtraLarge - 8
         color: Theme.surface
@@ -149,6 +155,14 @@ PanelWindow {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 visible: ShellState.utilitiesTab === "alarms"
+            }
+            WorldClockPane {
+                id: worldPane
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                visible: ShellState.utilitiesTab === "world"
+                onVisibleChanged: if (visible)
+                    load()
             }
             ConverterPane {
                 Layout.fillWidth: true

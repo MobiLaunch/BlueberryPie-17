@@ -52,6 +52,9 @@ ShellRoot {
         function clipboard(): void {
             ShellState.openUtilities(ShellState.focusedScreen(), "clipboard");
         }
+        function worldclock(): void {
+            ShellState.openUtilities(ShellState.focusedScreen(), "world");
+        }
         function converter(): void {
             ShellState.openUtilities(ShellState.focusedScreen(), "converter");
         }
