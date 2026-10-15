@@ -224,4 +224,12 @@ Still open: per-tile detail panels, clipboard search/pinning, resizable widgets,
 - Hyprland spring config fixed; Material Symbols icon set; app icon theme and letter fallback;
   optimistic toggles and a faster bridge; layout polish.
 
+## Round eleven (development slice): closing the Android gaps
+
+- Volume/microphone/brightness indicator; notification inline reply, snooze and lock screen count;
+  Hotspot, VPN and Screen record tiles; App info with force stop and safe uninstall; touchpad
+  gestures, Home and split screen; Focus mode; Software update page; emoji picker.
+- Deliberately not built (product decisions): accounts and sync, a voice assistant, and the
+  Phone/Messages/Contacts/Camera apps. Cast and a system-wide share sheet are not planned yet.
+
 Still open: measurements against the Android reference and everything listed under "Not executed" in `docs/VALIDATION.md`.
