@@ -19,12 +19,12 @@ jobs:
       - run: ./scripts/check.sh
       - run: |
           python scripts/generate-design.py
-          git diff --exit-code -- design preview/tokens.js preview/icons.js preview/assets/wallpaper.svg
+          git diff --exit-code -- design preview/tokens.js preview/icons.js preview/assets/wallpaper.svg shell/components/IconData.js
   native-lint:
     runs-on: ubuntu-latest
     container: archlinux:base-devel
     steps:
-      - run: pacman -Syu --noconfirm git nodejs python python-pillow quickshell qt6-declarative dbus pyside6
+      - run: pacman -Syu --noconfirm git nodejs python python-pillow quickshell qt6-declarative dbus pyside6 lua
       - uses: actions/checkout@v4
       - run: |
           while IFS= read -r path; do /usr/lib/qt6/bin/qmllint -I /usr/lib/qt6/qml "$path"; done < <(find shell -name '*.qml')

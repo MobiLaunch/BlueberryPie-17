@@ -50,7 +50,7 @@ jobs:
       - name: Upload bootable ISO candidate
         uses: actions/upload-artifact@v4
         with:
-          name: PrismOS-v0.8-ISO
+          name: PrismOS-v0.9-ISO
           path: |
             out/*.iso
             out/SHA256SUMS

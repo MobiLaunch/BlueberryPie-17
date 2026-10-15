@@ -21,10 +21,10 @@ Column {
         id: stack
         width: parent.width
         spacing: 3
-        onChildrenChanged: root.shape()
+        onChildrenChanged: Qt.callLater(root.shape)
     }
     function shape() {
-        const rows = Array.from(stack.children).filter(item => item.visible && item.shapePosition !== undefined);
+        const rows = Array.from(stack.children).filter(item => item.shapePosition !== undefined && item.visible !== false);
         rows.forEach((row, index) => {
             row.shapePosition = rows.length === 1 ? "single" : index === 0 ? "top" : index === rows.length - 1 ? "bottom" : "middle";
         });

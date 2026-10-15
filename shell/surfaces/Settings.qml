@@ -65,6 +65,13 @@ PanelWindow {
             keywords: "mouse touchpad scrolling tap keyboard repeat pointer"
         },
         {
+            id: "shortcuts",
+            title: "Shortcuts & gestures",
+            symbol: "keyboard",
+            page: "ShortcutsPage",
+            keywords: "shortcuts keys keyboard gestures touchpad swipe bindings hotkeys"
+        },
+        {
             id: "apps",
             title: "Apps",
             symbol: "apps_grid",
@@ -107,6 +114,8 @@ PanelWindow {
             return (Theme.dark ? "Dark" : "Light") + " theme";
         case "input":
             return "Touchpad, speed, repeat";
+        case "shortcuts":
+            return "Keys and touchpad gestures";
         case "apps":
             return SystemBridge.apps.length + " installed";
         case "power":

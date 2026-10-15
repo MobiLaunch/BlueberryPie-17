@@ -9,13 +9,13 @@ for prism_tool in makepkg tar sha256sum python3; do
 done
 python3 "$prism_root/scripts/generate-design.py"
 prism_build="$prism_root/build/package"
-mkdir -p -- "$prism_build/PrismOS-0.8.0"
+mkdir -p -- "$prism_build/PrismOS-0.9.0"
 for prism_path in bin prismos shell design config docs packaging LICENSE; do
-    cp -r -- "$prism_root/$prism_path" "$prism_build/PrismOS-0.8.0/"
+    cp -r -- "$prism_root/$prism_path" "$prism_build/PrismOS-0.9.0/"
 done
-find "$prism_build/PrismOS-0.8.0" -type d -name __pycache__ -prune -exec rm -rf -- {} +
-tar -czf "$prism_build/PrismOS-0.8.0.tar.gz" -C "$prism_build" PrismOS-0.8.0
-prism_hash="$(sha256sum "$prism_build/PrismOS-0.8.0.tar.gz")"
+find "$prism_build/PrismOS-0.9.0" -type d -name __pycache__ -prune -exec rm -rf -- {} +
+tar -czf "$prism_build/PrismOS-0.9.0.tar.gz" -C "$prism_build" PrismOS-0.9.0
+prism_hash="$(sha256sum "$prism_build/PrismOS-0.9.0.tar.gz")"
 prism_hash="${prism_hash%% *}"
 sed "s/GENERATED_BY_BUILD_SCRIPT/$prism_hash/" "$prism_root/packaging/arch/PKGBUILD" > "$prism_build/PKGBUILD"
 cd -- "$prism_build"

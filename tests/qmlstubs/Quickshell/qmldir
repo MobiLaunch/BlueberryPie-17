@@ -9,3 +9,4 @@ PanelWindow 1.0 PanelWindow.qml
 PanelAnchors 1.0 PanelAnchors.qml
 PanelMargins 1.0 PanelMargins.qml
 Region 1.0 Region.qml
+FloatingWindow 1.0 FloatingWindow.qml

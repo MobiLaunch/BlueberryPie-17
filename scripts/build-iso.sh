@@ -60,7 +60,7 @@ UNIT
 rm -f -- "$prism_airoot/etc/systemd/system/getty@tty1.service.d/autologin.conf"
 cat > "$prism_airoot/etc/os-release" <<'OS'
 NAME="PrismOS"
-PRETTY_NAME="PrismOS 0.8 Live Preview"
+PRETTY_NAME="PrismOS 0.9 Live Preview"
 ID=prismos
 ID_LIKE=arch
 VERSION_ID=0.8
