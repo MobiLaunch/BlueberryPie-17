@@ -215,4 +215,8 @@ Still open: per-tile detail panels, clipboard search/pinning, resizable widgets,
 
 - Settings Storage page: bounded usage breakdown and clearing of window previews.
 
+## Round nine (development slice)
+
+- Opt-in, in-memory notification history in Settings.
+
 Still open: measurements against the Android reference and everything listed under "Not executed" in `docs/VALIDATION.md`.

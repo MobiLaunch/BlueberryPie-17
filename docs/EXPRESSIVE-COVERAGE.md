@@ -52,7 +52,8 @@ HARDWARE = real compositor/device testing still required, GAP = missing.
 | HCT dynamic material color in the shell | SOURCE / QA | other scheme variants (Vibrant, Expressive); GTK/Qt accent handoff stays a GAP |
 | Dynamic color across GTK/Qt/Electron apps | GAP | supported accent handoff, live reapply |
 | Secure Android APK trust and seamless native install | GAP | publisher signatures, authorized F-Droid API |
-| Notification history, clipboard, share sheet / portal UI | PARTIAL / GAP | full action tests |
+| Notification history (opt-in, in memory) | SOURCE / QA | in-place replacements from real clients |
+| Clipboard, share sheet / portal UI | PARTIAL / GAP | full action tests |
 | ISO and USB boot | HARDWARE | Arch mkarchiso, real USB, Intel+AMD |
 
 ## Rules for future passes

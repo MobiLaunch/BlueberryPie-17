@@ -1,4 +1,21 @@
-# Validation record — 2026-10-15 (v0.9 through round eight)
+# Validation record — 2026-10-15 (v0.9 through round nine)
+
+## Addendum: round nine (notification history)
+
+### Executed
+
+| Check | Result |
+| --- | --- |
+| Setting | Off by default; only `yes`/`no` accepted by the bridge; persists; a non-boolean value in the file falls back to off |
+| History | Nothing recorded before opting in; entries newest first with the app, title, a bounded body and the important flag; muted apps are not recorded; the list is capped at 100 and long text is cut; clearing and turning the setting off both empty it; nothing is written to disk |
+| Settings page | The toggle reaches the bridge and the rows render without elided text |
+| `scripts/check.sh` | Passed |
+
+### Not executed
+
+- Real notification clients: whether Quickshell reports an in-place replacement as a new notification (it would then be recorded again), and very large bodies from real apps.
+
+## Previous record — 2026-10-15 (through round eight)
 
 ## Addendum: round eight (Storage)
 

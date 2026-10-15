@@ -88,6 +88,50 @@ SettingsPage {
     }
     SettingsGroup {
         width: parent.width
+        title: "Notification history"
+        ToggleRow {
+            width: parent.width
+            objectName: "history-toggle"
+            title: "Keep recent notifications"
+            supporting: on ? "The last " + Notifications.historyLimit + " are kept until you log out" : "Off. Nothing is remembered once a notification is dismissed"
+            symbol: "recents"
+            on: Notifications.historyEnabled
+            onSwitched: value => SystemBridge.setNotificationHistory(value)
+        }
+        ListRow {
+            width: parent.width
+            visible: Notifications.historyEnabled && Notifications.history.length === 0
+            interactive: false
+            title: "No history yet"
+            supporting: "New notifications will be listed here"
+            symbol: "notifications"
+        }
+        Repeater {
+            model: Notifications.historyEnabled ? Notifications.history.slice(0, 30) : []
+            delegate: ListRow {
+                required property var modelData
+                width: parent ? parent.width : 600
+                interactive: false
+                objectName: "history-item"
+                title: modelData.summary || modelData.app
+                supporting: modelData.app + " · " + Theme.timeText(new Date(modelData.time)) + (modelData.body ? " · " + modelData.body.replace(/\s+/g, " ").slice(0, 80) : "")
+                symbol: modelData.critical ? "warning" : "notifications"
+                chipColor: modelData.critical ? Theme.errorContainer : Theme.secondaryContainer
+                chipInk: modelData.critical ? Theme.errorContainerInk : Theme.secondaryContainerInk
+            }
+        }
+        ListRow {
+            width: parent.width
+            objectName: "history-clear"
+            visible: Notifications.historyEnabled
+            enabled: Notifications.history.length > 0
+            title: "Clear history"
+            symbol: "trash"
+            onClicked: Notifications.clearHistory()
+        }
+    }
+    SettingsGroup {
+        width: parent.width
         title: "App notifications"
         visible: page.apps.length > 0
         Repeater {

@@ -4,6 +4,7 @@ Needs PySide6 (>= 6.8) and EGL libraries; skipped otherwise. This catches QML
 reference/binding errors and layout regressions without a compositor. It does
 not qualify Quickshell, layer-shell focus, Hyprland or hardware.
 """
+import json
 import sys
 import unittest
 from pathlib import Path
@@ -239,6 +240,62 @@ class ShellRuntimeTests(unittest.TestCase):
         self.assertTrue(harness.wait_for(lambda: settings.load()["muted_apps"] == ["Chat"], 6000))
         self.assertEqual(harness.truncated_texts(), [])
         self.assertEqual(harness.problems(), [])
+
+    def test_notification_history_is_opt_in_in_memory_and_clearable(self):
+        from prismos import settings
+        from qml_runtime import stubs
+        harness = self.boot()
+        server = stubs.NotificationServer.instances[0]
+        history = lambda: json.loads(harness.eval_value("JSON.stringify(Notifications.history.map(e => [e.app, e.summary, e.critical]))"))
+        server.post(appName="Chat", summary="before opting in")
+        harness.pump(200)
+        self.assertEqual(history(), [])
+        harness.ipc("settings")
+        harness.pump(500)
+        row = harness.find("section-notifications")
+        harness.reveal(row)
+        harness.click(*harness.scene_pos(row))
+        harness.pump(600)
+        toggle = harness.find("history-toggle")
+        harness.reveal(toggle)
+        harness.click(*harness.scene_pos(toggle))
+        self.assertTrue(harness.wait_for(lambda: settings.load()["notification_history"] is True, 6000))
+        self.assertTrue(harness.wait_for(lambda: harness.eval_value("Notifications.historyEnabled") == "true", 6000))
+        server.post(appName="Chat", summary="hello", body="line one\nline two")
+        server.post(appName="Alarm", summary="Wake up", urgency=2)
+        harness.pump(300)
+        self.assertEqual(history(), [["Alarm", "Wake up", True], ["Chat", "hello", False]])
+        self.assertTrue(harness.wait_for(lambda: len([i for i in harness.visible_items() if i.objectName() == "history-item"]) == 2, 4000))
+        self.assertEqual(harness.truncated_texts(), [])
+        self.assertEqual(harness.problems(), [])
+        # Muted apps are dropped before they reach the history.
+        settings.update(muted_apps=["Spam"])
+        harness.eval("SystemBridge.refresh()")
+        self.assertTrue(harness.wait_for(lambda: harness.eval_value("Notifications.isMuted('Spam')") == "true", 6000))
+        server.post(appName="Spam", summary="buy now")
+        harness.pump(200)
+        self.assertEqual(len(history()), 2)
+        # Long text is bounded and the list never grows past its limit.
+        server.post(appName="Chat", summary="x" * 500, body="y" * 900)
+        for index in range(110):
+            server.post(appName="Bulk", summary=f"n{index}")
+        harness.pump(500)
+        self.assertEqual(harness.eval_value("Notifications.history.length"), "100")
+        self.assertEqual(harness.eval_value("Notifications.history[0].summary"), "n109")
+        # Clear history, then turn it off: nothing is kept.
+        clear = harness.find("history-clear")
+        harness.reveal(clear)
+        harness.click(*harness.scene_pos(clear))
+        harness.pump(300)
+        self.assertEqual(harness.eval_value("Notifications.history.length"), "0")
+        server.post(appName="Chat", summary="again")
+        harness.pump(200)
+        self.assertEqual(harness.eval_value("Notifications.history.length"), "1")
+        toggle = harness.find("history-toggle")
+        harness.reveal(toggle)
+        harness.click(*harness.scene_pos(toggle))
+        self.assertTrue(harness.wait_for(lambda: settings.load()["notification_history"] is False, 6000))
+        self.assertTrue(harness.wait_for(lambda: harness.eval_value("Notifications.history.length") == "0", 6000))
 
     def test_calculator_types_evaluates_and_rejects_bad_input(self):
         from PySide6.QtTest import QTest

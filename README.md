@@ -130,6 +130,14 @@ ISO and hardware qualification have not been completed in this release.
   symbolic links or crosses into other drives.
 - **Clear window previews** removes the Recents snapshots, the only thing the page can delete.
 
+### Round nine: Notification history
+
+- **Settings → Notifications → Notification history**: off by default. When turned on, the shell remembers
+  the last 100 notifications (app, title, the start of the body, time, and whether it was important) so you
+  can look back after dismissing them, and clear the list.
+- The history lives in the shell's memory only. It is never written to disk, is dropped when you turn the
+  setting off or log out, and notifications from muted apps are not recorded.
+
 ## Build the ISO on Windows
 
 See **[Windows build instructions](docs/WINDOWS-ISO.md)** for the

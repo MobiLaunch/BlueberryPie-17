@@ -50,6 +50,31 @@ QtObject {
         running: root.schedule.enabled
         onTriggered: root.minuteStamp = Date.now()
     }
+    // Opt-in notification history. Kept in memory only: it is never written to disk and
+    // is dropped when the shell restarts or the setting is turned off.
+    readonly property bool historyEnabled: SystemBridge.snapshot.settings.notification_history === true
+    readonly property int historyLimit: 100
+    property var history: []
+    property int historySerial: 0
+    onHistoryEnabledChanged: if (!historyEnabled)
+        history = []
+    function record(notification) {
+        if (!historyEnabled)
+            return;
+        historySerial++;
+        const entry = {
+            id: historySerial,
+            app: notification.appName || "Other",
+            summary: String(notification.summary || "").slice(0, 200),
+            body: String(notification.body || "").slice(0, 400),
+            critical: notification.urgency === NotificationUrgency.Critical,
+            time: Date.now()
+        };
+        history = [entry].concat(history).slice(0, historyLimit);
+    }
+    function clearHistory() {
+        history = [];
+    }
     // Apps that have sent something this session (for the per-app switches in Settings).
     property var seenApps: []
     readonly property var mutedApps: SystemBridge.snapshot.settings.muted_apps || []
@@ -72,6 +97,7 @@ QtObject {
                 notification.dismiss();
                 return;
             }
+            root.record(notification);
             notification.tracked = true;
             const current = Array.from(root.items.values);
             if (current.length > root.limit) {

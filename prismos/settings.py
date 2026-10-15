@@ -40,7 +40,7 @@ TILE_IDS = ("wifi", "bluetooth", "sound", "microphone", "dnd", "dark", "reduced_
             "airplane", "battery_saver", "night_light", "screenshot", "lock")
 WIDGET_IDS = ("glance", "clock", "search", "calendar", "media", "weather", "system", "analog", "notes")
 DEFAULTS = {"seed": "#8469cf", "dark": False, "reduced_motion": False, "dnd": False,
-            "favorites": None, "recent_apps": [], "wallpaper": "", "widgets": None, "weather": {}, "keyboard": "us", "widget_sizes": {}, "night_temp": 3800, "recents_previews": True, "clock_24h": True, "world_clocks": [], "tiles": None, "alarms": [], "dnd_schedule": {"enabled": False, "start": "22:00", "end": "07:00"}, "clipboard_history": False, "muted_apps": [], "night_light": False, "scheme": "tonal_spot", "font_scale": 1.0, "android_enabled": False, "onboarding_complete": False,
+            "favorites": None, "recent_apps": [], "wallpaper": "", "widgets": None, "weather": {}, "keyboard": "us", "widget_sizes": {}, "night_temp": 3800, "recents_previews": True, "clock_24h": True, "world_clocks": [], "tiles": None, "alarms": [], "dnd_schedule": {"enabled": False, "start": "22:00", "end": "07:00"}, "clipboard_history": False, "notification_history": False, "muted_apps": [], "night_light": False, "scheme": "tonal_spot", "font_scale": 1.0, "android_enabled": False, "onboarding_complete": False,
             "natural_scroll": True, "tap_to_click": True,
             "pointer_speed": 0.0, "repeat_rate": 25, "display_scales": {}, "display_positions": {}}
 
@@ -55,7 +55,7 @@ def load():
         if not isinstance(data, dict):
             return dict(DEFAULTS)
         valid = {}
-        for key in ("dark", "reduced_motion", "dnd", "night_light", "clipboard_history", "clock_24h", "recents_previews", "android_enabled", "onboarding_complete",
+        for key in ("dark", "reduced_motion", "dnd", "night_light", "clipboard_history", "notification_history", "clock_24h", "recents_previews", "android_enabled", "onboarding_complete",
                     "natural_scroll", "tap_to_click"):
             if isinstance(data.get(key), bool):
                 valid[key] = data[key]

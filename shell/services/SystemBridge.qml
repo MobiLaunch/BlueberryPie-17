@@ -155,6 +155,12 @@ QtObject {
         pending = queue;
         drain();
     }
+    function setNotificationHistory(on) {
+        const queue = pending.filter(item => item[1] !== "notifications" || item[2] !== "history");
+        queue.push(["prismctl", "notifications", "history", on ? "yes" : "no"]);
+        pending = queue;
+        drain();
+    }
     function screenshot(mode) {
         if (shooter.running)
             return;

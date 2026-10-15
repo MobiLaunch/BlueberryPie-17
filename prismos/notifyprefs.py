@@ -33,6 +33,18 @@ def unmute(name):
     return status()
 
 
+def history_status():
+    return {"ok": True, "enabled": settings.load()["notification_history"]}
+
+
+def set_history(value):
+    """Opt in to remembering recent notifications. The shell keeps them in memory only."""
+    if value not in ("yes", "no"):
+        raise ValueError("Enabled must be yes or no")
+    settings.update(notification_history=value == "yes")
+    return history_status()
+
+
 def schedule_status():
     return {"ok": True, "schedule": settings.load()["dnd_schedule"]}
 
