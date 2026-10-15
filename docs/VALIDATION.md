@@ -85,6 +85,19 @@
 
 - A schedule or timer for Focus mode, pausing the apps themselves (only their notifications are quieted), and notification sounds (the shell has no per-notification sound path to silence).
 
+### Slice 8: software update — executed
+
+| Check | Result |
+| --- | --- |
+| Adapter | Only well-formed `name old -> new` lines and Flatpak IDs are kept (injected names, broken lines dropped), sorted and capped; exit code 2 means "nothing to update"; errors and timeouts are reported per source; missing tools are explained and both missing is an error; checking runs only `checkupdates` and `flatpak remote-ls --updates` |
+| Cache | The last result is stored 0600 in a 0700 folder, read back validated, and a corrupt file is ignored |
+| Install | Opens `foot` on one of three fixed commands (`pacman`, `flatpak`, `all`); any other kind is refused, a missing terminal is reported |
+| Shell | The page reads "Not checked yet", Install is disabled until there is something to install, a check lists packages and Flatpak apps, and Install starts the terminal with the expected fixed arguments; checking started no terminal; no elided text |
+
+### Not executed (slice 8)
+
+- A real `checkupdates` against live mirrors (network, mirror failures, partial-upgrade warnings), and the terminal flow with a real `sudo pacman -Syu`. Reboot-required detection and automatic or scheduled checks are not built: a check happens only when asked.
+
 ### Not executed (slice 2)
 
 - Real messengers: whether their notifications set the inline-reply capability and how they react to a reply or to a dismissal; the lock screen label in a real `hyprlock` (the config is only checked for structure).

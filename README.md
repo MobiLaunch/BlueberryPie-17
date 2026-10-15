@@ -211,6 +211,11 @@ One slice per gap an Android user notices first.
   the shade; every other app behaves as usual and important notifications always break through. With no
   apps chosen the tile takes you to the page to choose them. (PrismOS quiets notifications; it does not
   freeze or hide the apps themselves.)
+- **Software update** (Settings → Software update): checks for new system packages (`checkupdates`, from
+  `pacman-contrib`, which works on a private copy of the package database and needs no root) and for
+  Flatpak apps, lists what would change and remembers the last result. Checking never installs anything.
+  **Install updates** opens the session terminal on a fixed command (`sudo pacman -Syu`, and
+  `flatpak update`) so you see the password prompt and any package news yourself.
 
 ## Build the ISO on Windows
 

@@ -22,7 +22,7 @@ else:
     SKIP_REASON = ""
 
 SURFACES = ("shade", "launcher", "settings", "files", "store", "power", "recents", "calculator", "clock", "alarms", "converter", "clipboard", "worldclock")
-SECTIONS = ("network", "bluetooth", "display", "sound", "notifications", "style", "widgets", "datetime", "input", "shortcuts", "apps", "power", "storage", "about")
+SECTIONS = ("network", "bluetooth", "display", "sound", "notifications", "style", "widgets", "datetime", "input", "shortcuts", "apps", "power", "storage", "update", "about")
 WINDOWS = ('Windows.available = true; Windows.list = ['
            '{address:"0xaa01", class:"firefox", title:"Docs", workspace:1, pid:1, recency:0, focused:true, hidden:false},'
            '{address:"0xaa02", class:"foot", title:"~/code", workspace:2, pid:2, recency:1, focused:false, hidden:false}];')
@@ -1804,6 +1804,43 @@ class ShellRuntimeTests(unittest.TestCase):
         harness.click(*harness.scene_pos(toggle))
         self.assertTrue(harness.wait_for(lambda: settings.load()["focus"] is True, 8000))
         self.assertEqual(harness.truncated_texts(), [])
+        self.assertEqual(harness.problems(), [])
+
+    def test_software_update_page_checks_read_only_and_opens_a_terminal_to_install(self):
+        import os
+        from pathlib import Path
+        harness = Harness()
+        self.addCleanup(harness.close)
+        harness.write_settings(onboarding_complete=True)
+        folder = Path(harness.sandbox) / "updbin"
+        folder.mkdir()
+        log = Path(harness.sandbox) / "terminal.txt"
+        (folder / "checkupdates").write_text("#!/bin/sh\necho 'linux 6.18.1-1 -> 6.18.2-1'\necho 'firefox 140.0-1 -> 141.0-1'\n")
+        (folder / "flatpak").write_text("#!/bin/sh\necho org.gnome.Calculator\n")
+        (folder / "foot").write_text(f"#!/bin/sh\nfor a in \"$@\"; do echo \"$a\"; done > '{log}'\n")
+        for name in ("checkupdates", "flatpak", "foot"):
+            (folder / name).chmod(0o755)
+        os.environ["PATH"] = f"{folder}:{os.environ['PATH']}"
+        harness.load()
+        harness.pump(2000)
+        harness.eval('ShellState.openSettings(ShellState.focusedScreen(), "update")')
+        harness.pump(900)
+        headline = harness.find("update-headline")
+        self.assertEqual(headline.property("text"), "Not checked yet")
+        self.assertFalse(harness.find("update-install").isEnabled(), "nothing to install before a check")
+        harness.click(*harness.scene_pos(harness.find("update-check")))
+        self.assertTrue(harness.wait_for(lambda: headline.property("text") == "3 updates available", 10000), headline.property("text"))
+        self.assertEqual(len([i for i in harness.visible_items() if i.objectName() == "update-package"]), 2)
+        self.assertEqual(len([i for i in harness.visible_items() if i.objectName() == "update-flatpak"]), 1)
+        self.assertFalse(log.exists(), "checking never starts an installation")
+        self.assertEqual(harness.truncated_texts(), [])
+        install = harness.find("update-install")
+        self.assertTrue(install.isEnabled())
+        harness.click(*harness.scene_pos(install))
+        self.assertTrue(harness.wait_for(log.exists, 8000))
+        arguments = log.read_text().splitlines()
+        self.assertEqual(arguments[:4], ["--title", "PrismOS update", "bash", "-c"])
+        self.assertTrue(arguments[4].startswith("sudo pacman -Syu; flatpak update;"), arguments)
         self.assertEqual(harness.problems(), [])
 
     def test_every_surface_opens_without_qml_errors(self):

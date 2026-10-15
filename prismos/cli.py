@@ -23,11 +23,11 @@ class _Lazy:
 
 (about, alarms, android, appinfo, apps, audio, clipboard, clockset, notes, thumbnails, worldclock, displays, drives,
  favorites, fdroid, files, inputs, installer, notifyprefs, hotspot, vpn, recorder, screenshot, settings, stats, storage, store,
- system, tiles, wallpaper, weather, websearch, widgets, windows, wireless) = (
+ system, tiles, updates, wallpaper, weather, websearch, widgets, windows, wireless) = (
     _Lazy(name) for name in (
         "about", "alarms", "android", "appinfo", "apps", "audio", "clipboard", "clockset", "notes", "thumbnails",
         "worldclock", "displays", "drives", "favorites", "fdroid", "files", "inputs", "installer",
-        "notifyprefs", "hotspot", "vpn", "recorder", "screenshot", "settings", "stats", "storage", "store", "system", "tiles",
+        "notifyprefs", "hotspot", "vpn", "recorder", "screenshot", "settings", "stats", "storage", "store", "system", "tiles", "updates",
         "wallpaper", "weather", "websearch", "widgets", "windows", "wireless"))
 alert_sound = _Lazy("sound")
 
@@ -102,6 +102,9 @@ def main(argv=None):
     paper = sub.add_parser("wallpaper")
     paper.add_argument("operation", choices=("list", "set", "clear"))
     paper.add_argument("path", nargs="?")
+    upd = sub.add_parser("updates")
+    upd.add_argument("operation", choices=("list", "check", "apply"))
+    upd.add_argument("kind", nargs="?")
     appinfo_cmd = sub.add_parser("appinfo")
     appinfo_cmd.add_argument("operation", choices=("info", "force-stop", "uninstall", "copy-command"))
     appinfo_cmd.add_argument("desktop_id")
@@ -289,6 +292,9 @@ def main(argv=None):
             result = about.info()
         elif args.command == "storage":
             result = storage.usage() if args.operation == "usage" else storage.clear_previews()
+        elif args.command == "updates":
+            result = (updates.cached() if args.operation == "list" else
+                      updates.check() if args.operation == "check" else updates.apply(args.kind))
         elif args.command == "appinfo":
             result = {"info": appinfo.info, "force-stop": appinfo.force_stop,
                       "uninstall": appinfo.uninstall, "copy-command": appinfo.copy_command}[args.operation](args.desktop_id)

@@ -107,6 +107,13 @@ PanelWindow {
             keywords: "storage disk space files free used documents downloads cache clean"
         },
         {
+            id: "update",
+            title: "Software update",
+            symbol: "update",
+            page: "UpdatePage",
+            keywords: "update upgrade software packages pacman flatpak security patches"
+        },
+        {
             id: "about",
             title: "About",
             symbol: "info",
@@ -145,6 +152,8 @@ PanelWindow {
             return SystemBridge.apps.length + " installed";
         case "storage":
             return StorageState.loaded ? StorageState.size(StorageState.usage.free) + " free" : "Space used by your files";
+        case "update":
+            return UpdateState.summary;
         case "power":
             return snap.battery.available ? snap.battery.value + "%" + (snap.battery.charging ? " · Charging" : "") : "Plugged in";
         default:

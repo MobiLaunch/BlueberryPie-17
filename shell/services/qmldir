@@ -22,3 +22,4 @@ singleton WorldClockState 1.0 WorldClockState.qml
 singleton StorageState 1.0 StorageState.qml
 singleton NetShareState 1.0 NetShareState.qml
 singleton AppInfoState 1.0 AppInfoState.qml
+singleton UpdateState 1.0 UpdateState.qml
