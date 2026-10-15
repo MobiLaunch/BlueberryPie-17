@@ -1020,6 +1020,94 @@ class ShellRuntimeTests(unittest.TestCase):
         self.assertEqual(volumes[-1], ["prismctl", "action", "volume", "30"])
         self.assertNotIn(["prismctl", "action", "volume", "20"], volumes, "the middle value was superseded")
 
+    def test_inline_reply_is_offered_only_where_the_app_accepts_it_and_is_sent_to_the_app(self):
+        from qml_runtime import stubs
+        harness = self.boot()
+        server = stubs.NotificationServer.instances[0]
+        self.assertEqual(harness.eval_value("Notifications.server.inlineReplySupported"), "true", "the server advertises replies")
+        plain = server.post(appName="Calendar", summary="Review at 3")
+        chat = server.post(appName="Chat", summary="Ava", body="Lunch?", reply="Reply to Ava")
+        harness.ipc("shade")
+        harness.pump(900)
+        fields = [item for item in harness.visible_items() if item.objectName() == "reply-field"]
+        self.assertEqual(len(fields), 1, "only the chat notification takes a reply")
+        self.assertEqual(fields[0].property("placeholderText"), "Reply to Ava")
+        send = next(item for item in harness.visible_items() if item.objectName() == "reply-send")
+        self.assertFalse(send.isEnabled(), "nothing to send yet")
+        fields[0].setProperty("text", "  Sounds good!  ")
+        harness.pump(100)
+        self.assertTrue(send.isEnabled())
+        harness.click(*harness.scene_pos(send))
+        harness.pump(200)
+        self.assertEqual(server.replies, [(chat.property("id"), "Sounds good!")], "trimmed text goes to the sending app")
+        texts = {str(item.property("text")) for item in harness.visible_items() if item.property("text")}
+        self.assertIn("Reply sent", texts)
+        self.assertTrue(harness.wait_for(lambda: chat not in list(server.tracked.values), 4000), "the card clears itself afterwards")
+        self.assertIn(plain, list(server.tracked.values))
+        self.assertEqual(harness.truncated_texts(), [])
+        self.assertEqual(harness.problems(), [])
+
+    def test_snoozed_notifications_leave_the_shade_and_come_back(self):
+        from qml_runtime import stubs
+        harness = self.boot()
+        server = stubs.NotificationServer.instances[0]
+        keep = server.post(appName="Chat", summary="Ava", body="Lunch?")
+        server.post(appName="Chat", summary="Noah", body="Photos")
+        important = server.post(appName="Calendar", summary="Starting now", urgency=2)
+        harness.ipc("shade")
+        harness.pump(900)
+        self.assertEqual(harness.eval_value("Notifications.count"), "3")
+        buttons = [item for item in harness.visible_items() if item.objectName() == "snooze-button"]
+        # The Chat group shows its newest card until expanded; the important one has no snooze button.
+        self.assertEqual(len(buttons), 1, "important notifications cannot be snoozed")
+        harness.click(*harness.scene_pos(buttons[0]))
+        harness.pump(300)
+        chips = [item for item in harness.visible_items() if item.objectName().startswith("snooze-") and item.objectName() != "snooze-button"]
+        self.assertEqual(sorted(item.objectName() for item in chips), ["snooze-15", "snooze-240", "snooze-60"])
+        harness.click(*harness.scene_pos(next(item for item in chips if item.objectName() == "snooze-15")))
+        harness.pump(400)
+        self.assertEqual(harness.eval_value("Notifications.count"), "2", "the snoozed one is out of the shade")
+        self.assertEqual(len(server.tracked.values), 3, "the sender's notification is still alive")
+        # Time passes: the snooze is over, the notification returns and announces itself.
+        harness.eval("const s = Object.assign({}, Notifications.snoozed); for (const k in s) s[k] = Date.now() - 1; Notifications.snoozed = s;")
+        self.assertTrue(harness.wait_for(lambda: harness.eval_value("Notifications.count") == "3", 6000))
+        self.assertEqual(harness.eval_value("Notifications.headsUp !== null"), "true")
+        self.assertEqual(harness.eval_value("Object.keys(Notifications.snoozed).length"), "0")
+        # Clearing everything also forgets snoozes.
+        harness.eval("Notifications.snooze(Notifications.items.values[0], 30); Notifications.clear();")
+        harness.pump(300)
+        self.assertEqual(harness.eval_value("Object.keys(Notifications.snoozed).length"), "0")
+        self.assertEqual(harness.problems(), [])
+
+    def test_the_lock_screen_gets_only_a_count_and_the_user_can_turn_it_off(self):
+        import os
+        from pathlib import Path
+        from prismos import settings
+        from qml_runtime import stubs
+        harness = self.boot()
+        harness.pump(1500)
+        counter = Path(os.environ["XDG_RUNTIME_DIR"]) / "prismos" / "notification-count"
+        self.assertTrue(harness.wait_for(lambda: counter.exists() and counter.read_text() == "0", 8000), "a fresh shell clears any stale count")
+        server = stubs.NotificationServer.instances[0]
+        server.post(appName="Chat", summary="Secret subject", body="Secret body")
+        server.post(appName="Chat", summary="Another secret")
+        self.assertTrue(harness.wait_for(lambda: counter.read_text() == "2", 8000))
+        self.assertNotIn("Secret", counter.read_text(), "no notification text is ever stored")
+        harness.ipc("settings")
+        harness.pump(500)
+        row = harness.find("section-notifications")
+        harness.reveal(row)
+        harness.click(*harness.scene_pos(row))
+        harness.pump(600)
+        toggle = harness.find("lock-count-toggle")
+        harness.reveal(toggle)
+        harness.click(*harness.scene_pos(toggle))
+        self.assertTrue(harness.wait_for(lambda: settings.load()["lock_notifications"] is False, 8000))
+        from prismos import notifyprefs
+        self.assertEqual(notifyprefs.summary(), "", "the lock screen prints nothing once it is off")
+        self.assertEqual(harness.truncated_texts(), [])
+        self.assertEqual(harness.problems(), [])
+
     def test_settings_search_filters_sections(self):
         harness = self.boot()
         harness.ipc("settings")

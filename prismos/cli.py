@@ -77,7 +77,8 @@ def main(argv=None):
     tile.add_argument("operation", choices=("list", "set", "reset"))
     tile.add_argument("ids", nargs="*")
     alerts = sub.add_parser("notifications")
-    alerts.add_argument("operation", choices=("list", "mute", "unmute", "history"))
+    alerts.add_argument("operation", choices=("list", "mute", "unmute", "history", "count", "lock-count"))
+    sub.add_parser("lock-summary")
     alerts.add_argument("app", nargs="?")
     gadget = sub.add_parser("widgets")
     gadget.add_argument("operation", choices=("list", "set", "size"))
@@ -222,7 +223,12 @@ def main(argv=None):
         elif args.command == "notifications":
             result = (notifyprefs.status() if args.operation == "list" else
                       notifyprefs.mute(args.app) if args.operation == "mute" else
-                      notifyprefs.set_history(args.app) if args.operation == "history" else notifyprefs.unmute(args.app))
+                      notifyprefs.set_history(args.app) if args.operation == "history" else
+                      notifyprefs.set_count(args.app) if args.operation == "count" else
+                      notifyprefs.set_lock_count(args.app) if args.operation == "lock-count" else notifyprefs.unmute(args.app))
+        elif args.command == "lock-summary":
+            # Plain text for the lock screen, not JSON.
+            result = notifyprefs.summary()
         elif args.command == "websearch":
             result = websearch.search(args.query)
         elif args.command == "stats":
@@ -371,7 +377,7 @@ def main(argv=None):
                 changes["font_scale"] = args.font_scale
             prefs = settings.update(**changes) if changes else settings.load()
             result = theme.palette(prefs["seed"], prefs["dark"], prefs["scheme"])
-        print(json.dumps(result, ensure_ascii=False))
+        print(result if args.command == "lock-summary" else json.dumps(result, ensure_ascii=False))
         return 0
     except (ValueError, OSError, system.CommandError, ImportError) as error:
         print(json.dumps({"ok": False, "error": str(error)}))

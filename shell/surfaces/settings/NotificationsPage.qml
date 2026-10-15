@@ -88,6 +88,19 @@ SettingsPage {
     }
     SettingsGroup {
         width: parent.width
+        title: "Lock screen"
+        ToggleRow {
+            width: parent.width
+            objectName: "lock-count-toggle"
+            title: "Show notification count"
+            supporting: on ? "The lock screen says how many are waiting, never what they say" : "The lock screen shows no notification information"
+            symbol: "lock"
+            on: SystemBridge.snapshot.settings.lock_notifications !== false
+            onSwitched: value => SystemBridge.setLockScreenCount(value)
+        }
+    }
+    SettingsGroup {
+        width: parent.width
         title: "Notification history"
         ToggleRow {
             width: parent.width

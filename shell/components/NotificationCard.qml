@@ -11,10 +11,27 @@ Item {
     id: root
     required property var notification
     property bool compact: false
+    property bool allowReply: true
+    property bool snoozing: false
+    property bool replySent: false
     readonly property bool critical: notification.urgency === NotificationUrgency.Critical
     implicitHeight: card.implicitHeight
     clip: false
 
+    function sendReply(text) {
+        const reply = text.trim();
+        if (reply.length === 0)
+            return;
+        root.notification.sendInlineReply(reply);
+        replyField.clear();
+        replySent = true;
+        sentTimer.restart();
+    }
+    Timer {
+        id: sentTimer
+        interval: 1400
+        onTriggered: root.dismiss(1)
+    }
     function dismiss(direction) {
         leave.to = direction * (root.width + 40);
         leave.start();
@@ -120,7 +137,40 @@ Item {
                     Layout.fillWidth: true
                     Layout.topMargin: 4
                     spacing: 6
-                    visible: root.notification.actions.length > 0 && !root.compact
+                    visible: root.snoozing && !root.compact
+                    Repeater {
+                        model: [
+                            {
+                                label: "15 min",
+                                minutes: 15
+                            },
+                            {
+                                label: "1 hour",
+                                minutes: 60
+                            },
+                            {
+                                label: "4 hours",
+                                minutes: 240
+                            }
+                        ]
+                        delegate: PillButton {
+                            required property var modelData
+                            objectName: "snooze-" + modelData.minutes
+                            text: modelData.label
+                            variant: "outlined"
+                            implicitHeight: 36
+                            onClicked: {
+                                root.snoozing = false;
+                                Notifications.snooze(root.notification, modelData.minutes);
+                            }
+                        }
+                    }
+                }
+                Flow {
+                    Layout.fillWidth: true
+                    Layout.topMargin: 4
+                    spacing: 6
+                    visible: (root.notification.actions.length > 0 || !root.critical) && !root.compact && !root.snoozing
                     Repeater {
                         model: root.notification.actions
                         delegate: PillButton {
@@ -131,6 +181,51 @@ Item {
                             onClicked: modelData.invoke()
                         }
                     }
+                    PillButton {
+                        objectName: "snooze-button"
+                        visible: !root.critical
+                        text: "Snooze"
+                        symbol: "snooze"
+                        variant: "text"
+                        implicitHeight: 36
+                        onClicked: root.snoozing = true
+                    }
+                }
+                // Apps that accept replies (messengers) get a text box, like Android's inline reply.
+                RowLayout {
+                    Layout.fillWidth: true
+                    Layout.topMargin: 4
+                    spacing: 6
+                    visible: root.allowReply && !root.compact && !root.snoozing && !root.replySent && root.notification.hasInlineReply
+                    ExpressiveTextField {
+                        id: replyField
+                        objectName: "reply-field"
+                        Layout.fillWidth: true
+                        implicitHeight: 40
+                        font.pixelSize: 14
+                        maximumLength: 2000
+                        placeholderText: root.notification.inlineReplyPlaceholder || "Reply"
+                        Accessible.name: "Reply to " + root.notification.summary
+                        onAccepted: root.sendReply(text)
+                    }
+                    IconButton {
+                        objectName: "reply-send"
+                        implicitWidth: 40
+                        implicitHeight: 40
+                        iconSize: 20
+                        variant: "filled"
+                        symbol: "send"
+                        enabled: replyField.text.trim().length > 0
+                        Accessible.name: "Send reply"
+                        onClicked: root.sendReply(replyField.text)
+                    }
+                }
+                Label {
+                    Layout.fillWidth: true
+                    visible: root.replySent
+                    text: "Reply sent"
+                    role: "labelLarge"
+                    color: Theme.primary
                 }
             }
             IconButton {

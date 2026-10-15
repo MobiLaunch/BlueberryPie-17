@@ -335,8 +335,14 @@ class Notification(QObject):
     trackedChanged = Signal()
     closed = Signal()
 
-    def __init__(self, server, appName="", summary="", body="", urgency=1, actions=(), desktopEntry="", appIcon="", parent=None):
+    _next_id = [0]
+
+    def __init__(self, server, appName="", summary="", body="", urgency=1, actions=(), desktopEntry="", appIcon="",
+                 reply=None, parent=None):
         super().__init__(parent)
+        Notification._next_id[0] += 1
+        self._id = Notification._next_id[0]
+        self._reply = reply  # None, or the placeholder text of an app that accepts inline replies
         self.server = server
         self._icon = appIcon
         self._app, self._summary, self._body = appName, summary, body
@@ -351,6 +357,13 @@ class Notification(QObject):
     desktopEntry = Property(str, lambda s: s._desktop, constant=True)
     appIcon = Property(str, lambda s: s._icon, constant=True)
     actions = Property("QVariantList", lambda s: list(s._actions), constant=True)
+    id = Property(int, lambda s: s._id, constant=True)
+    hasInlineReply = Property(bool, lambda s: s._reply is not None, constant=True)
+    inlineReplyPlaceholder = Property(str, lambda s: s._reply or "", constant=True)
+
+    @Slot(str)
+    def sendInlineReply(self, text):
+        self.server.replies.append((self._id, text))
 
     def _set_tracked(self, value):
         if value and not self._tracked:
@@ -380,9 +393,11 @@ class NotificationServer(QObject):
     bodyMarkupSupportedChanged, bodyMarkupSupported = prop(bool, "bodyMarkupSupported", False)
     actionsSupportedChanged, actionsSupported = prop(bool, "actionsSupported", False)
     persistenceSupportedChanged, persistenceSupported = prop(bool, "persistenceSupported", False)
+    inlineReplySupportedChanged, inlineReplySupported = prop(bool, "inlineReplySupported", False)
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.replies = []
         self.tracked = ObjectList(self)
         NotificationServer.instances.append(self)
 

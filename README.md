@@ -174,6 +174,12 @@ One slice per gap an Android user notices first.
   it after about a second and a half. Held keys step from the predicted level and merge into one write, brightness
   never goes below 1%, and if the shell is not running the key falls back to the same `prismctl` command as
   before.
+- **Notification replies, snooze and lock screen count**: apps that accept replies (messengers) get a
+  reply box on their card in the shade, and what you type goes to the app; every non-important card has a
+  **Snooze** chip (15 min, 1 hour, 4 hours) that takes it out of the shade until its time is up, then it
+  returns with a banner (the app's own notification stays alive, so replies and actions still work). The
+  lock screen shows how many are waiting ("3 notifications"), a number only, never any text. It is read from
+  a file in the login's runtime directory; turn it off in Settings → Notifications → Lock screen.
 
 ## Build the ISO on Windows
 

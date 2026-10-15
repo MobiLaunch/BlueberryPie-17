@@ -14,6 +14,18 @@
 
 - Real hardware keys, a real Hyprland `exec` of the `||` fallback, and the feel of a held key on real audio and backlight devices.
 
+### Slice 2: notification reply, snooze and lock screen count — executed
+
+| Check | Result |
+| --- | --- |
+| Inline reply | The server advertises reply support; only a notification that accepts replies shows the box; the trimmed text reaches the sending app; "Reply sent" shows and the card clears itself; the heads-up banner never offers a reply (it cannot take keyboard focus) |
+| Snooze | Important notifications have no snooze; the chips set 15 / 60 / 240 minutes; a snoozed one leaves the shade and the count while the sender's notification stays alive; when its time is up it returns with a banner; clearing forgets snoozes |
+| Lock screen count | The bridge stores only a number (0600 file in a 0700 runtime directory, atomic, bounded 0 to 999, bad or damaged values read as 0); the shell writes 0 at start and the count after each change; the summary is plain text for hyprlock and empty when off or zero; turning it off in Settings empties it; no notification text is ever stored |
+
+### Not executed
+
+- Real messengers: whether their notifications set the inline-reply capability and how they react to a reply or to a dismissal; the lock screen label in a real `hyprlock` (the config is only checked for structure).
+
 ## Previous record — 2026-10-15 (through round ten)
 
 ## Addendum: round ten (icons, Hyprland errors, responsiveness, polish)

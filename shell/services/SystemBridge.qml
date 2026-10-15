@@ -294,6 +294,18 @@ QtObject {
         pending = queue;
         drain();
     }
+    function setLockNotificationCount(count) {
+        const queue = pending.filter(item => !(item[1] === "notifications" && item[2] === "count"));
+        queue.push(["prismctl", "notifications", "count", String(Math.max(0, Math.min(999, Math.round(count))))]);
+        pending = queue;
+        drain();
+    }
+    function setLockScreenCount(on) {
+        const queue = pending.filter(item => !(item[1] === "notifications" && item[2] === "lock-count"));
+        queue.push(["prismctl", "notifications", "lock-count", on ? "yes" : "no"]);
+        pending = queue;
+        drain();
+    }
     function setNotificationHistory(on) {
         const queue = pending.filter(item => item[1] !== "notifications" || item[2] !== "history");
         queue.push(["prismctl", "notifications", "history", on ? "yes" : "no"]);
