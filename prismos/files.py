@@ -50,17 +50,17 @@ def home():
 def bookmarks():
     root = Path.home()
     defaults = [
-        ("Home", root, "⌂"), ("Desktop", root / "Desktop", "▣"),
-        ("Documents", root / "Documents", "▤"),
-        ("Downloads", root / "Downloads", "↓"),
-        ("Pictures", root / "Pictures", "◈"),
-        ("Music", root / "Music", "♫"),
-        ("Videos", root / "Videos", "▷"),
+        ("Home", root, "⌂", "home"), ("Desktop", root / "Desktop", "▣", "display"),
+        ("Documents", root / "Documents", "▤", "document"),
+        ("Downloads", root / "Downloads", "↓", "download"),
+        ("Pictures", root / "Pictures", "◈", "photo"),
+        ("Music", root / "Music", "♫", "music"),
+        ("Videos", root / "Videos", "▷", "video"),
     ]
     # Optional mounts are discovered by the portal/file-manager stack.
     return {"ok": True, "items": [
-        {"name": name, "path": str(path), "symbol": symbol}
-        for name, path, symbol in defaults if path.is_dir()
+        {"name": name, "path": str(path), "symbol": symbol, "icon": icon}
+        for name, path, symbol, icon in defaults if path.is_dir()
     ]}
 
 
@@ -97,6 +97,9 @@ def browse(raw=None, hidden=False):
                 "symbol": "▣" if folder else "◈" if mimetype.startswith("image/") else
                           "♫" if mimetype.startswith("audio/") else
                           "▷" if mimetype.startswith("video/") else "▤",
+                "icon": "folder" if folder else "photo" if mimetype.startswith("image/") else
+                        "music" if mimetype.startswith("audio/") else
+                        "video" if mimetype.startswith("video/") else "document",
                 "type": mimetype,
                 "size": "" if folder else format_size(info.st_size),
             })

@@ -144,55 +144,11 @@ SettingsPage {
                 spacing: 12
                 Repeater {
                     model: page.presets
-                    delegate: Button {
-                        id: swatch
+                    delegate: PaletteSwatch {
                         required property var modelData
-                        readonly property bool current: page.seed === modelData.seed
-                        implicitWidth: 76
-                        implicitHeight: 96
-                        leftPadding: 0
-                        rightPadding: 0
-                        topPadding: 0
-                        bottomPadding: 0
-                        hoverEnabled: true
-                        Accessible.name: modelData.name + " palette" + (current ? ", selected" : "")
-                        Accessible.checkable: true
-                        Accessible.checked: current
-                        background: Item {}
-                        contentItem: Column {
-                            spacing: 8
-                            Rectangle {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                width: 64
-                                height: 64
-                                radius: swatch.current ? 32 : 20
-                                color: swatch.modelData.seed
-                                border.width: swatch.activeFocus ? 3 : 0
-                                border.color: Theme.primary
-                                Behavior on radius {
-                                    NumberAnimation {
-                                        duration: Theme.standard
-                                        easing.type: Easing.OutBack
-                                    }
-                                }
-                                Symbol {
-                                    anchors.centerIn: parent
-                                    width: 28
-                                    height: 28
-                                    visible: swatch.current
-                                    name: "check"
-                                    weight: 2.6
-                                    color: "#ffffff"
-                                }
-                            }
-                            Label {
-                                width: parent.width
-                                horizontalAlignment: Text.AlignHCenter
-                                text: swatch.modelData.name
-                                role: "labelMedium"
-                                color: Theme.surfaceInk
-                            }
-                        }
+                        text: modelData.name
+                        seed: modelData.seed
+                        current: page.seed === modelData.seed
                         onClicked: {
                             page.customError = "";
                             SystemBridge.setSeed(modelData.seed);

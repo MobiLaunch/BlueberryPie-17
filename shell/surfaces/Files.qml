@@ -200,7 +200,7 @@ PanelWindow {
     }
     Rectangle {
         anchors.fill: parent
-        color: "#651b1425"
+        color: Theme.withAlpha(Theme.scrim, 0.45)
         opacity: root.opened ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: Theme.fast } }
     }
@@ -210,7 +210,7 @@ PanelWindow {
         anchors.centerIn: parent
         width: Math.min(1100, root.width - 32)
         height: Math.min(760, root.height - 64)
-        radius: 38
+        radius: Theme.shape.extraExtraLarge - 8
         color: Theme.surface
         opacity: root.opened ? 1 : 0
         scale: root.opened ? 1 : .96
@@ -239,53 +239,71 @@ PanelWindow {
                 }
             }
         }
-        Label {
-            x: 28; y: 20
-            text: "▣  Files"
-            font.pixelSize: 30
-            font.weight: Font.Bold
+        Row {
+            x: 28; y: 22
+            spacing: 12
+            Symbol {
+                anchors.verticalCenter: parent.verticalCenter
+                width: 30; height: 30
+                name: "folder"
+                color: Theme.primary
+            }
+            Label {
+                anchors.verticalCenter: parent.verticalCenter
+                text: "Files"
+                role: "headlineMedium"
+            }
         }
-        PillButton {
+        IconButton {
             anchors.top: parent.top
             anchors.right: parent.right
             anchors.margins: 18
-            text: "×"
+            symbol: "close"
+            variant: "tonal"
             Accessible.name: "Close Files"
             onClicked: ShellState.close()
         }
         Row {
             x: 28; y: 76
             spacing: 8
-            PillButton {
-                text: "↑"
+            IconButton {
+                symbol: "chevron_up"
+                variant: "tonal"
                 Accessible.name: "Parent folder"
                 enabled: root.currentPath !== root.parentPath && !root.busy
                 onClicked: root.navigate(root.parentPath)
             }
-            PillButton {
-                text: "⌂"
+            IconButton {
+                symbol: "home"
+                variant: "tonal"
                 Accessible.name: "Home folder"
                 enabled: !root.busy
                 onClicked: root.navigate("")
             }
-            PillButton {
-                text: "↻"
+            IconButton {
+                symbol: "refresh"
+                variant: "tonal"
                 Accessible.name: "Refresh folder"
                 enabled: !root.busy
                 onClicked: root.refresh()
             }
             PillButton {
                 text: "New folder"
+                symbol: "plus"
+                variant: "tonal"
                 enabled: !root.busy
                 onClicked: root.prompt("new", "", "")
             }
             PillButton {
                 text: "Paste"
+                variant: "tonal"
                 enabled: root.hasClipboard && !root.busy
                 onClicked: root.pasteInto(root.currentPath)
             }
-            PillButton {
-                text: root.showHidden ? "Hide dotfiles" : "Show dotfiles"
+            FilterChip {
+                anchors.verticalCenter: parent.verticalCenter
+                text: "Hidden files"
+                selected: root.showHidden
                 enabled: !root.busy
                 onClicked: {
                     root.showHidden = !root.showHidden;
@@ -314,9 +332,9 @@ PanelWindow {
             height: parent.height - 215
             spacing: 16
             Rectangle {
-                width: Math.min(190, parent.width * .25)
+                width: Math.min(250, parent.width * .27)
                 height: parent.height
-                radius: 25
+                radius: Theme.shape.extraLarge - 4
                 color: Theme.surfaceContainer
                 Flickable {
                     anchors.fill: parent
@@ -329,16 +347,20 @@ PanelWindow {
                         spacing: 8
                         Label {
                             text: "Places"
-                            font.pixelSize: 15
-                            font.weight: Font.DemiBold
+                            role: "titleSmall"
+                            color: Theme.primary
                         }
                         Repeater {
                             model: root.bookmarks
-                            delegate: PillButton {
+                            delegate: ListRow {
                                 required property var modelData
-                                text: modelData.symbol + "  " + modelData.name
+                                title: modelData.name
+                                symbol: modelData.icon || "folder"
+                                implicitHeight: 52
                                 width: places.width
-                                filled: root.currentPath === modelData.path
+                                selected: root.currentPath === modelData.path
+                                chipColor: selected ? Theme.primary : Theme.secondaryContainer
+                                chipInk: selected ? Theme.primaryInk : Theme.secondaryContainerInk
                                 enabled: !root.busy
                                 onClicked: root.navigate(modelData.path)
                                 DropArea {
@@ -353,23 +375,25 @@ PanelWindow {
                                 }
                             }
                         }
-                        Label { text: "Removable drives"; font.weight: Font.DemiBold }
+                        Label { text: "Removable drives"; role: "titleSmall"; color: Theme.primary; topPadding: 6 }
                         Repeater {
                             model: root.volumes
                             delegate: Column {
                                 required property var modelData
                                 width: places.width
                                 spacing: 3
-                                PillButton {
+                                ListRow {
                                     width: parent.width
-                                    text: "◉ " + modelData.label
-                                    implicitHeight: 42
+                                    title: modelData.label
+                                    symbol: "usb"
+                                    implicitHeight: 52
                                     enabled: modelData.mounted && !root.busy
                                     onClicked: root.navigate(modelData.mountpoint)
                                 }
                                 PillButton {
                                     width: parent.width
-                                    implicitHeight: 36
+                                    implicitHeight: 40
+                                    variant: "tonal"
                                     text: modelData.mounted ? "Safely unmount" : "Mount"
                                     enabled: !root.volumeBusy
                                     onClicked: root.driveAction(modelData)
@@ -378,8 +402,10 @@ PanelWindow {
                         }
                         PillButton {
                             width: places.width
-                            text: "↻ Refresh drives"
-                            implicitHeight: 38
+                            text: "Refresh drives"
+                            symbol: "refresh"
+                            variant: "text"
+                            implicitHeight: 40
                             enabled: !root.volumeBusy
                             onClicked: root.loadDrives()
                         }
@@ -387,9 +413,9 @@ PanelWindow {
                 }
             }
             Rectangle {
-                width: parent.width - Math.min(190, parent.width * .25) - 16
+                width: parent.width - Math.min(250, parent.width * .27) - 16
                 height: parent.height
-                radius: 26
+                radius: Theme.shape.extraLarge - 2
                 color: Theme.surfaceContainer
                 ExpressiveTextField {
                     id: searchField
@@ -477,11 +503,12 @@ PanelWindow {
                                 sourceSize.width: 128
                                 sourceSize.height: 128
                             }
-                            Label {
+                            Symbol {
                                 anchors.centerIn: parent
+                                width: 26
+                                height: 26
                                 visible: !fileRow.modelData.thumbnail
-                                text: fileRow.modelData.symbol
-                                font.pixelSize: 26
+                                name: fileRow.modelData.icon || "document"
                                 color: Theme.primary
                             }
                         }
@@ -518,11 +545,11 @@ PanelWindow {
                                 root.openItem(fileRow.modelData)
                             onPressAndHold: itemMenu.popup()
                         }
-                        PillButton {
+                        IconButton {
                             anchors.right: parent.right
                             anchors.rightMargin: 7
                             anchors.verticalCenter: parent.verticalCenter
-                            text: "⋮"
+                            symbol: "more"
                             implicitWidth: 42
                             implicitHeight: 42
                             Accessible.name: "Actions for " + modelData.name
@@ -571,7 +598,7 @@ PanelWindow {
         }
         Rectangle {
             anchors.fill: parent
-            color: "#781b1425"
+            color: Theme.withAlpha(Theme.scrim, 0.5)
             radius: frame.radius
             visible: root.dialogKind.length > 0
             MouseArea { anchors.fill: parent; onClicked: {} }
@@ -579,8 +606,8 @@ PanelWindow {
                 anchors.centerIn: parent
                 width: Math.min(470, parent.width - 32)
                 height: root.dialogKind === "trash" ? 220 : 248
-                radius: 32
-                color: Theme.surface
+                radius: Theme.shape.extraLarge
+                color: Theme.surfaceContainerHigh
                 Column {
                     anchors.fill: parent
                     anchors.margins: 22
@@ -589,8 +616,7 @@ PanelWindow {
                         text: root.dialogKind === "new" ? "New folder" :
                               root.dialogKind === "rename" ? "Rename item" :
                               "Move to Trash?"
-                        font.pixelSize: 24
-                        font.weight: Font.Bold
+                        role: "headlineSmall"
                     }
                     Label {
                         width: parent.width
@@ -608,10 +634,10 @@ PanelWindow {
                     }
                     Row {
                         spacing: 12
-                        PillButton { text: "Cancel"; onClicked: root.dialogKind = "" }
+                        PillButton { text: "Cancel"; variant: "text"; onClicked: root.dialogKind = "" }
                         PillButton {
                             text: root.dialogKind === "trash" ? "Move to Trash" : "Save"
-                            filled: true
+                            variant: "filled"
                             onClicked: root.applyPrompt()
                         }
                     }
