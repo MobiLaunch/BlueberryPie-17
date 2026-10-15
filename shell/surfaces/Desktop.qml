@@ -55,6 +55,9 @@ Scope {
     AlarmRinging {
         screen: root.screen
     }
+    Osd {
+        screen: root.screen
+    }
     Toast {
         screen: root.screen
     }

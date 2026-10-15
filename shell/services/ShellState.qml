@@ -28,7 +28,18 @@ QtObject {
     property bool launchReady: false
     property bool launchMinimumElapsed: false
     property string toast: ""
-
+    // On-screen indicator for hardware volume, microphone and brightness keys.
+    property string osdKind: ""
+    property var osdScreen: null
+    function showOsd(kind) {
+        osdScreen = focusedScreen();
+        osdKind = kind;
+        osdTimer.restart();
+    }
+    property Timer osdTimer: Timer {
+        interval: 1600
+        onTriggered: root.osdKind = ""
+    }
 
     function checkFirstRun() {
         if (firstRunChecked)
@@ -45,7 +56,9 @@ QtObject {
     }
     property Connections welcomeObserver: Connections {
         target: SystemBridge
-        function onSnapshotChanged() { root.checkFirstRun(); }
+        function onSnapshotChanged() {
+            root.checkFirstRun();
+        }
     }
     function close() {
         cancelLaunch();

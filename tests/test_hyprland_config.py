@@ -119,13 +119,14 @@ class HyprlandConfigTests(unittest.TestCase):
         self.assertIn("XF86AudioRaiseVolume", result.stdout)
 
     def test_hardware_keys_drive_fixed_prismctl_actions(self):
+        # Through the shell (which shows the indicator), falling back to the bridge when it is not running.
         expected = {
-            "XF86AudioRaiseVolume": "prismctl action volume-up",
-            "XF86AudioLowerVolume": "prismctl action volume-down",
-            "XF86AudioMute": "prismctl action mute",
-            "XF86AudioMicMute": "prismctl action microphone-mute",
-            "XF86MonBrightnessUp": "prismctl action brightness-up",
-            "XF86MonBrightnessDown": "prismctl action brightness-down",
+            "XF86AudioRaiseVolume": "prism-shell ipc volumeUp || prismctl action volume-up",
+            "XF86AudioLowerVolume": "prism-shell ipc volumeDown || prismctl action volume-down",
+            "XF86AudioMute": "prism-shell ipc volumeMute || prismctl action mute",
+            "XF86AudioMicMute": "prism-shell ipc micMute || prismctl action microphone-mute",
+            "XF86MonBrightnessUp": "prism-shell ipc brightnessUp || prismctl action brightness-up",
+            "XF86MonBrightnessDown": "prism-shell ipc brightnessDown || prismctl action brightness-down",
         }
         for key, command in expected.items():
             self.assertEqual(self.binds.get(key), command, key)
@@ -153,6 +154,7 @@ class HyprlandConfigTests(unittest.TestCase):
     def test_every_ipc_target_exists_in_wrapper_and_shell(self):
         targets = {match.split()[-1] for command in self.binds.values()
                    for match in re.findall(r"prism-shell ipc \w+", command)}
+        self.assertTrue({"volumeUp", "volumeDown", "volumeMute", "micMute", "brightnessUp", "brightnessDown"} <= targets)
         self.assertTrue(targets)
         wrapper = (ROOT / "bin/prism-shell").read_text()
         shell = (ROOT / "shell/shell.qml").read_text()

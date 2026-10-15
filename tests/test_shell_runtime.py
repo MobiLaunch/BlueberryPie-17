@@ -954,6 +954,72 @@ class ShellRuntimeTests(unittest.TestCase):
             self.assertEqual(harness.truncated_texts(), [], section)
         self.assertEqual(harness.problems(), [])
 
+    def test_hardware_keys_show_an_indicator_that_follows_the_level(self):
+        harness = self.boot()
+        harness.pump(2500)
+        now = harness.eval_value
+
+        def setup(volume=40, muted=False, mic_muted=False, brightness=3):
+            # Real hardware answers the key; here a status read would replace the pretend values, so
+            # each key press starts from known values (once the previous press has fully settled)
+            # and is checked before the next read can land.
+            harness.wait_for(lambda: now("!SystemBridge.busy && SystemBridge.pending.length === 0 && !SystemBridge.reader.running") == "true", 8000)
+            harness.eval("SystemBridge.snapshot = SystemBridge.patched({"
+                         f"volume: {{available: true, value: {volume}, muted: {str(muted).lower()}}}, "
+                         f"microphone: {{available: true, value: 70, muted: {str(mic_muted).lower()}}}, "
+                         f"brightness: {{available: true, value: {brightness}}}}}); ")
+
+        def pill():
+            return harness.find("osd-pill")
+        self.assertEqual(now("ShellState.osdKind"), "")
+        # Bindings update synchronously, so each result is read straight after the key press.
+        text = lambda: harness.find("osd-value").property("text")
+        setup()
+        harness.ipc("volumeUp")
+        self.assertTrue(pill().isVisible())
+        self.assertEqual(text(), "45%")
+        setup(volume=45)
+        harness.ipc("volumeDown")
+        harness.ipc("volumeDown")
+        self.assertEqual(text(), "35%")
+        setup(volume=35)
+        harness.ipc("volumeMute")
+        self.assertEqual(text(), "Muted")
+        setup(mic_muted=False)
+        harness.ipc("micMute")
+        self.assertEqual(text(), "Muted")
+        self.assertEqual(harness.eval_value("ShellState.osdKind"), "microphone")
+        setup(brightness=3)
+        harness.ipc("brightnessDown")
+        self.assertEqual(text(), "1%", "never steps to a black screen")
+        self.assertEqual(harness.truncated_texts(), [])
+        # It goes away by itself.
+        self.assertTrue(harness.wait_for(lambda: now("ShellState.osdKind") == "", 4000))
+        self.assertTrue(harness.wait_for(lambda: not pill().isVisible(), 3000))
+        # Without a volume control there is nothing to show (the command reports the problem instead).
+        harness.eval("SystemBridge.snapshot = SystemBridge.patched({volume: {available: false}});")
+        harness.ipc("volumeUp")
+        harness.pump(60)
+        self.assertEqual(now("ShellState.osdKind"), "")
+        self.assertEqual(harness.problems(), [])
+
+    def test_stepping_keys_are_never_merged_but_slider_values_are(self):
+        from qml_runtime.stubs import Process
+        harness = self.boot()
+        harness.pump(2500)
+        Process.log.clear()
+        harness.eval("SystemBridge.action('mute'); SystemBridge.action('mute'); SystemBridge.action('mute');")
+        self.assertTrue(harness.wait_for(lambda: Process.log.count(["prismctl", "action", "mute"]) == 3, 8000), Process.log)
+        harness.wait_for(lambda: harness.eval_value("!SystemBridge.busy && SystemBridge.pending.length === 0") == "true", 8000)
+        Process.log.clear()
+        harness.eval("SystemBridge.action('volume', 10); SystemBridge.action('volume', 20); SystemBridge.action('volume', 30);")
+        self.assertTrue(harness.wait_for(lambda: ["prismctl", "action", "volume", "30"] in Process.log, 8000), Process.log)
+        harness.wait_for(lambda: harness.eval_value("!SystemBridge.busy && SystemBridge.pending.length === 0") == "true", 8000)
+        volumes = [entry for entry in Process.log if entry[:3] == ["prismctl", "action", "volume"]]
+        self.assertEqual(volumes[0], ["prismctl", "action", "volume", "10"])
+        self.assertEqual(volumes[-1], ["prismctl", "action", "volume", "30"])
+        self.assertNotIn(["prismctl", "action", "volume", "20"], volumes, "the middle value was superseded")
+
     def test_settings_search_filters_sections(self):
         harness = self.boot()
         harness.ipc("settings")

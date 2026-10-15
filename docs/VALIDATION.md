@@ -1,4 +1,20 @@
-# Validation record — 2026-10-15 (v0.9 through round ten)
+# Validation record — 2026-10-15 (v0.9 through round eleven)
+
+## Addendum: round eleven (closing the Android gaps)
+
+### Slice 1: volume and brightness indicator — executed
+
+| Check | Result |
+| --- | --- |
+| Key binds | Each hardware key runs `prism-shell ipc <target> \|\| prismctl action <fallback>`; every target exists in the wrapper allowlist and the shell's IPC handler |
+| Indicator | Volume up, down, mute, microphone mute and brightness each show the right level or "Muted" straight after the press; brightness stops at 1%; it hides itself; nothing is shown when the control is missing (the command reports why); no elided text |
+| Writes | Toggles and steps are never merged; slider values for the same control are (first and last run, middle superseded) |
+
+### Not executed
+
+- Real hardware keys, a real Hyprland `exec` of the `||` fallback, and the feel of a held key on real audio and backlight devices.
+
+## Previous record — 2026-10-15 (through round ten)
 
 ## Addendum: round ten (icons, Hyprland errors, responsiveness, polish)
 

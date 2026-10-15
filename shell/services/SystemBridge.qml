@@ -96,13 +96,14 @@ QtObject {
         switch (name) {
         case "dark":
         case "reduced_motion":
-        case "dnd": {
-            const change = {};
-            change[name] = !s.settings[name];
-            return patched({
-                settings: change
-            });
-        }
+        case "dnd":
+            {
+                const change = {};
+                change[name] = !s.settings[name];
+                return patched({
+                    settings: change
+                });
+            }
         case "wifi":
             return s.wifi.available ? patched({
                 wifi: {
@@ -192,6 +193,18 @@ QtObject {
         if (reader.running)
             staleRead = true;
     }
+    // One step of a hardware volume or brightness key, taken from the predicted level so a held key
+    // moves smoothly and many presses become one write. Returns false if there is nothing to adjust.
+    function step(kind, delta) {
+        const control = kind === "volume" ? snapshot.volume : snapshot.brightness;
+        if (!control || !control.available) {
+            // Let the command report why (no sound server, no backlight) instead of failing silently.
+            action(kind + (delta > 0 ? "-up" : "-down"));
+            return false;
+        }
+        action(kind, clamp(control.value + delta, kind === "volume" ? 0 : 1));
+        return true;
+    }
     function action(name, value) {
         const guess = predict(name, value);
         if (guess)
@@ -199,8 +212,9 @@ QtObject {
         let args = ["prismctl", "action", name];
         if (value !== undefined)
             args.push(String(Math.round(value)));
-        // Sliders coalesce pending writes. Commands are arrays, never shell text.
-        let queue = pending.filter(item => item[2] !== name);
+        // Sliders coalesce pending writes of the same control (only the newest value matters);
+        // toggles and steps are never merged. Commands are arrays, never shell text.
+        let queue = value !== undefined ? pending.filter(item => item[2] !== name) : pending.slice();
         queue.push(args);
         pending = queue;
         drain();

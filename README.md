@@ -165,6 +165,16 @@ ISO and hardware qualification have not been completed in this release.
   Balanced / Performance and Pointer / Shortcuts have distinct icons, and the Utilities close button
   stays at the top right.
 
+### Round eleven: closing the Android gaps
+
+One slice per gap an Android user notices first.
+
+- **Volume, microphone and brightness indicator**: the hardware keys now go through the shell
+  (`prism-shell ipc volumeUp` and friends), which shows a pill with the level, mute state and icon and fades
+  it after about a second and a half. Held keys step from the predicted level and merge into one write, brightness
+  never goes below 1%, and if the shell is not running the key falls back to the same `prismctl` command as
+  before.
+
 ## Build the ISO on Windows
 
 See **[Windows build instructions](docs/WINDOWS-ISO.md)** for the

@@ -64,6 +64,32 @@ ShellRoot {
         function power(): void {
             ShellState.openPower(ShellState.focusedScreen());
         }
+        function volumeUp(): void {
+            if (SystemBridge.step("volume", 5))
+                ShellState.showOsd("volume");
+        }
+        function volumeDown(): void {
+            if (SystemBridge.step("volume", -5))
+                ShellState.showOsd("volume");
+        }
+        function volumeMute(): void {
+            SystemBridge.action("mute");
+            if (SystemBridge.snapshot.volume.available)
+                ShellState.showOsd("volume");
+        }
+        function micMute(): void {
+            SystemBridge.action("microphone-mute");
+            if (SystemBridge.snapshot.microphone.available)
+                ShellState.showOsd("microphone");
+        }
+        function brightnessUp(): void {
+            if (SystemBridge.step("brightness", 5))
+                ShellState.showOsd("brightness");
+        }
+        function brightnessDown(): void {
+            if (SystemBridge.step("brightness", -5))
+                ShellState.showOsd("brightness");
+        }
         function close(): void {
             ShellState.close();
         }
