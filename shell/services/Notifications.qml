@@ -24,6 +24,32 @@ QtObject {
         return order.map(key => byApp[key]);
     }
     readonly property int count: items.values.length
+    // Quiet hours: Do Not Disturb turns itself on between two times (may span midnight).
+    readonly property var schedule: SystemBridge.snapshot.settings.dnd_schedule || {
+        enabled: false,
+        start: "22:00",
+        end: "07:00"
+    }
+    property real minuteStamp: Date.now()
+    function minutes(text) {
+        return parseInt(text.slice(0, 2)) * 60 + parseInt(text.slice(3, 5));
+    }
+    readonly property bool quietHours: {
+        const stamp = minuteStamp;
+        if (!schedule.enabled)
+            return false;
+        const date = new Date(stamp);
+        const now = date.getHours() * 60 + date.getMinutes();
+        const from = minutes(schedule.start), to = minutes(schedule.end);
+        return from === to ? false : from < to ? (now >= from && now < to) : (now >= from || now < to);
+    }
+    readonly property bool quiet: SystemBridge.snapshot.settings.dnd === true || quietHours
+    property Timer quietClock: Timer {
+        interval: 30000
+        repeat: true
+        running: root.schedule.enabled
+        onTriggered: root.minuteStamp = Date.now()
+    }
     // Apps that have sent something this session (for the per-app switches in Settings).
     property var seenApps: []
     readonly property var mutedApps: SystemBridge.snapshot.settings.muted_apps || []
@@ -53,7 +79,7 @@ QtObject {
                 oldest.dismiss();
             }
             // Banner unless Do Not Disturb is on; important ones always break through.
-            if (!SystemBridge.snapshot.settings.dnd || notification.urgency === NotificationUrgency.Critical) {
+            if (!root.quiet || notification.urgency === NotificationUrgency.Critical) {
                 root.headsUp = notification;
                 headsUpTimer.interval = notification.urgency === NotificationUrgency.Critical ? 12000 : 6000;
                 headsUpTimer.restart();

@@ -19,7 +19,7 @@ except ImportError as error:  # PySide6 or its system libraries are absent
 else:
     SKIP_REASON = ""
 
-SURFACES = ("shade", "launcher", "settings", "files", "store", "power", "recents", "calculator", "clock")
+SURFACES = ("shade", "launcher", "settings", "files", "store", "power", "recents", "calculator", "clock", "alarms", "converter", "clipboard")
 SECTIONS = ("network", "bluetooth", "display", "sound", "notifications", "style", "widgets", "input", "shortcuts", "apps", "power", "about")
 WINDOWS = ('Windows.available = true; Windows.list = ['
            '{address:"0xaa01", class:"firefox", title:"Docs", workspace:1, pid:1, recency:0, focused:true, hidden:false},'
@@ -297,6 +297,117 @@ class ShellRuntimeTests(unittest.TestCase):
         self.assertEqual(harness.eval_value("ClockState.clock(61000, false)"), "1:01")
         self.assertEqual(harness.eval_value("ClockState.clock(3725120, true)"), "1:02:05.12")
         self.assertEqual(harness.problems(), [])
+
+    def test_alarm_rings_once_with_sound_and_can_be_added_in_the_panel(self):
+        import datetime
+        from prismos import settings
+        from qml_runtime.stubs import Process
+        import time
+        if datetime.datetime.now().second > 52:  # never straddle a minute boundary
+            time.sleep(9)
+        now = datetime.datetime.now()
+        harness = Harness()
+        self.addCleanup(harness.close)
+        harness.write_settings(onboarding_complete=True, alarms=[
+            {"id": 1, "time": now.strftime("%H:%M"), "days": [], "label": "Test", "enabled": True}])
+        Process.log.clear()
+        harness.load()
+        harness.pump(1800)
+        self.assertEqual(harness.eval_value("ShellState.toast"), "Alarm: Test")
+        self.assertIn(["prismctl", "sound", "alarm"], Process.log)
+        self.assertTrue(harness.wait_for(lambda: settings.load()["alarms"][0]["enabled"] is False, 6000),
+                        "a one-time alarm switches itself off")
+        harness.ipc("alarms")
+        harness.pump(500)
+        add = next(item for item in harness.visible_items()
+                   if item.metaObject().className().startswith("PillButton") and item.property("text") == "Add alarm")
+        harness.click(*harness.scene_pos(add))
+        self.assertTrue(harness.wait_for(lambda: len(settings.load()["alarms"]) == 2, 6000))
+        self.assertEqual(harness.truncated_texts(), [])
+        self.assertEqual(harness.problems(), [])
+
+    def test_quiet_hours_silence_banners_until_the_window_ends(self):
+        import datetime
+        from qml_runtime import stubs
+        now = datetime.datetime.now()
+        around = lambda hours: (now + datetime.timedelta(hours=hours)).strftime("%H:%M")
+        for label, schedule, expect_banner in (
+                ("inside", {"enabled": True, "start": around(-1), "end": around(1)}, False),
+                ("outside", {"enabled": True, "start": around(1), "end": around(2)}, True),
+                ("disabled", {"enabled": False, "start": around(-1), "end": around(1)}, True)):
+            with self.subTest(label):
+                harness = Harness()
+                self.addCleanup(harness.close)
+                harness.write_settings(onboarding_complete=True, dnd_schedule=schedule)
+                harness.load()
+                harness.pump(1800)
+                server = stubs.NotificationServer.instances[-1]
+                server.post(appName="Chat", summary="Hello " + label)
+                harness.pump(400)
+                texts = {item.property("text") for item in harness.visible_items() if item.property("text")}
+                self.assertEqual("Hello " + label in texts, expect_banner)
+                self.assertEqual(harness.eval_value("Notifications.quiet"), "false" if expect_banner else "true")
+                self.assertEqual(harness.problems(), [])
+
+    def test_quiet_hours_settings_edit_through_the_bridge(self):
+        from prismos import settings
+        harness = self.boot()
+        harness.ipc("settings")
+        harness.pump(500)
+        row = harness.find("section-notifications")
+        harness.reveal(row)
+        harness.click(*harness.scene_pos(row))
+        harness.pump(600)
+        toggle = next(item for item in harness.visible_items()
+                      if item.metaObject().className().startswith("ToggleRow") and item.property("title") == "Turn on automatically")
+        harness.reveal(toggle)
+        harness.click(*harness.scene_pos(toggle))
+        self.assertTrue(harness.wait_for(lambda: settings.load()["dnd_schedule"]["enabled"] is True, 6000))
+        self.assertTrue(harness.wait_for(lambda: harness.eval_value("Notifications.schedule.enabled") == "true", 6000))
+        harness.pump(500)
+        up = min((item for item in harness.visible_items() if item.property("symbol") == "chevron_up"),
+                 key=lambda item: harness.scene_pos(item)[0])  # the From hour stepper
+        harness.reveal(up)
+        harness.click(*harness.scene_pos(up))
+        self.assertTrue(harness.wait_for(lambda: settings.load()["dnd_schedule"]["start"] == "23:00", 6000))
+        self.assertEqual(harness.truncated_texts(), [])
+        self.assertEqual(harness.problems(), [])
+
+    def test_converter_converts_and_swaps(self):
+        harness = self.boot()
+        harness.ipc("converter")
+        harness.pump(500)
+        texts = lambda: {str(item.property("text")) for item in harness.visible_items() if item.property("text")}
+        self.assertIn("3.2808399 ft", texts())
+        chip = next(item for item in harness.visible_items()
+                    if item.metaObject().className().startswith("FilterChip") and item.property("text") == "Temperature")
+        harness.click(*harness.scene_pos(chip))
+        harness.pump(300)
+        self.assertIn("33.8 °F", texts())
+        swap = next(item for item in harness.visible_items() if item.property("symbol") == "arrow" and item.rotation() == 90)
+        harness.click(*harness.scene_pos(swap))
+        harness.pump(300)
+        self.assertEqual(harness.eval_value("1"), "1")  # layout settled
+        self.assertIn("1 °C", texts())
+        self.assertEqual(harness.truncated_texts(), [])
+        self.assertEqual(harness.problems(), [])
+
+    def test_clipboard_history_is_opt_in_and_copies_by_numeric_id(self):
+        from qml_runtime.stubs import Process
+        harness = self.boot()
+        harness.ipc("clipboard")
+        harness.pump(700)
+        texts = lambda: {str(item.property("text")) for item in harness.visible_items() if item.property("text")}
+        self.assertTrue(any("cliphist" in text for text in texts()), "explains the missing tool instead of failing")
+        harness.eval('ClipboardState.available = true; ClipboardState.enabled = true; ClipboardState.items = ['
+                     '{id:"12", kind:"text", preview:"hello world"}, {id:"11", kind:"image", preview:"Image"}]')
+        harness.pump(300)
+        row = next(item for item in harness.visible_items()
+                   if item.metaObject().className().startswith("ListRow") and item.property("title") == "hello world")
+        Process.log.clear()
+        harness.click(*harness.scene_pos(row))
+        self.assertTrue(harness.wait_for(lambda: ["prismctl", "clipboard", "copy", "12"] in Process.log, 3000))
+        self.assertEqual(harness.truncated_texts(), [])
 
     def test_settings_search_filters_sections(self):
         harness = self.boot()

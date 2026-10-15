@@ -35,6 +35,8 @@ power-profiles-daemon
 grim
 slurp
 wl-clipboard
+sound-theme-freedesktop
+cliphist
 waydroid
 xdg-desktop-portal-gtk
 # Disk installer (prismos/installer.py); releng ships most of these, listed so they are never dropped.

@@ -184,3 +184,10 @@ widgets, thumbnails in Recents, an offline install mode and a published package 
 
 Still open from the M2 list: Recents thumbnails (needs a screencopy path), per-tile detail panels,
 bit-exact Vibrant/Expressive hue tables, alarms, and measurements against the reference.
+
+## Round three (development slice)
+
+- Alarms with sound, scheduled Do Not Disturb, opt-in clipboard history, unit converter.
+
+Still open: Recents thumbnails, per-tile detail panels, looping alarm ringing screen, snooze,
+clipboard search and pinning, world clock.

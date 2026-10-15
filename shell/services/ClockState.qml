@@ -20,6 +20,31 @@ QtObject {
     property var laps: []
     readonly property real watchElapsed: watchRunning ? watchBase + (now - watchStarted) : watchBase
     readonly property bool ticking: timerRunning || watchRunning
+    // Alarms live in the user's settings and are checked twice a minute.
+    readonly property var alarmList: SystemBridge.snapshot.settings.alarms || []
+    property var fired: ({})
+    onAlarmListChanged: checkAlarms(new Date())
+    function checkAlarms(date) {
+        const stamp = date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
+        const hhmm = pad(date.getHours()) + ":" + pad(date.getMinutes());
+        const weekday = (date.getDay() + 6) % 7;
+        for (const alarm of alarmList) {
+            if (!alarm.enabled || alarm.time !== hhmm || (alarm.days.length > 0 && alarm.days.indexOf(weekday) < 0))
+                continue;
+            const key = alarm.id + "|" + stamp + "|" + hhmm;
+            if (fired[key])
+                continue;
+            fired[key] = true;
+            ring(alarm);
+        }
+    }
+    function ring(alarm) {
+        ShellState.toast = alarm.label.length > 0 ? "Alarm: " + alarm.label : "Alarm " + alarm.time;
+        ShellState.toastTimer.restart();
+        SystemBridge.playSound("alarm");
+        if (alarm.days.length === 0)
+            SystemBridge.toggleAlarm(alarm.id);
+    }
 
     function pad(value, digits) {
         let text = String(Math.floor(value));
@@ -106,7 +131,15 @@ QtObject {
                 root.timerLeftWhenPaused = 0;
                 ShellState.toast = "Timer finished";
                 ShellState.toastTimer.restart();
+                SystemBridge.playSound("alarm");
             }
         }
+    }
+    property Timer alarmClock: Timer {
+        interval: 15000
+        repeat: true
+        running: true
+        triggeredOnStart: true
+        onTriggered: root.checkAlarms(new Date())
     }
 }

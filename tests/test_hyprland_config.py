@@ -67,6 +67,9 @@ class HyprlandConfigTests(unittest.TestCase):
             self.assertEqual(self.binds.get(keys), command, keys)
 
     def test_screenshot_keys_and_night_light_autostart(self):
+        self.assertEqual(self.binds.get("SUPER + C"), "prism-shell ipc calculator")
+        self.assertEqual(self.binds.get("SUPER + V"), "prism-shell ipc clipboard")
+        self.assertIn("prismctl clipboard resume", (ROOT / "config/hypr/hyprland.lua").read_text())
         self.assertEqual(self.binds.get("Print"), "prism-shell ipc screenshot")
         self.assertEqual(self.binds.get("SHIFT + Print"), "prism-shell ipc screenshotFull")
         source = (ROOT / "config/hypr/hyprland.lua").read_text()

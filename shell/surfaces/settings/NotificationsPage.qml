@@ -22,6 +22,54 @@ SettingsPage {
     }
     SettingsGroup {
         width: parent.width
+        title: "Quiet hours"
+        ToggleRow {
+            width: parent.width
+            title: "Turn on automatically"
+            supporting: Notifications.schedule.enabled ? "Every day from " + Notifications.schedule.start + " to " + Notifications.schedule.end : "Do Not Disturb follows a schedule"
+            symbol: "moon"
+            on: Notifications.schedule.enabled
+            onSwitched: value => SystemBridge.setQuietHours(value, Notifications.schedule.start, Notifications.schedule.end)
+        }
+        Rectangle {
+            width: parent.width
+            height: 172
+            radius: Theme.shape.extraLarge - 4
+            color: Theme.surfaceContainer
+            property bool interactive: false
+            visible: Notifications.schedule.enabled
+            Row {
+                anchors.centerIn: parent
+                spacing: 24
+                Column {
+                    spacing: 2
+                    Label {
+                        text: "From"
+                        role: "labelMedium"
+                        color: Theme.surfaceVariantInk
+                    }
+                    TimeField {
+                        value: Notifications.schedule.start
+                        onEdited: value => SystemBridge.setQuietHours(true, value, Notifications.schedule.end)
+                    }
+                }
+                Column {
+                    spacing: 2
+                    Label {
+                        text: "Until"
+                        role: "labelMedium"
+                        color: Theme.surfaceVariantInk
+                    }
+                    TimeField {
+                        value: Notifications.schedule.end
+                        onEdited: value => SystemBridge.setQuietHours(true, Notifications.schedule.start, value)
+                    }
+                }
+            }
+        }
+    }
+    SettingsGroup {
+        width: parent.width
         title: "Current notifications"
         ListRow {
             width: parent.width

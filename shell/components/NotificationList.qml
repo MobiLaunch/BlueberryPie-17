@@ -33,13 +33,13 @@ Column {
             anchors.horizontalCenter: parent.horizontalCenter
             width: 40
             height: 40
-            name: SystemBridge.snapshot.settings.dnd ? "notifications_off" : "notifications"
+            name: Notifications.quiet ? "notifications_off" : "notifications"
             color: Theme.surfaceVariantInk
         }
         Label {
             width: parent.width
             horizontalAlignment: Text.AlignHCenter
-            text: SystemBridge.snapshot.settings.dnd ? "Do Not Disturb is on" : "You're all caught up"
+            text: Notifications.quiet ? "Do Not Disturb is on" : "You're all caught up"
             role: "bodyLarge"
             color: Theme.surfaceVariantInk
         }

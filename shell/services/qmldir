@@ -16,3 +16,4 @@ singleton WidgetsState 1.0 WidgetsState.qml
 singleton InstallerState 1.0 InstallerState.qml
 singleton TilesState 1.0 TilesState.qml
 singleton ClockState 1.0 ClockState.qml
+singleton ClipboardState 1.0 ClipboardState.qml

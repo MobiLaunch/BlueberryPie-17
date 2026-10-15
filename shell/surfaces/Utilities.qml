@@ -22,6 +22,18 @@ PanelWindow {
         {
             id: "stopwatch",
             title: "Stopwatch"
+        },
+        {
+            id: "alarms",
+            title: "Alarms"
+        },
+        {
+            id: "converter",
+            title: "Convert"
+        },
+        {
+            id: "clipboard",
+            title: "Clipboard"
         }
     ]
     anchors {
@@ -41,6 +53,8 @@ PanelWindow {
         card.forceActiveFocus();
         if (ShellState.utilitiesTab === "calculator")
             calculator.focusInput();
+        if (ShellState.utilitiesTab === "clipboard")
+            clipboardPane.load();
     }
     Rectangle {
         anchors.fill: parent
@@ -130,6 +144,24 @@ PanelWindow {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 visible: ShellState.utilitiesTab === "stopwatch"
+            }
+            AlarmsPane {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                visible: ShellState.utilitiesTab === "alarms"
+            }
+            ConverterPane {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                visible: ShellState.utilitiesTab === "converter"
+            }
+            ClipboardPane {
+                id: clipboardPane
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                visible: ShellState.utilitiesTab === "clipboard"
+                onVisibleChanged: if (visible)
+                    load()
             }
         }
     }

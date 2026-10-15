@@ -116,7 +116,7 @@ PanelWindow {
         case "sound":
             return !snap.volume.available ? "No output" : snap.volume.muted ? "Muted" : "Volume " + snap.volume.value + "%";
         case "notifications":
-            return snap.settings.dnd ? "Do Not Disturb is on" : Notifications.count + " now";
+            return Notifications.quiet ? "Do Not Disturb is on" : Notifications.count + " now";
         case "style":
             return (Theme.dark ? "Dark" : "Light") + " theme";
         case "widgets":

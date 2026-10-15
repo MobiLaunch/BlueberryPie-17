@@ -138,9 +138,9 @@ QtObject {
             return {
                 title: base.title,
                 large: false,
-                subtitle: s.settings.dnd ? "On" : "Off",
-                symbol: s.settings.dnd ? "notifications_off" : "dnd",
-                activated: s.settings.dnd,
+                subtitle: s.settings.dnd ? "On" : Notifications.quietHours ? "Until " + Notifications.schedule.end : "Off",
+                symbol: Notifications.quiet ? "notifications_off" : "dnd",
+                activated: Notifications.quiet,
                 enabled: true,
                 hasDetails: false
             };

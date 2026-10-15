@@ -46,6 +46,15 @@ ShellRoot {
         function clock(): void {
             ShellState.openUtilities(ShellState.focusedScreen(), "timer");
         }
+        function alarms(): void {
+            ShellState.openUtilities(ShellState.focusedScreen(), "alarms");
+        }
+        function clipboard(): void {
+            ShellState.openUtilities(ShellState.focusedScreen(), "clipboard");
+        }
+        function converter(): void {
+            ShellState.openUtilities(ShellState.focusedScreen(), "converter");
+        }
         function recents(): void {
             ShellState.toggleRecents(ShellState.focusedScreen());
         }

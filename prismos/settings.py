@@ -10,12 +10,33 @@ from .regional import KEYBOARD_IDS
 from .theme import SCHEME_SPECS
 
 FONT_SCALES = (0.9, 1.0, 1.15, 1.3)
+TIME = re.compile(r"(?:[01]\d|2[0-3]):[0-5]\d\Z")
+MAX_ALARMS = 10
+
+
+def clean_alarms(items):
+    """Keep only well-formed alarms: unique id, HH:MM, days 0-6 (Monday first), short label."""
+    result, seen = [], set()
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        identity, when, days, label = item.get("id"), item.get("time"), item.get("days"), item.get("label", "")
+        if (type(identity) is not int or not 1 <= identity <= 9999 or identity in seen
+                or not isinstance(when, str) or not TIME.fullmatch(when)
+                or not isinstance(days, list) or not all(type(day) is int and 0 <= day <= 6 for day in days)
+                or not isinstance(label, str) or len(label) > 40 or re.search(r"[\x00-\x1f\x7f]", label)
+                or type(item.get("enabled")) is not bool):
+            continue
+        seen.add(identity)
+        result.append({"id": identity, "time": when, "days": sorted(set(days)), "label": label.strip(),
+                       "enabled": item["enabled"]})
+    return result[:MAX_ALARMS]
 
 TILE_IDS = ("wifi", "bluetooth", "sound", "microphone", "dnd", "dark", "reduced_motion", "audio_devices",
             "airplane", "battery_saver", "night_light", "screenshot", "lock")
 WIDGET_IDS = ("glance", "clock", "search", "calendar", "media", "weather", "system", "analog")
 DEFAULTS = {"seed": "#8469cf", "dark": False, "reduced_motion": False, "dnd": False,
-            "favorites": None, "recent_apps": [], "wallpaper": "", "widgets": None, "weather": {}, "keyboard": "us", "tiles": None, "muted_apps": [], "night_light": False, "scheme": "tonal_spot", "font_scale": 1.0, "android_enabled": False, "onboarding_complete": False,
+            "favorites": None, "recent_apps": [], "wallpaper": "", "widgets": None, "weather": {}, "keyboard": "us", "tiles": None, "alarms": [], "dnd_schedule": {"enabled": False, "start": "22:00", "end": "07:00"}, "clipboard_history": False, "muted_apps": [], "night_light": False, "scheme": "tonal_spot", "font_scale": 1.0, "android_enabled": False, "onboarding_complete": False,
             "natural_scroll": True, "tap_to_click": True,
             "pointer_speed": 0.0, "repeat_rate": 25, "display_scales": {}, "display_positions": {}}
 
@@ -30,7 +51,7 @@ def load():
         if not isinstance(data, dict):
             return dict(DEFAULTS)
         valid = {}
-        for key in ("dark", "reduced_motion", "dnd", "night_light", "android_enabled", "onboarding_complete",
+        for key in ("dark", "reduced_motion", "dnd", "night_light", "clipboard_history", "android_enabled", "onboarding_complete",
                     "natural_scroll", "tap_to_click"):
             if isinstance(data.get(key), bool):
                 valid[key] = data[key]
@@ -70,6 +91,13 @@ def load():
         tiles = data.get("tiles")
         if isinstance(tiles, list):
             valid["tiles"] = [item for item in dict.fromkeys(tiles) if item in TILE_IDS]
+        alarms = data.get("alarms")
+        if isinstance(alarms, list):
+            valid["alarms"] = clean_alarms(alarms)
+        quiet = data.get("dnd_schedule")
+        if isinstance(quiet, dict) and type(quiet.get("enabled")) is bool \
+                and TIME.fullmatch(str(quiet.get("start"))) and TIME.fullmatch(str(quiet.get("end"))):
+            valid["dnd_schedule"] = {"enabled": quiet["enabled"], "start": quiet["start"], "end": quiet["end"]}
         muted = data.get("muted_apps")
         if isinstance(muted, list):
             valid["muted_apps"] = list(dict.fromkeys(

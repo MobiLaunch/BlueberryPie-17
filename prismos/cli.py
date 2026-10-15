@@ -2,7 +2,8 @@ import argparse
 import json
 import sys
 
-from . import about, android, apps, audio, displays, drives, favorites, fdroid, files, inputs, installer, notifyprefs, screenshot, settings, stats, store, system, theme, tiles, wallpaper, weather, websearch, widgets, windows, wireless
+from . import sound as alert_sound
+from . import about, alarms, android, apps, audio, clipboard, displays, drives, favorites, fdroid, files, inputs, installer, notifyprefs, screenshot, settings, stats, store, system, theme, tiles, wallpaper, weather, websearch, widgets, windows, wireless
 
 
 def main(argv=None):
@@ -16,6 +17,22 @@ def main(argv=None):
     web.add_argument("query")
     setup = sub.add_parser("installer")
     setup.add_argument("operation", choices=("status", "options", "disks", "plan", "install"))
+    clock = sub.add_parser("alarms")
+    clock.add_argument("operation", choices=("list", "add", "toggle", "remove"))
+    clock.add_argument("id", nargs="?")
+    clock.add_argument("--time")
+    clock.add_argument("--days", default="")
+    clock.add_argument("--label", default="")
+    clip = sub.add_parser("clipboard")
+    clip.add_argument("operation", choices=("list", "copy", "delete", "clear", "enable", "disable", "resume"))
+    clip.add_argument("id", nargs="?")
+    quiet = sub.add_parser("quiet-hours")
+    quiet.add_argument("operation", choices=("get", "set"))
+    quiet.add_argument("--enabled", choices=("yes", "no"))
+    quiet.add_argument("--start")
+    quiet.add_argument("--end")
+    tone = sub.add_parser("sound")
+    tone.add_argument("name", choices=tuple(alert_sound.SOUNDS))
     shot = sub.add_parser("screenshot")
     shot.add_argument("mode", choices=screenshot.MODES)
     tile = sub.add_parser("tiles")
@@ -119,6 +136,25 @@ def main(argv=None):
             else:
                 result = {"status": installer.status, "options": installer.options,
                           "disks": installer.disk_listing}[args.operation]()
+        elif args.command == "alarms":
+            if args.operation == "list":
+                result = alarms.status()
+            elif args.operation == "add":
+                result = alarms.add(args.time, args.days, args.label)
+            else:
+                if args.id is None or not args.id.isdigit():
+                    raise ValueError("An alarm number is required")
+                result = alarms.toggle(args.id) if args.operation == "toggle" else alarms.remove(args.id)
+        elif args.command == "clipboard":
+            op = args.operation
+            result = (clipboard.status() if op == "list" else clipboard.copy(args.id) if op == "copy"
+                      else clipboard.delete(args.id) if op == "delete" else clipboard.clear() if op == "clear"
+                      else clipboard.resume() if op == "resume" else clipboard.enable(op == "enable"))
+        elif args.command == "quiet-hours":
+            result = (notifyprefs.schedule_status() if args.operation == "get"
+                      else notifyprefs.set_schedule(args.enabled, args.start, args.end))
+        elif args.command == "sound":
+            result = alert_sound.play(args.name)
         elif args.command == "screenshot":
             result = screenshot.capture(args.mode)
         elif args.command == "tiles":

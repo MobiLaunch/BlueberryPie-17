@@ -198,7 +198,7 @@ PanelWindow {
                 anchors.centerIn: parent
                 spacing: 12
                 Symbol {
-                    visible: root.snap.settings.dnd
+                    visible: Notifications.quiet
                     anchors.verticalCenter: parent.verticalCenter
                     width: 18
                     height: 18

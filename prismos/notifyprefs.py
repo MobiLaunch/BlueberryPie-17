@@ -31,3 +31,18 @@ def unmute(name):
     name = clean(name)
     settings.modify(lambda data: {**data, "muted_apps": [item for item in data["muted_apps"] if item != name]})
     return status()
+
+
+def schedule_status():
+    return {"ok": True, "schedule": settings.load()["dnd_schedule"]}
+
+
+def set_schedule(enabled, start, end):
+    """Quiet hours: Do Not Disturb applies automatically between start and end (may span midnight)."""
+    if enabled not in ("yes", "no"):
+        raise ValueError("Enabled must be yes or no")
+    for value in (start, end):
+        if not isinstance(value, str) or not settings.TIME.fullmatch(value):
+            raise ValueError("Use times like 22:00")
+    settings.update(dnd_schedule={"enabled": enabled == "yes", "start": start, "end": end})
+    return schedule_status()

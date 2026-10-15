@@ -1,4 +1,24 @@
-# Validation record — 2026-10-15 (v0.9 + window management, widgets, installer, round two)
+# Validation record — 2026-10-15 (v0.9 through round three)
+
+## Addendum: round three (alarms, quiet hours, clipboard history, converter)
+
+### Executed
+
+| Check | Result |
+| --- | --- |
+| `scripts/check.sh` | Python suites, Node specs (calculator and unit converter parsers), shell syntax and the QML runtime suite passed |
+| Alarms | Adapter tests (validation, id reuse, limit, corrupt-file filtering, argv-only sound player); in the shell, a due alarm toasted once, asked for the sound and switched itself off; adding from the panel persisted |
+| Quiet hours | Banners suppressed inside the window (including a window spanning midnight in the Python/QML logic), shown outside it and when disabled; edited from Settings through the bridge |
+| Clipboard history | Adapter tests with mocked `cliphist`/`wl-copy` (numeric ids only, no shell, delete by original line, watcher pids verified by `/proc/PID/cmdline` before signalling); the pane explains missing tools and copies by id |
+| Converter | Spec covers every category, round trips, decimal commas, absolute zero and prototype-name rejection; clicked through in the shell |
+
+### Not executed
+
+- Real `cliphist`, `wl-paste --watch` and `wl-copy`; real `pw-play`/`paplay` with the sound theme.
+- Alarm ringing across a suspend/resume or while the screen is locked; the sound is a single short clip, not a looping alarm.
+- Quiet hours over a real day/night boundary (tests use windows around "now").
+
+## Previous record (through round two)
 
 ## Addendum: round two (schemes, tiles, screenshots, notifications, utilities)
 

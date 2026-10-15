@@ -6,7 +6,7 @@ pkgdesc='PrismOS expressive native desktop shell and dedicated Wayland session'
 arch=('any')
 url='https://github.com/MobiLaunch/BlueberryPie-17'
 license=('MIT')
-depends=('quickshell>=0.3.2' 'hyprland>=0.56' 'python' 'python-pillow' 'qt6-declarative' 'qt6-svg' 'qt6-shadertools' 'networkmanager' 'nm-connection-editor' 'bluez' 'bluez-utils' 'blueman' 'pipewire' 'pipewire-pulse' 'wireplumber' 'brightnessctl' 'glib2' 'hyprlock' 'hypridle' 'dbus' 'foot' 'thunar' 'xdg-utils' 'udisks2' 'util-linux' 'polkit-kde-agent' 'ttf-roboto' 'xdg-desktop-portal-hyprland' 'xdg-desktop-portal-gtk' 'flatpak' 'waydroid' 'polkit' 'grim' 'slurp' 'wl-clipboard')
+depends=('quickshell>=0.3.2' 'hyprland>=0.56' 'python' 'python-pillow' 'qt6-declarative' 'qt6-svg' 'qt6-shadertools' 'networkmanager' 'nm-connection-editor' 'bluez' 'bluez-utils' 'blueman' 'pipewire' 'pipewire-pulse' 'wireplumber' 'brightnessctl' 'glib2' 'hyprlock' 'hypridle' 'dbus' 'foot' 'thunar' 'xdg-utils' 'udisks2' 'util-linux' 'polkit-kde-agent' 'ttf-roboto' 'xdg-desktop-portal-hyprland' 'xdg-desktop-portal-gtk' 'flatpak' 'waydroid' 'polkit' 'grim' 'slurp' 'wl-clipboard' 'sound-theme-freedesktop' 'cliphist')
 optdepends=('hyprsunset: Night Light tile' 'power-profiles-daemon: Battery Saver tile')
 source=("PrismOS-${pkgver}.tar.gz")
 sha256sums=('GENERATED_BY_BUILD_SCRIPT')

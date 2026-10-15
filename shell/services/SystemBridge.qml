@@ -112,6 +112,37 @@ QtObject {
         pending = queue;
         drain();
     }
+    function addAlarm(time, days, label) {
+        const queue = pending.slice();
+        queue.push(["prismctl", "alarms", "add", "--time", time, "--days", days.join(","), "--label", label]);
+        pending = queue;
+        drain();
+    }
+    function toggleAlarm(id) {
+        const queue = pending.slice();
+        queue.push(["prismctl", "alarms", "toggle", String(id)]);
+        pending = queue;
+        drain();
+    }
+    function removeAlarm(id) {
+        const queue = pending.slice();
+        queue.push(["prismctl", "alarms", "remove", String(id)]);
+        pending = queue;
+        drain();
+    }
+    function setQuietHours(enabled, start, end) {
+        const queue = pending.filter(item => item[1] !== "quiet-hours");
+        queue.push(["prismctl", "quiet-hours", "set", "--enabled", enabled ? "yes" : "no", "--start", start, "--end", end]);
+        pending = queue;
+        drain();
+    }
+    function playSound(name) {
+        if (!sounder.running) {
+            sounder.command = ["prismctl", "sound", name];
+            sounder.running = true;
+        }
+    }
+    property Process sounder: Process {}
     function muteApp(name, muted) {
         const queue = pending.slice();
         queue.push(["prismctl", "notifications", muted ? "mute" : "unmute", name]);

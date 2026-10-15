@@ -74,6 +74,17 @@ ISO and hardware qualification have not been completed in this release.
 - **Calculator, timer and stopwatch** in one panel: `Super + C`, the launcher, or
   `prism-shell ipc calculator|clock`. The calculator is a hand-written parser (no `eval`).
 
+### Round three: alarms, quiet hours, clipboard history and a converter
+
+- **Alarms** (Utilities → Alarms, `prism-shell ipc alarms`): up to ten time-of-day alarms with
+  weekdays and labels; they ring while the panel is closed (toast plus a freedesktop sound) and
+  a one-time alarm turns itself off. The timer plays the same sound.
+- **Quiet hours** (Settings → Notifications): Do Not Disturb turns on between two times, even
+  across midnight; critical alerts still break through.
+- **Clipboard history** (`Super + V`): off by default. When turned on, cliphist and wl-clipboard
+  keep text and images; entries are copied back by numeric id through a pipe.
+- **Converter**: length, mass, volume, speed, data and temperature.
+
 ## Build the ISO on Windows
 
 See **[Windows build instructions](docs/WINDOWS-ISO.md)** for the

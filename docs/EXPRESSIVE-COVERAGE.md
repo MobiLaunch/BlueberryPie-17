@@ -21,6 +21,7 @@ HARDWARE = real compositor/device testing still required, GAP = missing.
 | Quick Settings tile editor; airplane, battery saver, night light, screenshot, lock tiles | SOURCE / QA | needs power-profiles-daemon, hyprsunset, grim/slurp on hardware |
 | Per-app notification mute | SOURCE / QA | real notification clients |
 | Calculator, timer, stopwatch | SOURCE / QA | no alarms; timer has no sound |
+| Alarms, quiet hours, clipboard history, converter | SOURCE / QA | no snooze or looping ringer; real cliphist and audio unverified |
 | Recents overview (windows via hyprctl) | SOURCE / QA | verify focus/close dispatch on Hyprland 0.56 Lua; no thumbnails yet |
 | Heads-up banners and grouped swipe-dismiss shade | SOURCE / QA | real notification clients, long text, many apps |
 | Settings app (11 sections) | SOURCE / QA | real adapters on hardware; per-app notification controls missing |
