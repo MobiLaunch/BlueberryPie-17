@@ -14,6 +14,8 @@ Button {
     property bool activated: false
     property bool large: true
     property bool hasDetails: false
+    // With large text the chevron gives way to the label; press and hold or right-click still opens details.
+    readonly property bool showChevron: hasDetails && Theme.fontScale <= 1.1
     signal detailsRequested
     implicitWidth: large ? 176 : 84
     implicitHeight: 72
@@ -78,7 +80,7 @@ Button {
             visible: root.large
             x: 56
             y: (parent.height - height) / 2
-            width: Math.max(0, parent.width - 56 - (root.hasDetails ? 46 : 14))
+            width: Math.max(0, parent.width - 56 - (root.showChevron ? 46 : 14))
             spacing: 1
             opacity: root.enabled ? 1 : 0.5
             Label {
@@ -99,7 +101,7 @@ Button {
             }
         }
         Rectangle {
-            visible: root.large && root.hasDetails
+            visible: root.large && root.showChevron
             anchors.right: parent.right
             anchors.rightMargin: 8
             anchors.verticalCenter: parent.verticalCenter

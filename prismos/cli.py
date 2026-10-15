@@ -89,6 +89,8 @@ def main(argv=None):
     color.add_argument("--seed")
     color.add_argument("--wallpaper")
     color.add_argument("--dark", action="store_true", default=None)
+    color.add_argument("--scheme", choices=tuple(theme.SCHEMES))
+    color.add_argument("--font-scale", type=float)
     args = parser.parse_args(argv)
     try:
         if args.command == "status":
@@ -242,8 +244,14 @@ def main(argv=None):
                 changes["seed"] = seed
             if args.dark is not None:
                 changes["dark"] = args.dark
+            if args.scheme:
+                changes["scheme"] = args.scheme
+            if args.font_scale is not None:
+                if args.font_scale not in settings.FONT_SCALES:
+                    raise ValueError("Text size must be one of " + ", ".join(str(v) for v in settings.FONT_SCALES))
+                changes["font_scale"] = args.font_scale
             prefs = settings.update(**changes) if changes else settings.load()
-            result = theme.palette(prefs["seed"], prefs["dark"])
+            result = theme.palette(prefs["seed"], prefs["dark"], prefs["scheme"])
         print(json.dumps(result, ensure_ascii=False))
         return 0
     except (ValueError, OSError, system.CommandError, ImportError) as error:

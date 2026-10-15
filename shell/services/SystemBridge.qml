@@ -88,6 +88,18 @@ QtObject {
         pending = queue;
         drain();
     }
+    function setScheme(scheme) {
+        const queue = pending.slice();
+        queue.push(["prismctl", "theme", "--scheme", scheme]);
+        pending = queue;
+        drain();
+    }
+    function setFontScale(scale) {
+        const queue = pending.slice();
+        queue.push(["prismctl", "theme", "--font-scale", String(scale)]);
+        pending = queue;
+        drain();
+    }
     function favorite(operation, id) {
         const queue = pending.slice();
         queue.push(["prismctl", "favorites", operation, id]);

@@ -204,7 +204,7 @@ PanelWindow {
         Item {
             id: listPane
             visible: !root.compact || root.current === ""
-            width: root.compact ? parent.width : 330
+            width: root.compact ? parent.width : Math.round(330 * Math.max(1, Theme.fontScale))
             anchors.top: parent.top
             anchors.bottom: parent.bottom
             anchors.left: parent.left

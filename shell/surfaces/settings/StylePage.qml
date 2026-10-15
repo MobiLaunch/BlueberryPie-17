@@ -25,6 +25,51 @@ SettingsPage {
             seed: "#b85c80"
         }
     ]
+    readonly property var schemes: [
+        {
+            id: "tonal_spot",
+            label: "Tonal Spot",
+            description: "Calm and balanced, Android's default"
+        },
+        {
+            id: "vibrant",
+            label: "Vibrant",
+            description: "Saturated and lively"
+        },
+        {
+            id: "expressive",
+            label: "Expressive",
+            description: "Playful, with shifted hues"
+        },
+        {
+            id: "neutral",
+            label: "Neutral",
+            description: "Nearly gray with a hint of color"
+        },
+        {
+            id: "monochrome",
+            label: "Monochrome",
+            description: "Pure grays, maximum calm"
+        }
+    ]
+    readonly property var scales: [
+        {
+            label: "Small",
+            value: 0.9
+        },
+        {
+            label: "Default",
+            value: 1
+        },
+        {
+            label: "Large",
+            value: 1.15
+        },
+        {
+            label: "Largest",
+            value: 1.3
+        }
+    ]
     readonly property string seed: SystemBridge.snapshot.settings.seed || "#8469cf"
     property string customError: ""
     Component.onCompleted: WallpaperState.refresh()
@@ -240,6 +285,58 @@ SettingsPage {
                     variant: "filled"
                     enabled: hexField.valid
                     onClicked: SystemBridge.setSeed(hexField.text.toLowerCase())
+                }
+            }
+        }
+    }
+    SettingsGroup {
+        width: parent.width
+        title: "Color scheme"
+        Repeater {
+            model: page.schemes
+            delegate: ListRow {
+                required property var modelData
+                width: parent ? parent.width : 600
+                title: modelData.label
+                supporting: modelData.description
+                symbol: "palette"
+                selected: (SystemBridge.snapshot.settings.scheme || "tonal_spot") === modelData.id
+                Accessible.role: Accessible.RadioButton
+                onClicked: SystemBridge.setScheme(modelData.id)
+            }
+        }
+    }
+    SettingsGroup {
+        width: parent.width
+        title: "Text size"
+        Rectangle {
+            width: parent.width
+            height: 96
+            radius: Theme.shape.extraLarge - 4
+            color: Theme.surfaceContainer
+            property bool interactive: false
+            Column {
+                anchors.fill: parent
+                anchors.margins: 16
+                spacing: 10
+                Row {
+                    spacing: 8
+                    Repeater {
+                        model: page.scales
+                        delegate: FilterChip {
+                            required property var modelData
+                            text: modelData.label
+                            selected: Theme.fontScale === modelData.value
+                            onClicked: SystemBridge.setFontScale(modelData.value)
+                        }
+                    }
+                }
+                Label {
+                    width: parent.width
+                    text: "The quick brown fox jumps over the lazy dog"
+                    role: "bodyLarge"
+                    color: Theme.surfaceVariantInk
+                    elide: Text.ElideRight
                 }
             }
         }

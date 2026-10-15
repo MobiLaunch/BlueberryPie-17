@@ -7,10 +7,13 @@ from contextlib import contextmanager
 from pathlib import Path
 
 from .regional import KEYBOARD_IDS
+from .theme import SCHEME_SPECS
+
+FONT_SCALES = (0.9, 1.0, 1.15, 1.3)
 
 WIDGET_IDS = ("glance", "clock", "search", "calendar", "media", "weather", "system", "analog")
 DEFAULTS = {"seed": "#8469cf", "dark": False, "reduced_motion": False, "dnd": False,
-            "favorites": None, "recent_apps": [], "wallpaper": "", "widgets": None, "weather": {}, "keyboard": "us", "android_enabled": False, "onboarding_complete": False,
+            "favorites": None, "recent_apps": [], "wallpaper": "", "widgets": None, "weather": {}, "keyboard": "us", "scheme": "tonal_spot", "font_scale": 1.0, "android_enabled": False, "onboarding_complete": False,
             "natural_scroll": True, "tap_to_click": True,
             "pointer_speed": 0.0, "repeat_rate": 25, "display_scales": {}, "display_positions": {}}
 
@@ -70,6 +73,11 @@ def load():
                     valid["weather"] = {"lat": lat, "lon": lon, "label": label, "units": units}
             except (KeyError, TypeError, ValueError):
                 pass
+        if data.get("scheme") in SCHEME_SPECS:
+            valid["scheme"] = data["scheme"]
+        scale = data.get("font_scale")
+        if type(scale) in (int, float) and float(scale) in FONT_SCALES:
+            valid["font_scale"] = float(scale)
         layout = data.get("keyboard")
         if isinstance(layout, str) and layout in KEYBOARD_IDS:
             valid["keyboard"] = layout

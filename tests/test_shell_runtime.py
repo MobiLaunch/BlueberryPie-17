@@ -110,6 +110,56 @@ class ShellRuntimeTests(unittest.TestCase):
                 self.assertEqual(harness.truncated_texts(), [], section)
         harness.ipc("close")
 
+    def test_largest_text_size_keeps_every_surface_and_section_readable(self):
+        harness = Harness()
+        self.addCleanup(harness.close)
+        harness.write_settings(onboarding_complete=True, font_scale=1.3)
+        harness.load()
+        harness.pump(1500)
+        for surface in SURFACES:
+            harness.ipc(surface)
+            harness.pump(500)
+            self.assertEqual(harness.problems(), [], surface)
+            self.assertEqual(harness.truncated_texts(), [], surface)
+            harness.ipc("close")
+            harness.pump(250)
+        harness.ipc("settings")
+        harness.pump(700)
+        for section in SECTIONS:
+            with self.subTest(section=section):
+                row = harness.find("section-" + section)
+                harness.reveal(row)
+                harness.click(*harness.scene_pos(row))
+                harness.pump(500)
+                self.assertEqual(harness.problems(), [], section)
+                self.assertEqual(harness.truncated_texts(), [], section)
+
+    def test_color_scheme_and_text_size_change_through_the_bridge(self):
+        from prismos import settings
+        harness = self.boot()
+        before = harness.eval_value("Theme.primary.toString() + '|' + Theme.type.bodyMedium.size")
+        harness.ipc("settings")
+        harness.pump(500)
+        row = harness.find("section-style")
+        harness.reveal(row)
+        harness.click(*harness.scene_pos(row))
+        harness.pump(600)
+        pick = next(item for item in harness.visible_items()
+                    if item.metaObject().className().startswith("ListRow") and item.property("title") == "Monochrome")
+        harness.reveal(pick)
+        harness.click(*harness.scene_pos(pick))
+        self.assertTrue(harness.wait_for(lambda: settings.load()["scheme"] == "monochrome", 6000))
+        chip = next(item for item in harness.visible_items()
+                    if item.metaObject().className().startswith("FilterChip") and item.property("text") == "Largest")
+        harness.reveal(chip)
+        harness.click(*harness.scene_pos(chip))
+        self.assertTrue(harness.wait_for(lambda: settings.load()["font_scale"] == 1.3, 6000))
+        harness.pump(900)
+        after = harness.eval_value("Theme.primary.toString() + '|' + Theme.type.bodyMedium.size")
+        self.assertNotEqual(before.split("|")[0], after.split("|")[0])
+        self.assertEqual(after.split("|")[1], "18")
+        self.assertEqual(harness.problems(), [])
+
     def test_settings_search_filters_sections(self):
         harness = self.boot()
         harness.ipc("settings")

@@ -49,23 +49,50 @@ def contrast(a, b):
     return (hi + 0.05) / (lo + 0.05)
 
 
-def tonal_spot(seed):
-    """Tonal Spot core palettes: fixed chroma per role, hue taken from the seed."""
+# Scheme -> (label, one-line description). Chroma values follow Material's dynamic
+# schemes; Vibrant and Expressive rotate secondary/tertiary hues by fixed offsets
+# rather than Material's lookup tables, so they are close but not bit-exact.
+SCHEMES = {
+    "tonal_spot": ("Tonal Spot", "Calm, Android's default"),
+    "vibrant": ("Vibrant", "Saturated and lively"),
+    "expressive": ("Expressive", "Playful, shifted hues"),
+    "neutral": ("Neutral", "Almost gray, a hint of color"),
+    "monochrome": ("Monochrome", "Pure grays"),
+}
+# scheme -> {palette: (hue offset, chroma)}
+SCHEME_SPECS = {
+    "tonal_spot": {"primary": (0, 36), "secondary": (0, 16), "tertiary": (60, 24), "neutral": (0, 6), "neutralVariant": (0, 8)},
+    "vibrant": {"primary": (0, 200), "secondary": (20, 24), "tertiary": (40, 32), "neutral": (0, 10), "neutralVariant": (0, 12)},
+    "expressive": {"primary": (240, 40), "secondary": (330, 24), "tertiary": (150, 32), "neutral": (15, 8), "neutralVariant": (15, 12)},
+    "neutral": {"primary": (0, 12), "secondary": (0, 8), "tertiary": (60, 16), "neutral": (0, 2), "neutralVariant": (0, 2)},
+    "monochrome": {"primary": (0, 0), "secondary": (0, 0), "tertiary": (0, 0), "neutral": (0, 0), "neutralVariant": (0, 0)},
+}
+
+
+def scheme_palettes(seed, scheme="tonal_spot"):
+    """Core palettes for a scheme: hue from the seed, chroma and offsets per role."""
+    if scheme not in SCHEME_SPECS:
+        raise ValueError("Unknown color scheme")
     hue, _, _ = hct_from_hex(seed)
-    return {"primary": TonalPalette(hue, 36), "secondary": TonalPalette(hue, 16),
-            "tertiary": TonalPalette(hue + 60, 24), "neutral": TonalPalette(hue, 6),
-            "neutralVariant": TonalPalette(hue, 8), "error": TonalPalette(25, 84)}
+    cores = {name: TonalPalette(hue + offset, chroma) for name, (offset, chroma) in SCHEME_SPECS[scheme].items()}
+    cores["error"] = TonalPalette(25, 84)
+    return cores
 
 
-def palette(seed="#8469cf", dark=False):
+def tonal_spot(seed):
+    return scheme_palettes(seed, "tonal_spot")
+
+
+def palette(seed="#8469cf", dark=False, scheme="tonal_spot"):
     rgb(seed)  # validates; raises ValueError on anything but #rrggbb
     seed = seed.lower()
-    tones = tonal_spot(seed)
+    tones = scheme_palettes(seed, scheme)
     roles = {name: tones[source].tone(dark_tone if dark else light_tone)
              for name, (source, light_tone, dark_tone) in ROLES.items()}
     roles["surfaceTint"] = roles["primary"]
     roles["seed"] = seed
     roles["dark"] = bool(dark)
+    roles["scheme"] = scheme
     return roles
 
 

@@ -178,6 +178,14 @@ class Harness:
         instance.deleteLater()
         self.pump(150)
 
+    def eval_value(self, expression):
+        """Evaluate a JavaScript expression in the shell's engine and return it as text."""
+        marker = "EVAL_RESULT:"
+        self.messages.clear() if hasattr(self.messages, "clear") else None
+        self.eval('console.log("%s" + (%s))' % (marker, expression))
+        line = next(m for m in reversed(self.messages) if marker in m)
+        return line.split(marker, 1)[1]
+
     def screenshot(self, path):
         self.pump(120)
         image = self.view.grabWindow()

@@ -59,7 +59,7 @@ QtObject {
 
     // Material 3 type scale (size, line height, weight, tracking). "Emphasized"
     // variants carry the Expressive weight bump.
-    readonly property var type: ({
+    readonly property var typeBase: ({
             displayLarge: {size: 57, line: 64, weight: Font.Normal, tracking: -0.25},
             displayMedium: {size: 45, line: 52, weight: Font.Normal, tracking: 0},
             displaySmall: {size: 36, line: 44, weight: Font.Normal, tracking: 0},
@@ -78,6 +78,22 @@ QtObject {
             labelMedium: {size: 12, line: 16, weight: Font.Medium, tracking: 0.5},
             labelSmall: {size: 11, line: 16, weight: Font.Medium, tracking: 0.5}
         })
+
+    // User text size (Settings > Wallpaper & style). Line heights scale with the text.
+    readonly property real fontScale: SystemBridge.snapshot.settings.font_scale || 1
+    readonly property var type: {
+        const scaled = {};
+        for (const name in typeBase) {
+            const entry = typeBase[name];
+            scaled[name] = {
+                size: Math.round(entry.size * fontScale),
+                line: Math.round(entry.line * fontScale),
+                weight: entry.weight,
+                tracking: entry.tracking
+            };
+        }
+        return scaled;
+    }
 
     // Corner radii (Material 3 shape scale).
     readonly property var shape: ({
@@ -162,6 +178,6 @@ QtObject {
     }
     // Recompute roles only when the seed or light/dark preference changes,
     // not on every 5-second status poll.
-    readonly property string themeKey: (SystemBridge.snapshot.settings.seed || "") + "|" + dark
+    readonly property string themeKey: (SystemBridge.snapshot.settings.seed || "") + "|" + (SystemBridge.snapshot.settings.scheme || "") + "|" + dark
     onThemeKeyChanged: refresh()
 }
