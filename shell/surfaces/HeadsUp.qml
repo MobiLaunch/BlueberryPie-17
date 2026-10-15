@@ -35,6 +35,8 @@ PanelWindow {
             property real implicitHeight: item ? item.implicitHeight : 0
             sourceComponent: NotificationCard {
                 notification: root.note
+                // The banner window never takes keyboard focus, so replies are typed in the shade.
+                allowReply: false
             }
         }
     }

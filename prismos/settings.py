@@ -37,10 +37,10 @@ def clean_alarms(items):
     return result[:MAX_ALARMS]
 
 TILE_IDS = ("wifi", "bluetooth", "sound", "microphone", "dnd", "dark", "reduced_motion", "audio_devices",
-            "airplane", "battery_saver", "night_light", "screenshot", "lock")
+            "airplane", "battery_saver", "night_light", "screenshot", "lock", "hotspot", "vpn", "screen_record", "focus")
 WIDGET_IDS = ("glance", "clock", "search", "calendar", "media", "weather", "system", "analog", "notes")
 DEFAULTS = {"seed": "#8469cf", "dark": False, "reduced_motion": False, "dnd": False,
-            "favorites": None, "recent_apps": [], "wallpaper": "", "widgets": None, "weather": {}, "keyboard": "us", "widget_sizes": {}, "night_temp": 3800, "recents_previews": True, "clock_24h": True, "world_clocks": [], "tiles": None, "alarms": [], "dnd_schedule": {"enabled": False, "start": "22:00", "end": "07:00"}, "clipboard_history": False, "notification_history": False, "muted_apps": [], "night_light": False, "scheme": "tonal_spot", "font_scale": 1.0, "android_enabled": False, "onboarding_complete": False,
+            "favorites": None, "recent_apps": [], "wallpaper": "", "widgets": None, "weather": {}, "keyboard": "us", "widget_sizes": {}, "night_temp": 3800, "recents_previews": True, "clock_24h": True, "world_clocks": [], "tiles": None, "alarms": [], "dnd_schedule": {"enabled": False, "start": "22:00", "end": "07:00"}, "clipboard_history": False, "notification_history": False, "lock_notifications": True, "record_audio": False, "vpn_profile": "", "muted_apps": [], "recent_emoji": [], "focus": False, "focus_apps": [], "night_light": False, "scheme": "tonal_spot", "font_scale": 1.0, "android_enabled": False, "onboarding_complete": False,
             "natural_scroll": True, "tap_to_click": True,
             "pointer_speed": 0.0, "repeat_rate": 25, "display_scales": {}, "display_positions": {}}
 
@@ -55,7 +55,7 @@ def load():
         if not isinstance(data, dict):
             return dict(DEFAULTS)
         valid = {}
-        for key in ("dark", "reduced_motion", "dnd", "night_light", "clipboard_history", "notification_history", "clock_24h", "recents_previews", "android_enabled", "onboarding_complete",
+        for key in ("dark", "reduced_motion", "dnd", "night_light", "clipboard_history", "notification_history", "lock_notifications", "record_audio", "focus", "clock_24h", "recents_previews", "android_enabled", "onboarding_complete",
                     "natural_scroll", "tap_to_click"):
             if isinstance(data.get(key), bool):
                 valid[key] = data[key]
@@ -101,9 +101,13 @@ def load():
                                      if key in RESIZABLE_WIDGETS and value in WIDGET_SIZES}
         zones = data.get("world_clocks")
         if isinstance(zones, list):
-            from .regional import timezones
-            known = set(timezones())
-            valid["world_clocks"] = list(dict.fromkeys(z for z in zones if isinstance(z, str) and z in known))[:MAX_WORLD_CLOCKS]
+            # The time zone database is only read (it is slow to scan) when there is something to check.
+            candidates = [z for z in zones if isinstance(z, str)]
+            if candidates:
+                from .regional import timezones
+                known = set(timezones())
+                candidates = [z for z in candidates if z in known]
+            valid["world_clocks"] = list(dict.fromkeys(candidates))[:MAX_WORLD_CLOCKS]
         alarms = data.get("alarms")
         if isinstance(alarms, list):
             valid["alarms"] = clean_alarms(alarms)
@@ -111,11 +115,19 @@ def load():
         if isinstance(quiet, dict) and type(quiet.get("enabled")) is bool \
                 and TIME.fullmatch(str(quiet.get("start"))) and TIME.fullmatch(str(quiet.get("end"))):
             valid["dnd_schedule"] = {"enabled": quiet["enabled"], "start": quiet["start"], "end": quiet["end"]}
-        muted = data.get("muted_apps")
-        if isinstance(muted, list):
-            valid["muted_apps"] = list(dict.fromkeys(
-                name for name in muted if isinstance(name, str) and 1 <= len(name) <= 64
-                and not re.search(r"[\x00-\x1f\x7f]", name)))[:50]
+        profile = data.get("vpn_profile")
+        if isinstance(profile, str) and re.fullmatch(r"[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}", profile):
+            valid["vpn_profile"] = profile.lower()
+        used = data.get("recent_emoji")
+        if isinstance(used, list):
+            from .emoji import MAX_RECENT, valid as is_emoji
+            valid["recent_emoji"] = list(dict.fromkeys(item for item in used if is_emoji(item)))[:MAX_RECENT]
+        for key in ("muted_apps", "focus_apps"):
+            names = data.get(key)
+            if isinstance(names, list):
+                valid[key] = list(dict.fromkeys(
+                    name for name in names if isinstance(name, str) and 1 <= len(name) <= 64
+                    and not re.search(r"[\x00-\x1f\x7f]", name)))[:50]
         place = data.get("weather")
         if isinstance(place, dict) and place:
             try:
@@ -181,6 +193,6 @@ def modify(transform):
 
 
 def toggle(key):
-    if key not in ("dark", "reduced_motion", "dnd", "night_light"):
+    if key not in ("dark", "reduced_motion", "dnd", "night_light", "focus"):
         raise ValueError("Unknown preference")
     return modify(lambda data: {**data, key: not bool(data[key])})

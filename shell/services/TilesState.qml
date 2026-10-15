@@ -69,6 +69,26 @@ QtObject {
             id: "lock",
             title: "Lock screen",
             large: false
+        },
+        {
+            id: "hotspot",
+            title: "Hotspot",
+            large: false
+        },
+        {
+            id: "vpn",
+            title: "VPN",
+            large: false
+        },
+        {
+            id: "screen_record",
+            title: "Screen record",
+            large: false
+        },
+        {
+            id: "focus",
+            title: "Focus mode",
+            large: false
         }
     ]
     readonly property var defaults: ["wifi", "bluetooth", "sound", "microphone", "dnd", "dark", "reduced_motion", "audio_devices"]
@@ -78,7 +98,7 @@ QtObject {
     readonly property var arranged: enabled.concat(catalog.map(item => item.id).filter(id => enabled.indexOf(id) < 0))
 
     // Compact tiles that open an inline details panel (long-press or right-click).
-    readonly property var detailTiles: ["night_light", "battery_saver", "screenshot", "dnd", "dark"]
+    readonly property var detailTiles: ["night_light", "battery_saver", "screenshot", "dnd", "dark", "hotspot", "vpn", "screen_record"]
     function entry(id) {
         return catalog.find(item => item.id === id) || {
             id: id,
@@ -215,6 +235,47 @@ QtObject {
                 activated: false,
                 enabled: true,
                 hasDetails: true
+            };
+        case "hotspot":
+            return {
+                title: base.title,
+                large: false,
+                subtitle: !s.hotspot.available ? "Unavailable" : s.hotspot.enabled ? (s.hotspot.ssid || "On") : "Off",
+                symbol: "hotspot",
+                activated: s.hotspot.enabled === true,
+                enabled: s.hotspot.available === true,
+                hasDetails: true
+            };
+        case "vpn":
+            return {
+                title: base.title,
+                large: false,
+                subtitle: !s.vpn.available ? "None set up" : s.vpn.enabled ? s.vpn.label : "Off",
+                symbol: "vpn",
+                activated: s.vpn.enabled === true,
+                // Without a profile the tile stays tappable: its details explain how to add one.
+                enabled: true,
+                hasDetails: true
+            };
+        case "screen_record":
+            return {
+                title: base.title,
+                large: false,
+                subtitle: !s.recording.available ? "Needs wf-recorder" : s.recording.recording ? "Recording" : "Off",
+                symbol: s.recording.recording ? "stop" : "record",
+                activated: s.recording.recording === true,
+                enabled: s.recording.available === true,
+                hasDetails: true
+            };
+        case "focus":
+            return {
+                title: base.title,
+                large: false,
+                subtitle: s.settings.focus ? Notifications.focusApps.length + (Notifications.focusApps.length === 1 ? " app paused" : " apps paused") : Notifications.focusApps.length === 0 ? "Choose apps" : "Off",
+                symbol: "focus",
+                activated: s.settings.focus === true,
+                enabled: true,
+                hasDetails: false
             };
         case "lock":
             return {

@@ -36,6 +36,22 @@ QtObject {
                 available: false,
                 enabled: false
             },
+            hotspot: {
+                available: false,
+                enabled: false
+            },
+            vpn: {
+                available: false,
+                enabled: false,
+                count: 0
+            },
+            recording: {
+                available: false,
+                recording: false,
+                seconds: 0,
+                started: 0,
+                audio: false
+            },
             profile: {
                 available: false,
                 saver: false
@@ -63,6 +79,8 @@ QtObject {
     property var pending: []
     property bool busy: writer.running
     property bool needsRefresh: false
+    property bool staleRead: false
+    property string lastStatus: ""
     signal launchFinished(bool success, string message)
 
     function refresh() {
@@ -75,12 +93,169 @@ QtObject {
         if (!appReader.running)
             appReader.running = true;
     }
+    // A copy of the snapshot with a few keys changed per section, so a tile can answer
+    // a click at once instead of waiting for the command and a full status read.
+    function patched(changes) {
+        const next = Object.assign({}, snapshot);
+        for (const section in changes)
+            next[section] = Object.assign({}, snapshot[section], changes[section]);
+        return next;
+    }
+    function clamp(value, low) {
+        return Math.max(low, Math.min(100, Math.round(value)));
+    }
+    // What the snapshot will say once `name` has run, for actions whose result is certain.
+    // Anything not listed waits for the real state. A failed action is corrected by the
+    // status read that always follows it.
+    function predict(name, value) {
+        const s = snapshot;
+        switch (name) {
+        case "dark":
+        case "reduced_motion":
+        case "dnd":
+        case "focus":
+            {
+                const change = {};
+                change[name] = !s.settings[name];
+                return patched({
+                    settings: change
+                });
+            }
+        case "wifi":
+            return s.wifi.available ? patched({
+                wifi: {
+                    enabled: !s.wifi.enabled
+                }
+            }) : null;
+        case "bluetooth":
+            return s.bluetooth.available ? patched({
+                bluetooth: {
+                    enabled: !s.bluetooth.enabled
+                }
+            }) : null;
+        case "mute":
+            return s.volume.available ? patched({
+                volume: {
+                    muted: !s.volume.muted
+                }
+            }) : null;
+        case "microphone-mute":
+            return s.microphone.available ? patched({
+                microphone: {
+                    muted: !s.microphone.muted
+                }
+            }) : null;
+        case "airplane":
+            return s.airplane.available ? patched({
+                airplane: {
+                    enabled: !s.airplane.enabled
+                },
+                wifi: {
+                    enabled: s.airplane.enabled && s.wifi.available
+                },
+                bluetooth: {
+                    enabled: s.airplane.enabled && s.bluetooth.available
+                }
+            }) : null;
+        case "hotspot":
+            return s.hotspot.available ? patched({
+                hotspot: {
+                    enabled: !s.hotspot.enabled
+                }
+            }) : null;
+        case "vpn":
+            return s.vpn.available ? patched({
+                vpn: {
+                    enabled: !s.vpn.enabled
+                }
+            }) : null;
+        case "night-light":
+            return s.night_light.available ? patched({
+                night_light: {
+                    enabled: !s.night_light.enabled
+                },
+                settings: {
+                    night_light: !s.night_light.enabled
+                }
+            }) : null;
+        case "battery-saver":
+            return s.profile.available ? patched({
+                profile: {
+                    saver: !s.profile.saver
+                }
+            }) : null;
+        case "volume":
+            return s.volume.available && value !== undefined ? patched({
+                volume: {
+                    value: clamp(value, 0)
+                }
+            }) : null;
+        case "brightness":
+            return s.brightness.available && value !== undefined ? patched({
+                brightness: {
+                    value: clamp(value, 1)
+                }
+            }) : null;
+        case "volume-up":
+        case "volume-down":
+            return s.volume.available ? patched({
+                volume: {
+                    value: clamp(s.volume.value + (name === "volume-up" ? 5 : -5), 0)
+                }
+            }) : null;
+        case "brightness-up":
+        case "brightness-down":
+            return s.brightness.available ? patched({
+                brightness: {
+                    value: clamp(s.brightness.value + (name === "brightness-up" ? 5 : -5), 1)
+                }
+            }) : null;
+        }
+        return null;
+    }
+    // Show a predicted snapshot now. The next real reading always replaces it, even when it equals
+    // the previous reading (a command that failed), and a read already in flight is discarded: it
+    // predates the click and would flip the control back.
+    function applyGuess(next) {
+        snapshot = next;
+        lastStatus = "";
+        if (reader.running)
+            staleRead = true;
+    }
+    // One step of a hardware volume or brightness key, taken from the predicted level so a held key
+    // moves smoothly and many presses become one write. Returns false if there is nothing to adjust.
+    function step(kind, delta) {
+        const control = kind === "volume" ? snapshot.volume : snapshot.brightness;
+        if (!control || !control.available) {
+            // Let the command report why (no sound server, no backlight) instead of failing silently.
+            action(kind + (delta > 0 ? "-up" : "-down"));
+            return false;
+        }
+        action(kind, clamp(control.value + delta, kind === "volume" ? 0 : 1));
+        return true;
+    }
     function action(name, value) {
+        const guess = predict(name, value);
+        if (guess)
+            applyGuess(guess);
         let args = ["prismctl", "action", name];
         if (value !== undefined)
             args.push(String(Math.round(value)));
-        // Sliders coalesce pending writes. Commands are arrays, never shell text.
-        let queue = pending.filter(item => item[2] !== name);
+        if (name === "hotspot" || name === "vpn") {
+            // Starting these can take many seconds; they get their own writer so volume keys,
+            // brightness and everything else keep working meanwhile.
+            if (!slowWriter.running) {
+                slowWriter.command = args;
+                slowWriter.running = true;
+            } else {
+                // Already working on one: undo the guess for this extra tap.
+                snapshot = predict(name, value) || snapshot;
+            }
+            return;
+        }
+        // Sliders coalesce pending writes of the same control (only the newest value matters);
+        // toggles and steps are never merged. Commands are arrays, never shell text.
+        let queue = value !== undefined ? pending.filter(item => item[2] !== name) : pending.slice();
         queue.push(args);
         pending = queue;
         drain();
@@ -107,6 +282,11 @@ QtObject {
         drain();
     }
     function setTiles(ids) {
+        applyGuess(patched({
+            settings: {
+                tiles: ids
+            }
+        }));
         const queue = pending.filter(item => item[1] !== "tiles");
         queue.push(["prismctl", "tiles", "set"].concat(ids));
         pending = queue;
@@ -155,11 +335,77 @@ QtObject {
         pending = queue;
         drain();
     }
+    // Pause (or stop pausing) one app's notifications while Focus mode is on.
+    function setFocusApp(name, paused) {
+        const current = snapshot.settings.focus_apps || [];
+        applyGuess(patched({
+            settings: {
+                focus_apps: paused ? current.filter(item => item !== name).concat([name]) : current.filter(item => item !== name)
+            }
+        }));
+        const queue = pending.filter(item => !(item[1] === "notifications" && item[2] === "focus-app" && item[3] === name));
+        queue.push(["prismctl", "notifications", "focus-app", name, paused ? "yes" : "no"]);
+        pending = queue;
+        drain();
+    }
+    function setLockNotificationCount(count) {
+        const queue = pending.filter(item => !(item[1] === "notifications" && item[2] === "count"));
+        queue.push(["prismctl", "notifications", "count", String(Math.max(0, Math.min(999, Math.round(count))))]);
+        pending = queue;
+        drain();
+    }
+    function setLockScreenCount(on) {
+        const queue = pending.filter(item => !(item[1] === "notifications" && item[2] === "lock-count"));
+        queue.push(["prismctl", "notifications", "lock-count", on ? "yes" : "no"]);
+        pending = queue;
+        drain();
+    }
     function setNotificationHistory(on) {
         const queue = pending.filter(item => item[1] !== "notifications" || item[2] !== "history");
         queue.push(["prismctl", "notifications", "history", on ? "yes" : "no"]);
         pending = queue;
         drain();
+    }
+    // Screen recording. Starting an area waits for the user's selection, so it has its own process.
+    signal recordingFinished(bool success, string message)
+    property string recorderOp: ""
+    function record(op, mode) {
+        if (recorder.running)
+            return;
+        recorderOp = op;
+        // Stopping always works if it was recording, so the tile and top-bar chip answer at once;
+        // starting may be cancelled (an area selection), so it waits for the real state.
+        if (op === "stop")
+            applyGuess(patched({
+                recording: {
+                    recording: false,
+                    seconds: 0
+                }
+            }));
+        recorder.command = ["prismctl", "record", op].concat(mode ? [mode] : []);
+        recorder.running = true;
+    }
+    function setRecordAudio(on) {
+        const queue = pending.filter(item => !(item[1] === "record" && item[2] === "audio"));
+        queue.push(["prismctl", "record", "audio", on ? "yes" : "no"]);
+        pending = queue;
+        drain();
+    }
+    property Process recorder: Process {
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const data = JSON.parse(text);
+                    if (data.ok === false)
+                        root.recordingFinished(false, data.error);
+                    else if (root.recorderOp === "stop" || (root.recorderOp === "toggle" && data.recording === false))
+                        root.recordingFinished(true, "Recording saved to Videos/Screen recordings");
+                } catch (e) {
+                    root.recordingFinished(false, "The recorder did not respond");
+                }
+            }
+        }
+        onExited: root.refresh()
     }
     function screenshot(mode) {
         if (shooter.running)
@@ -236,10 +482,22 @@ QtObject {
         }
         stdout: StdioCollector {
             onStreamFinished: {
+                const stale = root.staleRead;
+                root.staleRead = false;
+                if (stale) {
+                    // Read before the last click took effect: discard it and read again.
+                    root.needsRefresh = true;
+                    return;
+                }
+                // An unchanged answer would still re-run every binding in the shell.
+                if (text === root.lastStatus)
+                    return;
                 try {
                     const data = JSON.parse(text);
-                    if (data.settings)
+                    if (data.settings) {
+                        root.lastStatus = text;
                         root.snapshot = data;
+                    }
                 } catch (e) {
                     root.error = "Could not read system state";
                 }
@@ -256,7 +514,8 @@ QtObject {
             onStreamFinished: {
                 try {
                     const data = JSON.parse(text);
-                    if (Array.isArray(data))
+                    // Reopening the launcher re-reads the list; keep the model (and its tiles) when nothing changed.
+                    if (Array.isArray(data) && JSON.stringify(data) !== JSON.stringify(root.apps))
                         root.apps = data;
                 } catch (e) {
                     root.error = "Could not read installed applications";
@@ -283,6 +542,23 @@ QtObject {
             if (AudioState.panelOpen)
                 AudioState.refresh();
             nextWrite.restart();
+        }
+    }
+    property Process slowWriter: Process {
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const data = JSON.parse(text);
+                    if (data.ok === false)
+                        root.error = data.error;
+                } catch (e) {
+                    root.error = "The network action did not respond";
+                }
+            }
+        }
+        onExited: {
+            root.refresh();
+            NetShareState.refreshHotspotIfOpen();
         }
     }
     property Timer nextWrite: Timer {

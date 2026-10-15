@@ -9,7 +9,7 @@ PanelWindow {
     property bool opened: ShellState.launching !== null && ShellState.activeScreen === screen
     property var lastApp: ({
             name: "",
-            icon: "application-x-executable"
+            icon: ""
         })
     anchors {
         top: true
@@ -47,12 +47,12 @@ PanelWindow {
         Column {
             anchors.centerIn: parent
             spacing: 20
-            Image {
+            AppIcon {
                 anchors.horizontalCenter: parent.horizontalCenter
                 width: 56
                 height: 56
-                source: Quickshell.iconPath(root.lastApp.icon, "application-x-executable")
-                sourceSize: Qt.size(56, 56)
+                icon: root.lastApp.icon
+                label: root.lastApp.name
             }
             Label {
                 text: root.lastApp.name

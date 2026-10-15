@@ -60,13 +60,12 @@ Button {
                     duration: Theme.fast
                 }
             }
-            Image {
+            AppIcon {
                 anchors.centerIn: parent
                 width: 44
                 height: 44
-                sourceSize: Qt.size(88, 88)
-                fillMode: Image.PreserveAspectFit
-                source: Quickshell.iconPath(root.app.icon, "application-x-executable")
+                icon: root.app.icon
+                label: root.app.name
             }
             Rectangle {
                 visible: Applications.isPinned(root.app.id)
@@ -79,10 +78,9 @@ Button {
                 color: Theme.primary
                 Symbol {
                     anchors.centerIn: parent
-                    width: 10
-                    height: 10
+                    width: 14
+                    height: 14
                     name: "check"
-                    weight: 3
                     color: Theme.primaryInk
                 }
             }

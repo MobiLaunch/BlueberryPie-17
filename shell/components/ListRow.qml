@@ -66,6 +66,7 @@ Button {
                 width: 22
                 height: 22
                 name: root.symbol
+                filled: root.selected
                 color: root.chipInk
             }
         }

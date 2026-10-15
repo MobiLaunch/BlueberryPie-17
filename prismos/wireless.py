@@ -4,7 +4,6 @@ import pwd
 import re
 import tempfile
 import uuid
-from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from . import system
@@ -46,6 +45,7 @@ def profiles():
         return {"uuid": identifier, "ssid": parts[0] if parts else "",
                 "key": parts[1] if len(parts) > 1 else ""}
 
+    from concurrent.futures import ThreadPoolExecutor
     with ThreadPoolExecutor(max_workers=6) as pool:
         return list(pool.map(read, ids))
 
@@ -187,6 +187,7 @@ def bluetooth_list(scan=False):
                 "paired": bool(re.search(r"(?:Paired|Bonded):\s+yes", info)),
                 "connected": bool(re.search(r"Connected:\s+yes", info))}
 
+    from concurrent.futures import ThreadPoolExecutor
     with ThreadPoolExecutor(max_workers=6) as pool:
         result["devices"] = sorted(filter(None, pool.map(read, known)),
                                    key=lambda d: (not d["connected"], not d["paired"], d["name"].casefold()))

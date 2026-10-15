@@ -23,6 +23,7 @@ python
 python-pillow
 ttf-roboto
 noto-fonts
+noto-fonts-emoji
 sudo
 mesa
 vulkan-intel
@@ -37,6 +38,9 @@ slurp
 wl-clipboard
 sound-theme-freedesktop
 cliphist
+papirus-icon-theme
+dnsmasq
+wf-recorder
 waydroid
 xdg-desktop-portal-gtk
 # Disk installer (prismos/installer.py); releng ships most of these, listed so they are never dropped.
@@ -47,3 +51,4 @@ e2fsprogs
 grub
 efibootmgr
 polkit
+pacman-contrib

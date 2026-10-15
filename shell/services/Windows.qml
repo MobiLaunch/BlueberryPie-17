@@ -71,10 +71,18 @@ QtObject {
         closing = closing.slice(1);
         act("close", next);
     }
-    function act(operation, address) {
+    // Android's Home: tuck every window on this workspace away; again brings them back.
+    function showDesktop() {
+        return act("show-desktop");
+    }
+    // Two windows side by side, `first` on the left.
+    function split(first, second) {
+        return act("split", first, second);
+    }
+    function act(operation, address, second) {
         if (actor.running)
             return false;
-        actor.command = ["prismctl", "windows", operation, address];
+        actor.command = ["prismctl", "windows", operation].concat(address ? [address] : [], second ? [second] : []);
         actor.running = true;
         return true;
     }

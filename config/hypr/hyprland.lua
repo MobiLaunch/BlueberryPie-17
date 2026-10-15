@@ -17,19 +17,33 @@ hl.config({
     animations = { enabled = true },
     input = { kb_layout = "us", follow_mouse = 1, touchpad = { natural_scroll = true } },
 })
-hl.curve("prismSpring", { type = "spring", mass = 1, stiffness = 340, damping = 29 })
-hl.curve("prismFade", { type = "bezier", points = {{0.2, 0}, {0, 1}} })
-hl.animation({ leaf = "windowsIn", enabled = true, speed = 3.2, spring = "prismSpring", style = "popin 90%" })
-hl.animation({ leaf = "windowsOut", enabled = true, speed = 1.6, bezier = "prismFade", style = "popin 95%" })
-hl.animation({ leaf = "fade", enabled = true, speed = 1.6, bezier = "prismFade" })
-hl.animation({ leaf = "layers", enabled = false }) -- The shell animates its own panels.
+-- Animation curves and touchpad gestures are the newest parts of the Lua API. Each call runs
+-- under pcall so one option a given Hyprland build refuses can never abort the file: the binds
+-- and the autostart below (which launches the shell) always run.
+local function try(fn, ...)
+    return (pcall(fn, ...))
+end
+-- Springs: the damping field is spelled `dampening`, and an animation can only name a spring
+-- that was created, so fall back to the bezier when the spring is refused.
+try(hl.curve, "prismFade", { type = "bezier", points = {{0.2, 0}, {0, 1}} })
+local spring_ok = try(hl.curve, "prismSpring", { type = "spring", mass = 1, stiffness = 340, dampening = 29 })
+local opening = spring_ok and { spring = "prismSpring" } or { bezier = "prismFade" }
+try(hl.animation, { leaf = "windowsIn", enabled = true, speed = 3.2, spring = opening.spring, bezier = opening.bezier, style = "popin 90%" })
+try(hl.animation, { leaf = "windowsOut", enabled = true, speed = 1.6, bezier = "prismFade", style = "popin 95%" })
+try(hl.animation, { leaf = "fade", enabled = true, speed = 1.6, bezier = "prismFade" })
+try(hl.animation, { leaf = "layers", enabled = false }) -- The shell animates its own panels.
 -- Hyprland 0.56 native trackpad gestures: continuous workspace movement
 -- plus Android-like 4-finger launcher / Quick Settings reveals.
 -- These do not intercept ordinary two-finger app scrolling.
-hl.gesture({ fingers = 3, direction = "horizontal", action = "workspace" })
-hl.gesture({ fingers = 4, direction = "up",
+try(hl.gesture, { fingers = 3, direction = "horizontal", action = "workspace" })
+-- 3-finger swipe up opens Recents; 3-finger swipe down is Home (leave what is open, else show the desktop).
+try(hl.gesture, { fingers = 3, direction = "up",
+    action = function() hl.exec_cmd("prism-shell ipc recents") end })
+try(hl.gesture, { fingers = 3, direction = "down",
+    action = function() hl.exec_cmd("prism-shell ipc home || prismctl windows show-desktop") end })
+try(hl.gesture, { fingers = 4, direction = "up",
     action = function() hl.exec_cmd("prism-shell ipc launcher") end })
-hl.gesture({ fingers = 4, direction = "down",
+try(hl.gesture, { fingers = 4, direction = "down",
     action = function() hl.exec_cmd("prism-shell ipc shade") end })
 hl.bind("SUPER + SPACE", hl.dsp.exec_cmd("prism-shell ipc launcher"))
 hl.bind("SUPER + A", hl.dsp.exec_cmd("prism-shell ipc launcher"))
@@ -42,6 +56,7 @@ hl.bind("SUPER + COMMA", hl.dsp.exec_cmd("prism-shell ipc settings"))
 hl.bind("SUPER + RETURN", hl.dsp.exec_cmd("foot"))
 hl.bind("SUPER + C", hl.dsp.exec_cmd("prism-shell ipc calculator"))
 hl.bind("SUPER + V", hl.dsp.exec_cmd("prism-shell ipc clipboard"))
+hl.bind("SUPER + PERIOD", hl.dsp.exec_cmd("prism-shell ipc emoji"))
 hl.bind("SUPER + E", hl.dsp.exec_cmd("prism-shell ipc files"))
 hl.bind("SUPER + L", hl.dsp.exec_cmd("prismctl action lock"))
 hl.bind("SUPER + SHIFT + Q", hl.dsp.window.close())
@@ -58,14 +73,20 @@ key_bind("SUPER + DOWN", "prismctl windows minimize active")
 key_bind("SUPER + LEFT", "prismctl windows snap-left active")
 key_bind("SUPER + RIGHT", "prismctl windows snap-right active")
 key_bind("SUPER + F", "prismctl windows float active")
+key_bind("SUPER + D", "prism-shell ipc home || prismctl windows show-desktop")
 key_bind("Print", "prism-shell ipc screenshot")
 key_bind("SHIFT + Print", "prism-shell ipc screenshotFull")
-key_bind("XF86AudioRaiseVolume", "prismctl action volume-up", held)
-key_bind("XF86AudioLowerVolume", "prismctl action volume-down", held)
-key_bind("XF86AudioMute", "prismctl action mute", { locked = true })
-key_bind("XF86AudioMicMute", "prismctl action microphone-mute", { locked = true })
-key_bind("XF86MonBrightnessUp", "prismctl action brightness-up", held)
-key_bind("XF86MonBrightnessDown", "prismctl action brightness-down", held)
+key_bind("SUPER + SHIFT + R", "prism-shell ipc record")
+-- The shell shows the volume / brightness indicator; if it is not running the key still works.
+local function via_shell(target, fallback)
+    return "prism-shell ipc " .. target .. " || prismctl action " .. fallback
+end
+key_bind("XF86AudioRaiseVolume", via_shell("volumeUp", "volume-up"), held)
+key_bind("XF86AudioLowerVolume", via_shell("volumeDown", "volume-down"), held)
+key_bind("XF86AudioMute", via_shell("volumeMute", "mute"), { locked = true })
+key_bind("XF86AudioMicMute", via_shell("micMute", "microphone-mute"), { locked = true })
+key_bind("XF86MonBrightnessUp", via_shell("brightnessUp", "brightness-up"), held)
+key_bind("XF86MonBrightnessDown", via_shell("brightnessDown", "brightness-down"), held)
 hl.on("hyprland.start", function()
     hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP")
     hl.exec_cmd("/usr/lib/polkit-kde-authentication-agent-1")

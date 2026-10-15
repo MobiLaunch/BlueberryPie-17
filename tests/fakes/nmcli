@@ -1,0 +1,70 @@
+#!/usr/bin/env python3
+"""A small stand-in for nmcli for the runtime tests: just enough of connection, device and radio
+handling for the hotspot and VPN features, with its state kept in the file named by FAKE_NM_STATE."""
+import fcntl
+import json
+import os
+import stat
+import sys
+import uuid
+
+path = os.environ["FAKE_NM_STATE"]
+args = sys.argv[1:]
+# Several nmcli processes run at once (status reads while an action runs): serialise them, write
+# the state atomically and only when something changed, so a read can never undo a change.
+lock = open(path + ".lock", "w")
+fcntl.flock(lock, fcntl.LOCK_EX)
+with open(path + ".log", "a") as log:
+    log.write(json.dumps(args) + "\n")
+with open(path) as stream:
+    state = json.load(stream)
+before = json.dumps(state, sort_keys=True)
+
+
+def save():
+    if json.dumps(state, sort_keys=True) == before:
+        return
+    with open(path + ".tmp", "w") as stream:
+        json.dump(state, stream)
+    os.replace(path + ".tmp", path)
+
+
+def fields():
+    return args[args.index("-f") + 1] if "-f" in args else ""
+
+
+def find(by, value):
+    return next((c for c in state["connections"] if c[by] == value), None)
+
+
+plain = [a for a in args if a not in ("-t", "--escape", "no")]
+if plain[:2] == ["radio", "wifi"]:
+    print("enabled" if len(plain) == 2 else "")
+elif "connection" in plain and "show" in plain and "--active" in plain:
+    for c in state["connections"]:
+        if c["active"]:
+            print(f"{c['name']}:{c['type']}")
+elif "connection" in plain and "show" in plain and "-f" in plain:
+    for c in state["connections"]:
+        print(":".join({"NAME": c["name"], "UUID": c["uuid"], "TYPE": c["type"], "ACTIVE": "yes" if c["active"] else "no"}[f]
+                       for f in fields().split(",")))
+elif "DEVICE,TYPE" in args:
+    print("wlan0:wifi")
+elif "WIFI-PROPERTIES.AP" in args:
+    print("yes")
+elif "connection" in plain and "add" in plain:
+    name = plain[plain.index("con-name") + 1]
+    state["connections"].append({"name": name, "uuid": str(uuid.uuid4()), "type": "802-11-wireless", "active": False})
+elif "connection" in plain and "up" in plain:
+    target = find("name", plain[plain.index("id") + 1]) if "id" in plain else find("uuid", plain[plain.index("uuid") + 1])
+    if "passwd-file" in plain:
+        secret = plain[plain.index("passwd-file") + 1]
+        state["secret_seen"] = [open(secret).read(), stat.S_IMODE(os.stat(secret).st_mode)]
+    if target is None:
+        sys.exit("Error: unknown connection")
+    target["active"] = True
+elif "connection" in plain and "down" in plain:
+    target = find("name", plain[plain.index("id") + 1]) if "id" in plain else find("uuid", plain[plain.index("uuid") + 1])
+    if target:
+        target["active"] = False
+save()

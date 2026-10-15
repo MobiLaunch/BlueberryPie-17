@@ -65,7 +65,7 @@ def entries():
                     continue
                 if not data.get("Name") or not (data.get("Exec") or data.getboolean("DBusActivatable", fallback=False)):
                     continue
-                result.append({"id": desktop_id, "name": data["Name"], "icon": data.get("Icon", "application-x-executable"),
+                result.append({"id": desktop_id, "name": data["Name"], "icon": data.get("Icon", ""),
                                "startupClass": data.get("StartupWMClass", ""),
                                "description": data.get("Comment", ""), "path": str(path.resolve()),
                                "category": categorize(data.get("Categories", "")),

@@ -6,11 +6,54 @@ QtObject {
     id: root
     readonly property var items: server.trackedNotifications
     readonly property int limit: 50
+    // Snoozed notifications leave the shade until their time is up; the sender's own notification
+    // stays alive, so replies and actions keep working when it comes back.
+    property var snoozed: ({})
+    property real snoozeNow: Date.now()
+    function isSnoozed(note) {
+        const until = snoozed[note.id];
+        return until !== undefined && until > snoozeNow;
+    }
+    readonly property var visibleItems: {
+        const hidden = snoozed, stamp = snoozeNow;
+        return items.values.filter(note => !(hidden[note.id] !== undefined && hidden[note.id] > stamp));
+    }
+    function snooze(note, minutes) {
+        const next = Object.assign({}, snoozed);
+        next[note.id] = Date.now() + minutes * 60000;
+        snoozed = next;
+        snoozeNow = Date.now();
+        if (headsUp === note)
+            headsUp = null;
+    }
+    property Timer snoozeClock: Timer {
+        interval: 2000
+        repeat: true
+        running: Object.keys(root.snoozed).length > 0
+        onTriggered: {
+            root.snoozeNow = Date.now();
+            const next = {};
+            let due = null;
+            for (const key in root.snoozed) {
+                if (root.snoozed[key] > root.snoozeNow)
+                    next[key] = root.snoozed[key];
+                else
+                    due = root.items.values.find(note => String(note.id) === key) || due;
+            }
+            root.snoozed = next;
+            // Back again, like a new arrival: a banner unless Do Not Disturb is on.
+            if (due && !root.quiet) {
+                root.headsUp = due;
+                headsUpTimer.interval = 6000;
+                headsUpTimer.restart();
+            }
+        }
+    }
     // Newest first, grouped by sending app. Rebuilt whenever the tracked set changes.
     readonly property var groups: {
         const byApp = {};
         const order = [];
-        for (const note of items.values.slice().reverse()) {
+        for (const note of visibleItems.slice().reverse()) {
             const key = note.appName || "Other";
             if (!byApp[key]) {
                 byApp[key] = {
@@ -23,7 +66,14 @@ QtObject {
         }
         return order.map(key => byApp[key]);
     }
-    readonly property int count: items.values.length
+    readonly property int count: visibleItems.length
+    // The lock screen shows how many are waiting (a number only, never any text).
+    onCountChanged: lockCountTimer.restart()
+    Component.onCompleted: lockCountTimer.restart()
+    property Timer lockCountTimer: Timer {
+        interval: 400
+        onTriggered: SystemBridge.setLockNotificationCount(root.count)
+    }
     // Quiet hours: Do Not Disturb turns itself on between two times (may span midnight).
     readonly property var schedule: SystemBridge.snapshot.settings.dnd_schedule || {
         enabled: false,
@@ -82,6 +132,12 @@ QtObject {
         if (name && seenApps.indexOf(name) < 0)
             seenApps = seenApps.concat([name]).slice(-30);
     }
+    // Focus mode: the chosen apps stay quiet (no banner) while it is on; they still reach the shade.
+    readonly property var focusApps: SystemBridge.snapshot.settings.focus_apps || []
+    readonly property bool focusOn: SystemBridge.snapshot.settings.focus === true
+    function isPaused(name) {
+        return focusOn && focusApps.indexOf(name || "Other") >= 0;
+    }
     function isMuted(name) {
         return mutedApps.indexOf(name || "Other") >= 0;
     }
@@ -90,6 +146,7 @@ QtObject {
         bodyMarkupSupported: false
         actionsSupported: true
         persistenceSupported: true
+        inlineReplySupported: true
         onNotification: function (notification) {
             root.noteApp(notification.appName);
             // Muted apps are dropped; critical alerts still get through.
@@ -105,7 +162,7 @@ QtObject {
                 oldest.dismiss();
             }
             // Banner unless Do Not Disturb is on; important ones always break through.
-            if (!root.quiet || notification.urgency === NotificationUrgency.Critical) {
+            if (notification.urgency === NotificationUrgency.Critical || (!root.quiet && !root.isPaused(notification.appName))) {
                 root.headsUp = notification;
                 headsUpTimer.interval = notification.urgency === NotificationUrgency.Critical ? 12000 : 6000;
                 headsUpTimer.restart();
@@ -126,6 +183,7 @@ QtObject {
     }
     function clear() {
         headsUp = null;
+        snoozed = ({});
         // Copy before dismissing: trackedNotifications changes during iteration.
         const items = server.trackedNotifications.values.slice();
         items.forEach(item => item.dismiss());

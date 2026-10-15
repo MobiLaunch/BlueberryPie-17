@@ -2,7 +2,6 @@
 import json
 import math
 import re
-from concurrent.futures import ThreadPoolExecutor
 
 from .system import CommandError, percentage, run
 
@@ -97,6 +96,7 @@ def snapshot():
         device = current[kind]
         return {**device, **level(device["id"])} if device else None
 
+    from concurrent.futures import ThreadPoolExecutor
     with ThreadPoolExecutor(max_workers=2) as pool:
         values = dict(zip(KINDS, pool.map(read, KINDS)))
     return {"available": True, "outputs": [d for d in devices if d["kind"] == "output"],

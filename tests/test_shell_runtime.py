@@ -5,6 +5,7 @@ reference/binding errors and layout regressions without a compositor. It does
 not qualify Quickshell, layer-shell focus, Hyprland or hardware.
 """
 import json
+import re
 import sys
 import unittest
 from pathlib import Path
@@ -20,8 +21,8 @@ except ImportError as error:  # PySide6 or its system libraries are absent
 else:
     SKIP_REASON = ""
 
-SURFACES = ("shade", "launcher", "settings", "files", "store", "power", "recents", "calculator", "clock", "alarms", "converter", "clipboard", "worldclock")
-SECTIONS = ("network", "bluetooth", "display", "sound", "notifications", "style", "widgets", "datetime", "input", "shortcuts", "apps", "power", "storage", "about")
+SURFACES = ("shade", "launcher", "settings", "files", "store", "power", "recents", "calculator", "clock", "alarms", "converter", "clipboard", "worldclock", "emoji")
+SECTIONS = ("network", "bluetooth", "display", "sound", "notifications", "style", "widgets", "datetime", "input", "shortcuts", "apps", "power", "storage", "update", "about")
 WINDOWS = ('Windows.available = true; Windows.list = ['
            '{address:"0xaa01", class:"firefox", title:"Docs", workspace:1, pid:1, recency:0, focused:true, hidden:false},'
            '{address:"0xaa02", class:"foot", title:"~/code", workspace:2, pid:2, recency:1, focused:false, hidden:false}];')
@@ -185,9 +186,12 @@ class ShellRuntimeTests(unittest.TestCase):
         harness.click(*harness.scene_pos(switch))
         self.assertTrue(harness.wait_for(lambda: "screenshot" in (settings.load()["tiles"] or []), 6000))
         self.assertTrue(harness.wait_for(lambda: chevron("chevron_up") is not None, 6000))
+        settled = lambda: harness.eval_value("!SystemBridge.busy && SystemBridge.pending.length === 0 && !SystemBridge.staleRead") == "true"
+        self.assertTrue(harness.wait_for(settled, 8000))  # the editor has finished re-laying out
         harness.reveal(chevron("chevron_up"))
         harness.click(*harness.scene_pos(chevron("chevron_up")))
         self.assertTrue(harness.wait_for(lambda: settings.load()["tiles"][-2:] == ["screenshot", "audio_devices"], 6000))
+        self.assertTrue(harness.wait_for(settled, 8000))
         done = next(item for item in harness.visible_items()
                     if item.metaObject().className().startswith("PillButton") and item.property("text") == "Done")
         harness.reveal(done)
@@ -855,6 +859,440 @@ class ShellRuntimeTests(unittest.TestCase):
         self.assertTrue(harness.wait_for(lambda: not previews.exists(), 8000))
         self.assertTrue(harness.wait_for(lambda: not harness.find("storage-clear-previews").isEnabled(), 8000))
 
+    def test_apps_the_theme_has_no_icon_for_get_a_letter_tile_not_a_generic_icon(self):
+        harness = Harness()
+        self.addCleanup(harness.close)
+        harness.add_desktop_entry("noicon.desktop", "Zebra Notes", icon="no-such-icon-anywhere")
+        harness.add_desktop_entry("bare.desktop", "Quill", icon="")
+        harness.write_settings(onboarding_complete=True)
+        harness.load()
+        harness.pump(1500)
+        harness.ipc("launcher")
+        harness.pump(700)
+        tiles = [item for item in harness.visible_items() if item.metaObject().className().startswith("AppIcon")]
+        self.assertGreaterEqual(len(tiles), 2)
+        for tile in tiles:
+            self.assertFalse(tile.property("found"), tile.property("label"))
+        initials = {tile.property("label"): tile.property("initial") for tile in tiles}
+        self.assertEqual(initials["Zebra Notes"], "Z")
+        self.assertEqual(initials["Quill"], "Q")
+        self.assertEqual(harness.problems(), [])
+        self.assertEqual(harness.truncated_texts(), [])
+
+    def test_toggles_answer_the_click_at_once_and_the_real_state_confirms_it(self):
+        from prismos import settings
+        harness = self.boot()
+        harness.pump(1500)  # first status read lands
+        now = harness.eval_value
+        # Hardware the sandbox does not have is put in place inside each evaluation, because
+        # the real status reads that follow every click would otherwise replace it.
+        fake = ("SystemBridge.snapshot = SystemBridge.patched({wifi: {available: true, enabled: true}, "
+                "volume: {available: true, value: 40, muted: false}, brightness: {available: true, value: 50}}); ")
+
+        def clicked(call, field):
+            return now("(function () { " + fake + call + "; return " + field + "; })()")
+        # The value is already there when the call returns: nothing waited on a command.
+        self.assertEqual(clicked("SystemBridge.action('dnd')", "SystemBridge.snapshot.settings.dnd"), "true")
+        self.assertEqual(clicked("SystemBridge.action('wifi')", "SystemBridge.snapshot.wifi.enabled"), "false")
+        self.assertEqual(clicked("SystemBridge.action('mute')", "SystemBridge.snapshot.volume.muted"), "true")
+        self.assertEqual(clicked("SystemBridge.action('volume', 72)", "SystemBridge.snapshot.volume.value"), "72")
+        self.assertEqual(clicked("SystemBridge.action('brightness-down')", "SystemBridge.snapshot.brightness.value"), "45")
+        self.assertEqual(clicked("SystemBridge.action('volume-up')", "SystemBridge.snapshot.volume.value"), "45")
+        # Sliders stay inside their range.
+        self.assertEqual(clicked("SystemBridge.action('volume', 400)", "SystemBridge.snapshot.volume.value"), "100")
+        self.assertEqual(clicked("SystemBridge.action('brightness', 0)", "SystemBridge.snapshot.brightness.value"), "1")
+        # Editing the tile list answers at once as well.
+        self.assertEqual(clicked("SystemBridge.setTiles(['dnd', 'wifi'])", "JSON.stringify(SystemBridge.snapshot.settings.tiles)"), '["dnd","wifi"]')
+        # Unavailable hardware is left alone, and unknown actions predict nothing.
+        self.assertEqual(clicked("SystemBridge.action('microphone-mute')", "SystemBridge.snapshot.microphone.muted"), "false")
+        self.assertEqual(now("SystemBridge.predict('lock') === null"), "true")
+        # The command really ran, and the status read that follows settles on the real value.
+        self.assertTrue(harness.wait_for(lambda: settings.load()["dnd"] is True, 8000))
+        self.assertTrue(harness.wait_for(lambda: now("SystemBridge.pending.length === 0 && !SystemBridge.busy") == "true", 20000))
+        harness.pump(1500)
+        self.assertEqual(now("SystemBridge.snapshot.settings.dnd"), "true")
+        self.assertEqual(harness.problems(), [])
+
+    def test_a_status_read_that_started_before_a_click_cannot_flip_the_tile_back(self):
+        harness = self.boot()
+        harness.pump(1500)
+        now = harness.eval_value
+        self.assertEqual(now("(function () { SystemBridge.action('dnd'); return SystemBridge.staleRead; })()"), "false",
+                         "nothing was reading, so nothing is stale")
+        harness.wait_for(lambda: now("!SystemBridge.busy && SystemBridge.pending.length === 0") == "true", 8000)
+        harness.pump(1500)
+        self.assertEqual(now("(function () { SystemBridge.refresh(); SystemBridge.action('dnd'); return SystemBridge.staleRead; })()"), "true")
+        self.assertTrue(harness.wait_for(lambda: now("SystemBridge.staleRead") == "false", 8000))
+        harness.pump(1500)
+        self.assertEqual(now("SystemBridge.snapshot.settings.dnd"), "false", "two toggles are back to the start")
+
+    def test_a_wrong_guess_is_replaced_by_the_real_state_even_when_nothing_else_changed(self):
+        harness = self.boot()
+        harness.pump(2500)
+        now = harness.eval_value
+        self.assertEqual(now("SystemBridge.lastStatus.length > 10"), "true", "the first real reading is remembered")
+        # A guess the system will not confirm (the real value stays false): the tile must go back.
+        self.assertEqual(now("(function () { SystemBridge.snapshot = SystemBridge.patched({settings: {dnd: true}}); "
+                             "SystemBridge.lastStatus = ''; SystemBridge.refresh(); return SystemBridge.snapshot.settings.dnd; })()"), "true")
+        self.assertTrue(harness.wait_for(lambda: now("SystemBridge.snapshot.settings.dnd") == "false", 8000))
+
+    def test_slider_rows_show_their_value_once_in_their_own_units(self):
+        harness = self.boot()
+        harness.ipc("settings")
+        harness.pump(600)
+        for section, expect_percent in (("input", False), ("sound", True)):
+            row = harness.find("section-" + section)
+            harness.reveal(row)
+            harness.click(*harness.scene_pos(row))
+            harness.pump(700)
+            texts = [str(item.property("text")) for item in harness.visible_items() if item.property("text") is not None]
+            percents = [text for text in texts if re.fullmatch(r"-?\d+(\.\d+)?%", text)]
+            if expect_percent:
+                self.assertEqual(len(percents), 1, f"{section}: the same value must not appear twice: {percents}")
+            else:
+                self.assertEqual(percents, [], f"{section}: speeds and rates are not percentages")
+            self.assertEqual(harness.truncated_texts(), [], section)
+        self.assertEqual(harness.problems(), [])
+
+    def test_hardware_keys_show_an_indicator_that_follows_the_level(self):
+        harness = self.boot()
+        harness.pump(2500)
+        now = harness.eval_value
+
+        def setup(volume=40, muted=False, mic_muted=False, brightness=3):
+            # Real hardware answers the key; here a status read would replace the pretend values, so
+            # each key press starts from known values (once the previous press has fully settled)
+            # and is checked before the next read can land.
+            harness.wait_for(lambda: now("!SystemBridge.busy && SystemBridge.pending.length === 0 && !SystemBridge.reader.running") == "true", 8000)
+            harness.eval("SystemBridge.snapshot = SystemBridge.patched({"
+                         f"volume: {{available: true, value: {volume}, muted: {str(muted).lower()}}}, "
+                         f"microphone: {{available: true, value: 70, muted: {str(mic_muted).lower()}}}, "
+                         f"brightness: {{available: true, value: {brightness}}}}}); ")
+
+        def pill():
+            return harness.find("osd-pill")
+        self.assertEqual(now("ShellState.osdKind"), "")
+        # Bindings update synchronously, so each result is read straight after the key press.
+        text = lambda: harness.find("osd-value").property("text")
+        setup()
+        harness.ipc("volumeUp")
+        self.assertTrue(pill().isVisible())
+        self.assertEqual(text(), "45%")
+        setup(volume=45)
+        harness.ipc("volumeDown")
+        harness.ipc("volumeDown")
+        self.assertEqual(text(), "35%")
+        setup(volume=35)
+        harness.ipc("volumeMute")
+        self.assertEqual(text(), "Muted")
+        setup(mic_muted=False)
+        harness.ipc("micMute")
+        self.assertEqual(text(), "Muted")
+        self.assertEqual(harness.eval_value("ShellState.osdKind"), "microphone")
+        setup(brightness=3)
+        harness.ipc("brightnessDown")
+        self.assertEqual(text(), "1%", "never steps to a black screen")
+        self.assertEqual(harness.truncated_texts(), [])
+        # It goes away by itself.
+        self.assertTrue(harness.wait_for(lambda: now("ShellState.osdKind") == "", 4000))
+        self.assertTrue(harness.wait_for(lambda: not pill().isVisible(), 3000))
+        # Without a volume control there is nothing to show (the command reports the problem instead).
+        harness.eval("SystemBridge.snapshot = SystemBridge.patched({volume: {available: false}});")
+        harness.ipc("volumeUp")
+        harness.pump(60)
+        self.assertEqual(now("ShellState.osdKind"), "")
+        self.assertEqual(harness.problems(), [])
+
+    def test_stepping_keys_are_never_merged_but_slider_values_are(self):
+        from qml_runtime.stubs import Process
+        harness = self.boot()
+        harness.pump(2500)
+        Process.log.clear()
+        harness.eval("SystemBridge.action('mute'); SystemBridge.action('mute'); SystemBridge.action('mute');")
+        self.assertTrue(harness.wait_for(lambda: Process.log.count(["prismctl", "action", "mute"]) == 3, 8000), Process.log)
+        harness.wait_for(lambda: harness.eval_value("!SystemBridge.busy && SystemBridge.pending.length === 0") == "true", 8000)
+        Process.log.clear()
+        harness.eval("SystemBridge.action('volume', 10); SystemBridge.action('volume', 20); SystemBridge.action('volume', 30);")
+        self.assertTrue(harness.wait_for(lambda: ["prismctl", "action", "volume", "30"] in Process.log, 8000), Process.log)
+        harness.wait_for(lambda: harness.eval_value("!SystemBridge.busy && SystemBridge.pending.length === 0") == "true", 8000)
+        volumes = [entry for entry in Process.log if entry[:3] == ["prismctl", "action", "volume"]]
+        self.assertEqual(volumes[0], ["prismctl", "action", "volume", "10"])
+        self.assertEqual(volumes[-1], ["prismctl", "action", "volume", "30"])
+        self.assertNotIn(["prismctl", "action", "volume", "20"], volumes, "the middle value was superseded")
+
+    def test_inline_reply_is_offered_only_where_the_app_accepts_it_and_is_sent_to_the_app(self):
+        from qml_runtime import stubs
+        harness = self.boot()
+        server = stubs.NotificationServer.instances[0]
+        self.assertEqual(harness.eval_value("Notifications.server.inlineReplySupported"), "true", "the server advertises replies")
+        plain = server.post(appName="Calendar", summary="Review at 3")
+        chat = server.post(appName="Chat", summary="Ava", body="Lunch?", reply="Reply to Ava")
+        harness.ipc("shade")
+        harness.pump(900)
+        fields = [item for item in harness.visible_items() if item.objectName() == "reply-field"]
+        self.assertEqual(len(fields), 1, "only the chat notification takes a reply")
+        self.assertEqual(fields[0].property("placeholderText"), "Reply to Ava")
+        send = next(item for item in harness.visible_items() if item.objectName() == "reply-send")
+        self.assertFalse(send.isEnabled(), "nothing to send yet")
+        fields[0].setProperty("text", "  Sounds good!  ")
+        harness.pump(100)
+        self.assertTrue(send.isEnabled())
+        harness.click(*harness.scene_pos(send))
+        harness.pump(200)
+        self.assertEqual(server.replies, [(chat.property("id"), "Sounds good!")], "trimmed text goes to the sending app")
+        texts = {str(item.property("text")) for item in harness.visible_items() if item.property("text")}
+        self.assertIn("Reply sent", texts)
+        self.assertTrue(harness.wait_for(lambda: chat not in list(server.tracked.values), 4000), "the card clears itself afterwards")
+        self.assertIn(plain, list(server.tracked.values))
+        self.assertEqual(harness.truncated_texts(), [])
+        self.assertEqual(harness.problems(), [])
+
+    def test_snoozed_notifications_leave_the_shade_and_come_back(self):
+        from qml_runtime import stubs
+        harness = self.boot()
+        server = stubs.NotificationServer.instances[0]
+        keep = server.post(appName="Chat", summary="Ava", body="Lunch?")
+        server.post(appName="Chat", summary="Noah", body="Photos")
+        important = server.post(appName="Calendar", summary="Starting now", urgency=2)
+        harness.ipc("shade")
+        harness.pump(900)
+        self.assertEqual(harness.eval_value("Notifications.count"), "3")
+        buttons = [item for item in harness.visible_items() if item.objectName() == "snooze-button"]
+        # The Chat group shows its newest card until expanded; the important one has no snooze button.
+        self.assertEqual(len(buttons), 1, "important notifications cannot be snoozed")
+        harness.click(*harness.scene_pos(buttons[0]))
+        harness.pump(300)
+        chips = [item for item in harness.visible_items() if item.objectName().startswith("snooze-") and item.objectName() != "snooze-button"]
+        self.assertEqual(sorted(item.objectName() for item in chips), ["snooze-15", "snooze-240", "snooze-60"])
+        harness.click(*harness.scene_pos(next(item for item in chips if item.objectName() == "snooze-15")))
+        harness.pump(400)
+        self.assertEqual(harness.eval_value("Notifications.count"), "2", "the snoozed one is out of the shade")
+        self.assertEqual(len(server.tracked.values), 3, "the sender's notification is still alive")
+        # Time passes: the snooze is over, the notification returns and announces itself.
+        harness.eval("const s = Object.assign({}, Notifications.snoozed); for (const k in s) s[k] = Date.now() - 1; Notifications.snoozed = s;")
+        self.assertTrue(harness.wait_for(lambda: harness.eval_value("Notifications.count") == "3", 6000))
+        self.assertEqual(harness.eval_value("Notifications.headsUp !== null"), "true")
+        self.assertEqual(harness.eval_value("Object.keys(Notifications.snoozed).length"), "0")
+        # Clearing everything also forgets snoozes.
+        harness.eval("Notifications.snooze(Notifications.items.values[0], 30); Notifications.clear();")
+        harness.pump(300)
+        self.assertEqual(harness.eval_value("Object.keys(Notifications.snoozed).length"), "0")
+        self.assertEqual(harness.problems(), [])
+
+    def test_the_lock_screen_gets_only_a_count_and_the_user_can_turn_it_off(self):
+        import os
+        from pathlib import Path
+        from prismos import settings
+        from qml_runtime import stubs
+        harness = self.boot()
+        harness.pump(1500)
+        counter = Path(os.environ["XDG_RUNTIME_DIR"]) / "prismos" / "notification-count"
+        self.assertTrue(harness.wait_for(lambda: counter.exists() and counter.read_text() == "0", 8000), "a fresh shell clears any stale count")
+        server = stubs.NotificationServer.instances[0]
+        server.post(appName="Chat", summary="Secret subject", body="Secret body")
+        server.post(appName="Chat", summary="Another secret")
+        self.assertTrue(harness.wait_for(lambda: counter.read_text() == "2", 8000))
+        self.assertNotIn("Secret", counter.read_text(), "no notification text is ever stored")
+        harness.ipc("settings")
+        harness.pump(500)
+        row = harness.find("section-notifications")
+        harness.reveal(row)
+        harness.click(*harness.scene_pos(row))
+        harness.pump(600)
+        toggle = harness.find("lock-count-toggle")
+        harness.reveal(toggle)
+        harness.click(*harness.scene_pos(toggle))
+        self.assertTrue(harness.wait_for(lambda: settings.load()["lock_notifications"] is False, 8000))
+        from prismos import notifyprefs
+        self.assertEqual(notifyprefs.summary(), "", "the lock screen prints nothing once it is off")
+        self.assertEqual(harness.truncated_texts(), [])
+        self.assertEqual(harness.problems(), [])
+
+    def fake_network(self, harness, connections):
+        """Put a fake nmcli, dnsmasq and wl-copy on PATH for the commands the shell starts."""
+        import json
+        import os
+        import shutil
+        from pathlib import Path
+        folder = Path(harness.sandbox) / "fakebin"
+        folder.mkdir()
+        shutil.copy(Path(__file__).parent / "fakes" / "nmcli", folder / "nmcli")
+        (folder / "dnsmasq").write_text("#!/bin/sh\nexit 0\n")
+        copied = Path(harness.sandbox) / "copied.txt"
+        (folder / "wl-copy").write_text(f"#!/bin/sh\ncat > '{copied}'\n")
+        for name in ("dnsmasq", "wl-copy"):
+            (folder / name).chmod(0o755)
+        state = Path(harness.sandbox) / "nm.json"
+        state.write_text(json.dumps({"connections": connections}))
+        os.environ["PATH"] = f"{folder}:{os.environ['PATH']}"
+        os.environ["FAKE_NM_STATE"] = str(state)
+        return state, copied
+
+    def test_hotspot_and_vpn_tiles_switch_and_show_their_details(self):
+        import json
+        from pathlib import Path
+        from PySide6.QtCore import Qt
+        from prismos import hotspot
+        harness = Harness()
+        self.addCleanup(harness.close)
+        harness.write_settings(onboarding_complete=True, tiles=["hotspot", "vpn", "dnd"])
+        uuid_a, uuid_b = "11111111-2222-3333-4444-555555555555", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+        state, copied = self.fake_network(harness, [
+            {"name": "Home", "uuid": "99999999-9999-9999-9999-999999999999", "type": "802-11-wireless", "active": True},
+            {"name": "Work VPN", "uuid": uuid_a, "type": "vpn", "active": False},
+            {"name": "wg0", "uuid": uuid_b, "type": "wireguard", "active": False}])
+        harness.load()
+        harness.pump(2500)
+        harness.ipc("shade")
+        harness.pump(700)
+        current = lambda: json.loads(state.read_text())
+        commands = lambda: [json.loads(line) for line in Path(str(state) + ".log").read_text().splitlines()]
+        texts = lambda: {str(item.property("text")) for item in harness.visible_items() if item.property("text")}
+        active = lambda key, value: any(c[key] == value and c["active"] for c in current()["connections"])
+
+        def tile(title):
+            return next(item for item in harness.visible_items()
+                        if item.metaObject().className().startswith("QuickTile") and item.property("title") == title)
+        self.assertEqual(tile("Hotspot").property("subtitle"), "Off")
+        self.assertEqual(tile("VPN").property("subtitle"), "Off")
+        # Hotspot: the tile answers at once, then the real state confirms it.
+        harness.click(*harness.scene_pos(tile("Hotspot")))
+        self.assertTrue(tile("Hotspot").property("activated"))
+        self.assertTrue(harness.wait_for(lambda: active("name", hotspot.NAME), 10000))
+        password = hotspot.load()["password"]
+        self.assertEqual(current()["secret_seen"], [f"802-11-wireless-security.psk:{password}\n", 0o600])
+        for call in commands():
+            self.assertNotIn(password, " ".join(call), "the password never reaches a command line")
+        self.assertTrue(harness.wait_for(lambda: harness.eval_value("SystemBridge.snapshot.hotspot.enabled") == "true", 8000))
+        # Details: the name, a hidden password that can be revealed and copied.
+        harness.click(*harness.scene_pos(tile("Hotspot")), button=Qt.RightButton)
+        self.assertTrue(harness.wait_for(lambda: harness.find("hotspot-ssid") is not None
+                                         and harness.find("hotspot-ssid").property("text").startswith("PrismOS-"), 6000))
+        self.assertNotIn(password, texts(), "the password is hidden until asked for")
+        reveal = harness.find("hotspot-reveal")
+        harness.click(*harness.scene_pos(reveal))
+        harness.pump(200)
+        self.assertEqual(harness.find("hotspot-password").property("text"), password)
+        harness.click(*harness.scene_pos(harness.find("hotspot-copy")))
+        self.assertTrue(harness.wait_for(lambda: copied.exists() and copied.read_text() == password, 6000))
+        harness.click(*harness.scene_pos(harness.find("hotspot-toggle")))
+        self.assertTrue(harness.wait_for(lambda: not active("name", hotspot.NAME), 10000))
+        # A new password is saved and applied the next time (the hotspot is off now).
+        self.assertTrue(harness.wait_for(lambda: harness.find("hotspot-regenerate").isEnabled(), 6000), "enabled once the panel has settled")
+        harness.click(*harness.scene_pos(harness.find("hotspot-regenerate")))
+        self.assertTrue(harness.wait_for(lambda: hotspot.load()["password"] != password, 6000))
+        # Closing the panel makes the shell forget the password.
+        harness.click(*harness.scene_pos(tile("Hotspot")), button=Qt.RightButton)
+        harness.pump(300)
+        self.assertEqual(harness.eval_value("NetShareState.hotspot.password"), "")
+        # VPN: connects the first profile, then disconnects it.
+        harness.click(*harness.scene_pos(tile("VPN")))
+        self.assertTrue(harness.wait_for(lambda: active("uuid", uuid_a), 10000))
+        self.assertTrue(harness.wait_for(lambda: tile("VPN").property("subtitle") == "Work VPN", 8000))
+        harness.click(*harness.scene_pos(tile("VPN")), button=Qt.RightButton)
+        self.assertTrue(harness.wait_for(lambda: harness.find("vpn-name-1") is not None, 6000))
+        self.assertEqual(harness.find("vpn-name-1").property("text"), "wg0")
+        harness.click(*harness.scene_pos(harness.find("vpn-toggle-1")))
+        self.assertTrue(harness.wait_for(lambda: active("uuid", uuid_b), 10000))
+        self.assertEqual(harness.truncated_texts(), [])
+        self.assertEqual(harness.problems(), [])
+
+    def test_a_vpn_tile_with_no_profile_explains_how_to_add_one(self):
+        harness = Harness()
+        self.addCleanup(harness.close)
+        harness.write_settings(onboarding_complete=True, tiles=["vpn", "dnd"])
+        self.fake_network(harness, [{"name": "Home", "uuid": "99999999-9999-9999-9999-999999999999", "type": "802-11-wireless", "active": True}])
+        harness.load()
+        harness.pump(2500)
+        harness.ipc("shade")
+        harness.pump(700)
+        tile = next(item for item in harness.visible_items()
+                    if item.metaObject().className().startswith("QuickTile") and item.property("title") == "VPN")
+        self.assertEqual(tile.property("subtitle"), "None set up")
+        harness.click(*harness.scene_pos(tile))
+        self.assertTrue(harness.wait_for(lambda: harness.find("vpn-empty") is not None and harness.find("vpn-empty").isVisible(), 6000))
+        self.assertEqual(harness.problems(), [])
+
+    def test_the_network_page_has_hotspot_and_vpn_sections(self):
+        harness = Harness()
+        self.addCleanup(harness.close)
+        harness.write_settings(onboarding_complete=True)
+        self.fake_network(harness, [{"name": "Work VPN", "uuid": "11111111-2222-3333-4444-555555555555", "type": "vpn", "active": False}])
+        harness.load()
+        harness.pump(2500)
+        harness.ipc("settings")
+        harness.pump(700)
+        row = harness.find("section-network")
+        harness.reveal(row)
+        harness.click(*harness.scene_pos(row))
+        self.assertTrue(harness.wait_for(lambda: harness.find("hotspot-ssid") is not None and harness.find("vpn-name-0") is not None, 6000))
+        self.assertEqual(harness.find("vpn-name-0").property("text"), "Work VPN")
+        self.assertEqual(harness.truncated_texts(), [])
+        self.assertEqual(harness.problems(), [])
+
+    def test_screen_recording_starts_from_the_tile_shows_a_timer_and_stops_with_a_saved_toast(self):
+        import os
+        import shutil
+        from pathlib import Path
+        harness = Harness()
+        self.addCleanup(harness.close)
+        harness.write_settings(onboarding_complete=True, tiles=["screen_record", "dnd"])
+        folder = Path(harness.sandbox) / "recbin"
+        folder.mkdir()
+        shutil.copy(Path(__file__).parent / "fakes" / "wf-recorder", folder / "wf-recorder")
+        os.environ["PATH"] = f"{folder}:{os.environ['PATH']}"
+        harness.load()
+        harness.pump(2500)
+        harness.ipc("shade")
+        harness.pump(700)
+        now = harness.eval_value
+
+        def tile():
+            return next(item for item in harness.visible_items()
+                        if item.metaObject().className().startswith("QuickTile") and item.property("title") == "Screen record")
+        self.assertEqual(tile().property("subtitle"), "Off")
+        state = Path(os.environ["XDG_RUNTIME_DIR"]) / "prismos-recording.json"
+        harness.click(*harness.scene_pos(tile()))
+        self.assertEqual(now("ShellState.shadeOpen"), "false", "the shade closes so it is not in the video")
+        self.assertTrue(harness.wait_for(state.exists, 8000))
+        self.assertTrue(harness.wait_for(lambda: now("SystemBridge.snapshot.recording.recording") == "true", 8000))
+        chip = harness.find("recording-chip")
+        self.assertTrue(harness.wait_for(lambda: chip.isVisible(), 4000))
+        harness.pump(1200)
+        label = next(item for item in harness.visible_items(chip) if item.property("text") and ":" in str(item.property("text")))
+        self.assertRegex(str(label.property("text")), r"^\d+:\d\d$")
+        self.assertEqual(harness.truncated_texts(), [])
+        # Stopping from the top bar saves the file and says where.
+        harness.click(*harness.scene_pos(chip))
+        self.assertTrue(harness.wait_for(lambda: not chip.isVisible(), 4000), "the chip answers at once")
+        self.assertTrue(harness.wait_for(lambda: "saved" in now("ShellState.toast"), 12000), now("ShellState.toast"))
+        self.assertFalse(state.exists())
+        saved = list((Path(os.environ["HOME"]) / "Videos" / "Screen recordings").glob("Recording-*.mp4"))
+        self.assertEqual(len(saved), 1)
+        self.assertEqual(saved[0].read_bytes(), b"fake video")
+        self.assertEqual(harness.problems(), [])
+
+    def test_the_record_details_choose_a_mode_and_microphone_and_explain_missing_tools(self):
+        from prismos import settings
+        harness = Harness()
+        self.addCleanup(harness.close)
+        harness.write_settings(onboarding_complete=True, tiles=["screen_record", "dnd"])
+        harness.load()
+        harness.pump(2500)
+        harness.ipc("shade")
+        harness.pump(700)
+        from PySide6.QtCore import Qt
+        tile = next(item for item in harness.visible_items()
+                    if item.metaObject().className().startswith("QuickTile") and item.property("title") == "Screen record")
+        self.assertEqual(tile.property("subtitle"), "Needs wf-recorder", "no recorder in the sandbox")
+        harness.click(*harness.scene_pos(tile), button=Qt.RightButton)
+        harness.pump(500)
+        texts = {str(item.property("text")) for item in harness.visible_items() if item.property("text")}
+        self.assertIn("Screen recording needs the wf-recorder package.", texts)
+        self.assertFalse(harness.find("record-full").isEnabled())
+        self.assertEqual(harness.truncated_texts(), [])
+        self.assertEqual(harness.problems(), [])
+
     def test_settings_search_filters_sections(self):
         harness = self.boot()
         harness.ipc("settings")
@@ -1193,6 +1631,262 @@ class ShellRuntimeTests(unittest.TestCase):
         from prismos import settings
         self.assertTrue(harness.wait_for(lambda: settings.load()["wallpaper"].endswith("Forest.png"), 6000))
         self.assertEqual(settings.load()["seed"], "#47846a")
+        self.assertEqual(harness.problems(), [])
+
+    def test_app_info_shows_status_stops_a_running_app_and_removes_a_user_flatpak(self):
+        import json
+        import os
+        import subprocess
+        from pathlib import Path
+        harness = Harness()
+        self.addCleanup(harness.close)
+        harness.add_desktop_entry("foot.desktop", "Foot", icon="foot", extra="StartupWMClass=foot\n")
+        exports = Path(os.environ["XDG_DATA_HOME"]) / "flatpak" / "exports" / "share" / "applications"
+        exports.mkdir(parents=True)
+        (exports / "org.example.Notes.desktop").write_text(
+            "[Desktop Entry]\nType=Application\nName=Notes\nExec=true\nIcon=notes\n")
+        harness.write_settings(onboarding_complete=True)
+        sleeper = subprocess.Popen(["sleep", "120"])
+        self.addCleanup(lambda: (sleeper.kill(), sleeper.wait()) if sleeper.poll() is None else None)
+        folder = Path(harness.sandbox) / "infobin"
+        folder.mkdir()
+        clients = Path(harness.sandbox) / "clients.json"
+        clients.write_text(json.dumps([{"address": "0xaa01", "mapped": True, "class": "foot", "title": "~",
+                                         "workspace": {"id": 1}, "pid": sleeper.pid}]))
+        installed = Path(harness.sandbox) / "flatpak-installed"
+        installed.write_text("yes")
+        (folder / "hyprctl").write_text(f"#!/bin/sh\ncase \"$2\" in clients) cat '{clients}';; *) echo '{{}}';; esac\n")
+        (folder / "flatpak").write_text(
+            "#!/bin/sh\n"
+            f"if [ \"$1\" = info ] && [ \"$2\" = --user ] && [ -e '{installed}' ]; then echo 'Version: 2.0'; exit 0; fi\n"
+            f"if [ \"$1\" = uninstall ] && [ \"$2\" = --user ]; then rm -f '{installed}'; exit 0; fi\n"
+            "echo 'not installed' >&2; exit 1\n")
+        for name in ("hyprctl", "flatpak"):
+            (folder / name).chmod(0o755)
+        os.environ["PATH"] = f"{folder}:{os.environ['PATH']}"
+        harness.load()
+        harness.pump(2000)
+        now = harness.eval_value
+
+        harness.eval('ShellState.openAppInfo({id: "foot.desktop", name: "Foot", icon: "foot"}, ShellState.focusedScreen())')
+        self.assertTrue(harness.wait_for(lambda: now("AppInfoState.loaded") == "true", 8000))
+        self.assertEqual(now("ShellState.appInfoOpen"), "true")
+        self.assertEqual(harness.find("appinfo-name").property("text"), "Foot")
+        self.assertIn("Running", str(harness.find("appinfo-row-0").property("supporting")))
+        self.assertFalse(harness.find("appinfo-uninstall").isVisible(), "system apps are never removed from here")
+        stop = harness.find("appinfo-force-stop")
+        self.assertTrue(stop.isEnabled())
+        harness.click(*harness.scene_pos(stop))
+        self.assertTrue(harness.wait_for(lambda: sleeper.poll() is not None, 8000))
+        self.assertEqual(harness.truncated_texts(), [])
+
+        harness.eval('ShellState.openAppInfo({id: "org.example.Notes.desktop", name: "Notes", icon: "notes"}, ShellState.focusedScreen())')
+        self.assertTrue(harness.wait_for(lambda: now("AppInfoState.loaded") == "true"
+                                         and now("AppInfoState.details.removable") == "true", 8000))
+        self.assertFalse(harness.find("appinfo-force-stop").isEnabled(), "nothing to stop when it is not running")
+        harness.click(*harness.scene_pos(harness.find("appinfo-uninstall")))
+        self.assertTrue(harness.wait_for(lambda: harness.find("appinfo-confirm").isVisible(), 3000))
+        self.assertTrue(installed.exists(), "asks first")
+        harness.click(*harness.scene_pos(harness.find("appinfo-confirm")))
+        self.assertTrue(harness.wait_for(lambda: not installed.exists(), 8000))
+        self.assertTrue(harness.wait_for(lambda: now("AppInfoState.gone") == "true", 8000))
+        self.assertEqual(harness.find("appinfo-status").property("text"), "Notes was removed")
+        harness.ipc("close")
+        self.assertEqual(now("ShellState.appInfoOpen"), "false")
+        self.assertEqual(harness.problems(), [])
+
+    def test_recents_can_put_two_apps_side_by_side(self):
+        from qml_runtime.stubs import Process
+        harness = self.boot()
+        harness.ipc("recents")
+        harness.pump(900)
+        harness.eval(WINDOWS)
+        harness.pump(400)
+        hint = harness.find("recents-hint")
+        self.assertIn("Enter to open", hint.property("text"))
+        first = harness.find("recents-split-0")
+        harness.click(*harness.scene_pos(first))
+        harness.pump(200)
+        self.assertIn("second app", hint.property("text"))
+        harness.click(*harness.scene_pos(first))      # the same button again cancels
+        harness.pump(200)
+        self.assertIn("Enter to open", hint.property("text"))
+        harness.click(*harness.scene_pos(first))
+        harness.pump(200)
+        Process.log.clear()
+        second = harness.find("recents-split-1")
+        harness.click(second.mapToScene(second.boundingRect().center()).x() - 90,
+                      harness.scene_pos(second)[1] + 90)   # the second card's preview area
+        self.assertTrue(harness.wait_for(
+            lambda: ["prismctl", "windows", "split", "0xaa01", "0xaa02"] in Process.log, 8000), Process.log)
+        self.assertEqual(harness.eval_value("ShellState.recentsOpen"), "false")
+        self.assertEqual(harness.problems(), [])
+
+    def test_home_closes_what_is_open_and_otherwise_shows_the_desktop(self):
+        from qml_runtime.stubs import Process
+        harness = self.boot()
+        harness.ipc("shade")
+        harness.pump(500)
+        Process.log.clear()
+        harness.ipc("home")
+        harness.pump(500)
+        self.assertEqual(harness.eval_value("ShellState.shadeOpen"), "false")
+        self.assertNotIn(["prismctl", "windows", "show-desktop"], Process.log, "the first press only leaves the shade")
+        harness.ipc("home")
+        self.assertTrue(harness.wait_for(lambda: ["prismctl", "windows", "show-desktop"] in Process.log, 6000), Process.log)
+        self.assertEqual(harness.problems(), [])
+
+    def test_focus_mode_quiets_only_the_chosen_apps_and_important_ones_still_break_through(self):
+        from qml_runtime import stubs
+        from prismos import settings
+        harness = Harness()
+        self.addCleanup(harness.close)
+        harness.write_settings(onboarding_complete=True, tiles=["focus", "dnd"], focus_apps=["Messages"])
+        harness.load()
+        harness.pump(2500)
+        server = stubs.NotificationServer.instances[0]
+        now = harness.eval_value
+        harness.ipc("shade")
+        harness.pump(700)
+
+        def tile():
+            return next(item for item in harness.visible_items()
+                        if item.metaObject().className().startswith("QuickTile") and item.property("title") == "Focus mode")
+        self.assertEqual(tile().property("subtitle"), "Off")
+        server.post(appName="Messages", summary="Before focus")
+        self.assertEqual(now("Notifications.headsUp !== null"), "true", "off means normal banners")
+        harness.eval("Notifications.headsUp = null;")
+        harness.click(*harness.scene_pos(tile()))
+        self.assertTrue(tile().property("activated"), "the tile answers at once")
+        self.assertEqual(tile().property("subtitle"), "1 app paused")
+        self.assertTrue(harness.wait_for(lambda: settings.load()["focus"] is True, 8000))
+        server.post(appName="Messages", summary="Quiet one")
+        self.assertEqual(now("Notifications.headsUp !== null"), "false", "no banner for a paused app")
+        self.assertEqual(now("Notifications.count"), "2", "it still waits in the shade")
+        server.post(appName="Calendar", summary="Meeting")
+        self.assertEqual(now("Notifications.headsUp !== null"), "true", "other apps are not affected")
+        harness.eval("Notifications.headsUp = null;")
+        server.post(appName="Messages", summary="Alarm", urgency=2)
+        self.assertEqual(now("Notifications.headsUp !== null"), "true", "important notifications break through")
+        harness.eval("Notifications.headsUp = null;")
+        harness.click(*harness.scene_pos(tile()))
+        self.assertTrue(harness.wait_for(lambda: settings.load()["focus"] is False, 8000))
+        server.post(appName="Messages", summary="After focus")
+        self.assertEqual(now("Notifications.headsUp !== null"), "true")
+        self.assertEqual(harness.problems(), [])
+
+    def test_focus_tile_with_no_apps_opens_the_page_where_they_are_chosen(self):
+        from qml_runtime import stubs
+        from prismos import settings
+        harness = Harness()
+        self.addCleanup(harness.close)
+        harness.write_settings(onboarding_complete=True, tiles=["focus"])
+        harness.load()
+        harness.pump(2500)
+        stubs.NotificationServer.instances[0].post(appName="Chat", summary="Hi")
+        harness.ipc("shade")
+        harness.pump(700)
+        tile = next(item for item in harness.visible_items()
+                    if item.metaObject().className().startswith("QuickTile") and item.property("title") == "Focus mode")
+        self.assertEqual(tile.property("subtitle"), "Choose apps")
+        harness.click(*harness.scene_pos(tile))
+        self.assertTrue(harness.wait_for(lambda: harness.eval_value("ShellState.settingsOpen") == "true", 4000))
+        self.assertEqual(harness.eval_value("ShellState.settingsPage"), "notifications")
+        self.assertEqual(settings.load()["focus"], False, "nothing is switched on yet")
+        harness.pump(600)
+        row = harness.find("focus-app-0")
+        self.assertIsNotNone(row)
+        harness.reveal(row)
+        harness.click(*harness.scene_pos(row))
+        self.assertTrue(harness.wait_for(lambda: settings.load()["focus_apps"] == ["Chat"], 8000))
+        toggle = harness.find("focus-toggle")
+        harness.reveal(toggle)
+        harness.click(*harness.scene_pos(toggle))
+        self.assertTrue(harness.wait_for(lambda: settings.load()["focus"] is True, 8000))
+        self.assertEqual(harness.truncated_texts(), [])
+        self.assertEqual(harness.problems(), [])
+
+    def test_software_update_page_checks_read_only_and_opens_a_terminal_to_install(self):
+        import os
+        from pathlib import Path
+        harness = Harness()
+        self.addCleanup(harness.close)
+        harness.write_settings(onboarding_complete=True)
+        folder = Path(harness.sandbox) / "updbin"
+        folder.mkdir()
+        log = Path(harness.sandbox) / "terminal.txt"
+        (folder / "checkupdates").write_text("#!/bin/sh\necho 'linux 6.18.1-1 -> 6.18.2-1'\necho 'firefox 140.0-1 -> 141.0-1'\n")
+        (folder / "flatpak").write_text("#!/bin/sh\necho org.gnome.Calculator\n")
+        (folder / "foot").write_text(f"#!/bin/sh\nfor a in \"$@\"; do echo \"$a\"; done > '{log}'\n")
+        for name in ("checkupdates", "flatpak", "foot"):
+            (folder / name).chmod(0o755)
+        os.environ["PATH"] = f"{folder}:{os.environ['PATH']}"
+        harness.load()
+        harness.pump(2000)
+        harness.eval('ShellState.openSettings(ShellState.focusedScreen(), "update")')
+        harness.pump(900)
+        headline = harness.find("update-headline")
+        self.assertEqual(headline.property("text"), "Not checked yet")
+        self.assertFalse(harness.find("update-install").isEnabled(), "nothing to install before a check")
+        harness.click(*harness.scene_pos(harness.find("update-check")))
+        self.assertTrue(harness.wait_for(lambda: headline.property("text") == "3 updates available", 10000), headline.property("text"))
+        self.assertEqual(len([i for i in harness.visible_items() if i.objectName() == "update-package"]), 2)
+        self.assertEqual(len([i for i in harness.visible_items() if i.objectName() == "update-flatpak"]), 1)
+        self.assertFalse(log.exists(), "checking never starts an installation")
+        self.assertEqual(harness.truncated_texts(), [])
+        install = harness.find("update-install")
+        self.assertTrue(install.isEnabled())
+        harness.click(*harness.scene_pos(install))
+        self.assertTrue(harness.wait_for(log.exists, 8000))
+        arguments = log.read_text().splitlines()
+        self.assertEqual(arguments[:4], ["--title", "PrismOS update", "bash", "-c"])
+        self.assertTrue(arguments[4].startswith("sudo pacman -Syu; flatpak update;"), arguments)
+        self.assertEqual(harness.problems(), [])
+
+    def test_emoji_picker_searches_copies_and_remembers(self):
+        import os
+        import shutil
+        from pathlib import Path
+        from prismos import settings
+        harness = Harness()
+        self.addCleanup(harness.close)
+        harness.write_settings(onboarding_complete=True)
+        folder = Path(harness.sandbox) / "emojibin"
+        folder.mkdir()
+        copied = Path(harness.sandbox) / "emoji.txt"
+        (folder / "wl-copy").write_text(f"#!/bin/sh\ncat > '{copied}'\n")
+        (folder / "wl-copy").chmod(0o755)
+        os.environ["PATH"] = f"{folder}:{os.environ['PATH']}"
+        harness.load()
+        harness.pump(2000)
+        now = harness.eval_value
+        harness.ipc("emoji")
+        harness.pump(600)
+        self.assertEqual(now("ShellState.emojiOpen"), "true")
+        grid = harness.find("emoji-grid")
+        self.assertEqual(now("EmojiState.recents.length"), "0")
+        self.assertIsNotNone(harness.find("emoji-group-0"))
+        self.assertIsNone(harness.find("emoji-group--2"), "no Recent tab before anything was used")
+        self.assertGreater(grid.property("count"), 100, "browsing starts with the first group")
+        search = next(item for item in harness.visible_items()
+                      if "TextField" in item.metaObject().className() and item.property("placeholderText") == "Search emoji")
+        search.setProperty("text", "thumbs up")
+        harness.pump(400)
+        self.assertEqual(grid.property("count"), 1)
+        cell = next(item for item in harness.visible_items() if item.objectName() == "emoji-cell")
+        harness.click(*harness.scene_pos(cell))
+        self.assertTrue(harness.wait_for(copied.exists, 8000))
+        self.assertTrue(copied.read_text().startswith("\U0001F44D"))
+        self.assertEqual(now("ShellState.emojiOpen"), "false", "the picker closes after copying")
+        self.assertIn("Copied", now("ShellState.toast"))
+        self.assertTrue(harness.wait_for(lambda: settings.load()["recent_emoji"] != [], 8000))
+        self.assertTrue(harness.wait_for(lambda: now("EmojiState.recents.length") == "1", 8000))
+        harness.ipc("emoji")
+        harness.pump(600)
+        self.assertIsNotNone(harness.find("emoji-group--2"), "a Recent tab appears once something was used")
+        self.assertEqual(harness.find("emoji-grid").property("count"), 1)
+        harness.ipc("emoji")      # the key toggles it closed again
+        self.assertEqual(now("ShellState.emojiOpen"), "false")
         self.assertEqual(harness.problems(), [])
 
     def test_every_surface_opens_without_qml_errors(self):

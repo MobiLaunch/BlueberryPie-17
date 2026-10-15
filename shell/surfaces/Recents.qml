@@ -25,7 +25,15 @@ PanelWindow {
     function appFor(window) {
         return SystemBridge.apps.find(app => LaunchTracking.matches(app, window.class)) || null;
     }
+    // Address of the first app chosen for split screen; the next card picked is put beside it.
+    property string splitFirst: ""
     function focusWindow(window) {
+        if (splitFirst.length > 0 && splitFirst !== window.address) {
+            const first = splitFirst;
+            ShellState.close();
+            Windows.split(first, window.address);
+            return;
+        }
         ShellState.close();
         Windows.show(window);
     }
@@ -40,7 +48,12 @@ PanelWindow {
     WlrLayershell.keyboardFocus: opened ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
     color: "transparent"
     visible: opened || scrim.opacity > .01
-    onOpenedChanged: if (opened) {
+    onOpenedChanged: {
+        splitFirst = "";
+        if (opened)
+            openedSetup();
+    }
+    function openedSetup() {
         Hyprland.refreshToplevels();
         strip.currentIndex = 0;
         strip.forceActiveFocus();
@@ -89,7 +102,12 @@ PanelWindow {
             keyNavigationEnabled: true
             highlightFollowsCurrentItem: true
             boundsBehavior: Flickable.StopAtBounds
-            Keys.onEscapePressed: ShellState.close()
+            Keys.onEscapePressed: {
+                if (root.splitFirst.length > 0)
+                    root.splitFirst = "";
+                else
+                    ShellState.close();
+            }
             Keys.onReturnPressed: if (root.windows.length)
                 root.focusWindow(root.windows[currentIndex])
             Keys.onDeletePressed: if (root.windows.length)
@@ -106,7 +124,7 @@ PanelWindow {
                     anchors.fill: parent
                     radius: Theme.shape.extraLarge
                     color: slot.modelData.focused ? Theme.primaryContainer : Theme.surfaceContainerHigh
-                    border.width: strip.activeFocus && strip.currentIndex === slot.index ? 3 : 0
+                    border.width: root.splitFirst === slot.modelData.address || (strip.activeFocus && strip.currentIndex === slot.index) ? 3 : 0
                     border.color: Theme.primary
                     scale: cardArea.pressed ? 0.97 : cardArea.containsMouse ? 1.02 : 1
                     Behavior on scale {
@@ -133,20 +151,32 @@ PanelWindow {
                         x: 16
                         y: 14
                         spacing: 10
-                        Image {
+                        AppIcon {
                             width: 28
                             height: 28
-                            sourceSize: Qt.size(56, 56)
-                            source: Quickshell.iconPath(slot.app ? slot.app.icon : slot.modelData.class.toLowerCase(), "application-x-executable")
+                            icon: slot.app ? slot.app.icon : slot.modelData.class.toLowerCase()
+                            label: slot.app ? slot.app.name : slot.modelData.class
                         }
                         Label {
                             anchors.verticalCenter: parent.verticalCenter
-                            width: card.width - 16 - 28 - 10 - 16 - 44
+                            width: card.width - 16 - 28 - 10 - 16 - 88
                             text: slot.app ? slot.app.name : slot.modelData.class
                             role: "titleSmall"
                             color: slot.modelData.focused ? Theme.primaryContainerInk : Theme.surfaceInk
                             elide: Text.ElideRight
                         }
+                    }
+                    IconButton {
+                        objectName: "recents-split-" + slot.index
+                        anchors.right: parent.right
+                        anchors.rightMargin: 52
+                        y: 8
+                        implicitWidth: 40
+                        implicitHeight: 40
+                        iconSize: 20
+                        symbol: "snap_left"
+                        Accessible.name: root.splitFirst === slot.modelData.address ? "Cancel split screen" : "Split screen with " + slot.modelData.title
+                        onClicked: root.splitFirst = root.splitFirst === slot.modelData.address ? "" : slot.modelData.address
                     }
                     IconButton {
                         anchors.right: parent.right
@@ -189,14 +219,13 @@ PanelWindow {
                             onLoaded: item.source = Qt.binding(() => root.liveSource(slot.modelData))
                             visible: hasContent
                         }
-                        Image {
+                        AppIcon {
                             anchors.centerIn: parent
                             width: 72
                             height: 72
                             visible: preview.shot.length === 0 && !live.hasContent
-                            sourceSize: Qt.size(144, 144)
-                            fillMode: Image.PreserveAspectFit
-                            source: Quickshell.iconPath(slot.app ? slot.app.icon : slot.modelData.class.toLowerCase(), "application-x-executable")
+                            icon: slot.app ? slot.app.icon : slot.modelData.class.toLowerCase()
+                            label: slot.app ? slot.app.name : slot.modelData.class
                         }
                     }
                     Label {
@@ -260,7 +289,8 @@ PanelWindow {
                 }
             }
             Label {
-                text: "Enter to open · Delete to close · Esc to leave"
+                objectName: "recents-hint"
+                text: root.splitFirst.length > 0 ? "Choose the second app for split screen · Esc to cancel" : "Enter to open · Delete to close · Esc to leave"
                 role: "labelMedium"
                 color: Theme.inverseSurfaceInk
                 opacity: 0.8

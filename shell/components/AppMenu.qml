@@ -34,6 +34,12 @@ ExpressiveMenu {
         onTriggered: if (root.app)
             Applications.togglePin(root.app.id)
     }
+    MenuItem {
+        visible: root.app !== null && root.app.id.length > 0
+        text: "App info"
+        onTriggered: if (root.app)
+            ShellState.openAppInfo(root.app, ShellState.focusedScreen())
+    }
     MenuSeparator {}
     MenuItem {
         text: "Refresh applications"

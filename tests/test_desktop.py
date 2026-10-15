@@ -88,6 +88,10 @@ class LauncherDataTests(unittest.TestCase):
         self.assertEqual(by_name["Plain"]["category"], "Other")
         self.assertEqual(by_name["Web"]["keywords"], "internet surf")
 
+    def test_an_app_without_an_icon_key_has_an_empty_icon_so_the_shell_draws_a_letter_tile(self):
+        from prismos import apps
+        self.assertEqual({item["icon"] for item in apps.entries()}, {""})
+
     def test_launch_records_most_recent_first_without_duplicates(self):
         from prismos import apps
         with patch("prismos.apps.run"):

@@ -20,3 +20,7 @@ singleton ClipboardState 1.0 ClipboardState.qml
 singleton DateTimeState 1.0 DateTimeState.qml
 singleton WorldClockState 1.0 WorldClockState.qml
 singleton StorageState 1.0 StorageState.qml
+singleton NetShareState 1.0 NetShareState.qml
+singleton AppInfoState 1.0 AppInfoState.qml
+singleton UpdateState 1.0 UpdateState.qml
+singleton EmojiState 1.0 EmojiState.qml

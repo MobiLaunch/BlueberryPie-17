@@ -76,6 +76,7 @@ Button {
             width: 24
             height: 24
             name: root.symbol
+            filled: root.activated
             color: root.inkColor
             opacity: root.fade
         }
@@ -91,6 +92,9 @@ Button {
                 text: root.title
                 role: "titleSmall"
                 color: root.inkColor
+                // Narrow screens shrink a long name (Microphone) a little before cutting it.
+                fontSizeMode: Text.HorizontalFit
+                minimumPixelSize: 10
                 elide: Text.ElideRight
             }
             Label {

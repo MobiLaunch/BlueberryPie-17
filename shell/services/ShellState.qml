@@ -20,6 +20,8 @@ QtObject {
     // Text to prefill in the launcher search when it opens.
     property string launcherQuery: ""
     property bool powerOpen: false
+    property bool appInfoOpen: false
+    property bool emojiOpen: false
     property bool storeOpen: false
     property bool filesOpen: false
     property bool recentsOpen: false
@@ -28,7 +30,18 @@ QtObject {
     property bool launchReady: false
     property bool launchMinimumElapsed: false
     property string toast: ""
-
+    // On-screen indicator for hardware volume, microphone and brightness keys.
+    property string osdKind: ""
+    property var osdScreen: null
+    function showOsd(kind) {
+        osdScreen = focusedScreen();
+        osdKind = kind;
+        osdTimer.restart();
+    }
+    property Timer osdTimer: Timer {
+        interval: 1600
+        onTriggered: root.osdKind = ""
+    }
 
     function checkFirstRun() {
         if (firstRunChecked)
@@ -45,7 +58,9 @@ QtObject {
     }
     property Connections welcomeObserver: Connections {
         target: SystemBridge
-        function onSnapshotChanged() { root.checkFirstRun(); }
+        function onSnapshotChanged() {
+            root.checkFirstRun();
+        }
     }
     function close() {
         cancelLaunch();
@@ -53,6 +68,8 @@ QtObject {
         drawerOpen = false;
         settingsOpen = false;
         powerOpen = false;
+        appInfoOpen = false;
+        emojiOpen = false;
         storeOpen = false;
         filesOpen = false;
         recentsOpen = false;
@@ -107,6 +124,23 @@ QtObject {
     property Timer shotTimer: Timer {
         interval: 380
         onTriggered: SystemBridge.screenshot(root.screenshotMode)
+    }
+    // Recording starts after the panels have faded so they are not in the video.
+    property string recordMode: "full"
+    function startRecording(mode) {
+        close();
+        recordMode = mode;
+        recordTimer.restart();
+    }
+    function toggleRecording() {
+        if (SystemBridge.snapshot.recording.recording)
+            SystemBridge.record("stop");
+        else
+            startRecording("full");
+    }
+    property Timer recordTimer: Timer {
+        interval: 450
+        onTriggered: SystemBridge.record("start", root.recordMode)
     }
     function openInstaller(screen) {
         if (!InstallerState.live) {
@@ -185,6 +219,31 @@ QtObject {
             root.finishRecents();
         }
     }
+    readonly property bool anyOpen: shadeOpen || drawerOpen || settingsOpen || powerOpen || appInfoOpen || emojiOpen
+        || storeOpen || filesOpen || recentsOpen || utilitiesOpen
+    // Home: first leaves whatever is open; with nothing open it shows the desktop.
+    function goHome() {
+        if (anyOpen) {
+            close();
+            return "closed";
+        }
+        Windows.showDesktop();
+        return "desktop";
+    }
+    function openEmoji(screen) {
+        const wasOpen = emojiOpen;
+        close();
+        if (wasOpen)
+            return;
+        activeScreen = screen;
+        emojiOpen = true;
+    }
+    function openAppInfo(app, screen) {
+        close();
+        AppInfoState.open(app);
+        activeScreen = screen;
+        appInfoOpen = true;
+    }
     function openPower(screen) {
         close();
         activeScreen = screen;
@@ -231,6 +290,10 @@ QtObject {
             root.windowArrived(event.name, event.data);
         }
     }
+    function showToast(message) {
+        toast = message;
+        toastTimer.restart();
+    }
     property Timer toastTimer: Timer {
         interval: 5000
         onTriggered: root.toast = ""
@@ -240,6 +303,12 @@ QtObject {
         function onErrorChanged() {
             if (SystemBridge.error) {
                 root.toast = SystemBridge.error;
+                toastTimer.restart();
+            }
+        }
+        function onRecordingFinished(success, message) {
+            if (success || message !== "Recording cancelled") {
+                root.toast = message;
                 toastTimer.restart();
             }
         }

@@ -46,21 +46,21 @@ SettingsPage {
                     profile: "power-saver",
                     title: "Power saver",
                     note: "Longest battery life",
-                    symbol: "battery"
+                    symbol: "power_saver"
                 },
                 {
                     id: "power-balanced",
                     profile: "balanced",
                     title: "Balanced",
                     note: "A good mix of speed and battery",
-                    symbol: "battery"
+                    symbol: "power_balanced"
                 },
                 {
                     id: "power-performance",
                     profile: "performance",
                     title: "Performance",
                     note: "Fastest, uses more power",
-                    symbol: "bolt"
+                    symbol: "power_performance"
                 }
             ]
             delegate: ListRow {

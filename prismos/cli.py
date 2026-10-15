@@ -1,10 +1,35 @@
 import argparse
+import importlib
 import json
 import sys
 
-from . import sound as alert_sound
-from . import about, alarms, android, apps, audio, clipboard, clockset, notes, thumbnails, worldclock, displays, drives, favorites, fdroid, files, inputs, installer, notifyprefs, screenshot, settings, stats, storage, store, system, theme, tiles, wallpaper, weather, websearch, widgets, windows, wireless
+from . import theme, windowops
 
+
+class _Lazy:
+    """A command's module, imported the first time it is used. Every `prismctl` call is a
+    new process, so importing all of them for each call made each toggle wait on imports
+    it never used (urllib, ssl, subprocess helpers, ...)."""
+
+    def __init__(self, name):
+        self._name = name
+        self._module = None
+
+    def __getattr__(self, attribute):
+        if self._module is None:
+            self._module = importlib.import_module(f".{self._name}", __package__)
+        return getattr(self._module, attribute)
+
+
+(about, alarms, android, appinfo, apps, audio, clipboard, clockset, notes, thumbnails, worldclock, displays, drives,
+ emoji, favorites, fdroid, files, inputs, installer, notifyprefs, hotspot, vpn, recorder, screenshot, settings, stats, storage, store,
+ system, tiles, updates, wallpaper, weather, websearch, widgets, windows, wireless) = (
+    _Lazy(name) for name in (
+        "about", "alarms", "android", "appinfo", "apps", "audio", "clipboard", "clockset", "notes", "thumbnails",
+        "worldclock", "displays", "drives", "emoji", "favorites", "fdroid", "files", "inputs", "installer",
+        "notifyprefs", "hotspot", "vpn", "recorder", "screenshot", "settings", "stats", "storage", "store", "system", "tiles", "updates",
+        "wallpaper", "weather", "websearch", "widgets", "windows", "wireless"))
+alert_sound = _Lazy("sound")
 
 def main(argv=None):
     parser = argparse.ArgumentParser(prog="prismctl", description="PrismOS native system bridge (JSON output)")
@@ -25,6 +50,14 @@ def main(argv=None):
     clock.add_argument("--time")
     clock.add_argument("--days", default="")
     clock.add_argument("--label", default="")
+    rec = sub.add_parser("record")
+    rec.add_argument("operation", choices=("status", "start", "stop", "toggle", "audio"))
+    rec.add_argument("value", nargs="?")
+    spot = sub.add_parser("hotspot")
+    spot.add_argument("operation", choices=("status", "info", "enable", "disable", "set", "copy-password"))
+    tunnel = sub.add_parser("vpn")
+    tunnel.add_argument("operation", choices=("list", "toggle", "connect", "disconnect", "choose"))
+    tunnel.add_argument("uuid", nargs="?")
     jot = sub.add_parser("notes")
     jot.add_argument("operation", choices=("get", "set"))
     thumbs = sub.add_parser("thumbnails")
@@ -52,8 +85,10 @@ def main(argv=None):
     tile.add_argument("operation", choices=("list", "set", "reset"))
     tile.add_argument("ids", nargs="*")
     alerts = sub.add_parser("notifications")
-    alerts.add_argument("operation", choices=("list", "mute", "unmute", "history"))
+    alerts.add_argument("operation", choices=("list", "mute", "unmute", "history", "count", "lock-count", "focus-app"))
+    sub.add_parser("lock-summary")
     alerts.add_argument("app", nargs="?")
+    alerts.add_argument("flag", nargs="?")
     gadget = sub.add_parser("widgets")
     gadget.add_argument("operation", choices=("list", "set", "size"))
     gadget.add_argument("ids", nargs="*")
@@ -67,9 +102,19 @@ def main(argv=None):
     paper = sub.add_parser("wallpaper")
     paper.add_argument("operation", choices=("list", "set", "clear"))
     paper.add_argument("path", nargs="?")
+    emo = sub.add_parser("emoji")
+    emo.add_argument("operation", choices=("recent", "copy"))
+    emo.add_argument("text", nargs="?")
+    upd = sub.add_parser("updates")
+    upd.add_argument("operation", choices=("list", "check", "apply"))
+    upd.add_argument("kind", nargs="?")
+    appinfo_cmd = sub.add_parser("appinfo")
+    appinfo_cmd.add_argument("operation", choices=("info", "force-stop", "uninstall", "copy-command"))
+    appinfo_cmd.add_argument("desktop_id")
     win = sub.add_parser("windows")
-    win.add_argument("operation", choices=("list",) + windows.OPERATIONS)
+    win.add_argument("operation", choices=("list",) + windowops.OPERATIONS + windowops.SCREEN_OPERATIONS)
     win.add_argument("address", nargs="?")
+    win.add_argument("second", nargs="?")
     inp = sub.add_parser("input")
     inp.add_argument("operation", choices=("list", "set", "apply"))
     inp.add_argument("key", nargs="?")
@@ -158,6 +203,28 @@ def main(argv=None):
                 if args.id is None or not args.id.isdigit():
                     raise ValueError("An alarm number is required")
                 result = alarms.toggle(args.id) if args.operation == "toggle" else alarms.remove(args.id)
+        elif args.command == "record":
+            op = args.operation
+            result = (recorder.status() if op == "status" else recorder.stop() if op == "stop"
+                      else recorder.start(args.value or "full") if op == "start"
+                      else recorder.toggle(args.value or "full") if op == "toggle" else recorder.set_audio(args.value))
+        elif args.command == "hotspot":
+            op = args.operation
+            if op == "set":
+                try:
+                    wanted = json.loads(sys.stdin.read(4096))
+                    result = hotspot.configure(wanted.get("ssid"), wanted.get("password"), wanted.get("regenerate") is True)
+                except (AttributeError, TypeError, json.JSONDecodeError):
+                    raise ValueError("Invalid hotspot request") from None
+            else:
+                result = (hotspot.status() if op == "status" else hotspot.info() if op == "info"
+                          else hotspot.enable() if op == "enable" else hotspot.disable() if op == "disable"
+                          else hotspot.copy_password())
+        elif args.command == "vpn":
+            op = args.operation
+            result = (vpn.listing() if op == "list" else vpn.toggle() if op == "toggle"
+                      else vpn.connect(args.uuid) if op == "connect" else vpn.disconnect(args.uuid) if op == "disconnect"
+                      else vpn.choose(args.uuid))
         elif args.command == "notes":
             if args.operation == "get":
                 result = notes.get()
@@ -197,7 +264,13 @@ def main(argv=None):
         elif args.command == "notifications":
             result = (notifyprefs.status() if args.operation == "list" else
                       notifyprefs.mute(args.app) if args.operation == "mute" else
-                      notifyprefs.set_history(args.app) if args.operation == "history" else notifyprefs.unmute(args.app))
+                      notifyprefs.set_history(args.app) if args.operation == "history" else
+                      notifyprefs.set_count(args.app) if args.operation == "count" else
+                      notifyprefs.set_lock_count(args.app) if args.operation == "lock-count" else
+                      notifyprefs.focus_app(args.app, args.flag) if args.operation == "focus-app" else notifyprefs.unmute(args.app))
+        elif args.command == "lock-summary":
+            # Plain text for the lock screen, not JSON.
+            result = notifyprefs.summary()
         elif args.command == "websearch":
             result = websearch.search(args.query)
         elif args.command == "stats":
@@ -222,9 +295,25 @@ def main(argv=None):
             result = about.info()
         elif args.command == "storage":
             result = storage.usage() if args.operation == "usage" else storage.clear_previews()
+        elif args.command == "emoji":
+            result = emoji.recent() if args.operation == "recent" else emoji.copy(args.text)
+        elif args.command == "updates":
+            result = (updates.cached() if args.operation == "list" else
+                      updates.check() if args.operation == "check" else updates.apply(args.kind))
+        elif args.command == "appinfo":
+            result = {"info": appinfo.info, "force-stop": appinfo.force_stop,
+                      "uninstall": appinfo.uninstall, "copy-command": appinfo.copy_command}[args.operation](args.desktop_id)
         elif args.command == "windows":
-            result = (windows.status() if args.operation == "list"
-                      else windows.dispatch(args.operation, args.address))
+            if args.operation == "list":
+                result = windows.status()
+            elif args.operation == "show-desktop":
+                result = windows.show_desktop()
+            elif args.operation == "split":
+                if not args.address or not args.second:
+                    raise ValueError("Split needs two windows")
+                result = windows.split(args.address, args.second)
+            else:
+                result = windows.dispatch(args.operation, args.address)
         elif args.command == "input":
             if args.operation == "list":
                 result = inputs.list_settings()
@@ -346,7 +435,7 @@ def main(argv=None):
                 changes["font_scale"] = args.font_scale
             prefs = settings.update(**changes) if changes else settings.load()
             result = theme.palette(prefs["seed"], prefs["dark"], prefs["scheme"])
-        print(json.dumps(result, ensure_ascii=False))
+        print(result if args.command == "lock-summary" else json.dumps(result, ensure_ascii=False))
         return 0
     except (ValueError, OSError, system.CommandError, ImportError) as error:
         print(json.dumps({"ok": False, "error": str(error)}))

@@ -27,12 +27,12 @@ Item {
         id: row
         anchors.centerIn: parent
         spacing: 4
-        Image {
+        AppIcon {
             Layout.preferredWidth: 20
             Layout.preferredHeight: 20
             Layout.rightMargin: 6
-            sourceSize: Qt.size(40, 40)
-            source: Quickshell.iconPath(root.app ? root.app.icon : (root.window ? root.window.class.toLowerCase() : ""), "application-x-executable")
+            icon: root.app ? root.app.icon : (root.window ? root.window.class.toLowerCase() : "")
+            label: root.app ? root.app.name : (root.window ? root.window.class : "")
         }
         Label {
             Layout.maximumWidth: 320

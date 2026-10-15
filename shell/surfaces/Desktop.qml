@@ -49,10 +49,19 @@ Scope {
     PowerMenu {
         screen: root.screen
     }
+    AppInfo {
+        screen: root.screen
+    }
+    EmojiPicker {
+        screen: root.screen
+    }
     HeadsUp {
         screen: root.screen
     }
     AlarmRinging {
+        screen: root.screen
+    }
+    Osd {
         screen: root.screen
     }
     Toast {

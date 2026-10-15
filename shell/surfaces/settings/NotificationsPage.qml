@@ -6,7 +6,7 @@ SettingsPage {
     id: page
     title: "Notifications"
     readonly property var apps: {
-        const names = Notifications.mutedApps.concat(Notifications.seenApps, Notifications.groups.map(group => group.app));
+        const names = Notifications.mutedApps.concat(Notifications.focusApps, Notifications.seenApps, Notifications.groups.map(group => group.app));
         return names.filter((name, index) => names.indexOf(name) === index).sort((a, b) => a.localeCompare(b));
     }
     SettingsGroup {
@@ -18,6 +18,45 @@ SettingsPage {
             symbol: on ? "notifications_off" : "dnd"
             on: SystemBridge.snapshot.settings.dnd
             onSwitched: SystemBridge.action("dnd")
+        }
+    }
+    SettingsGroup {
+        width: parent.width
+        title: "Focus mode"
+        ToggleRow {
+            width: parent.width
+            objectName: "focus-toggle"
+            title: "Focus mode"
+            supporting: on ? "Notifications from the apps below stay quiet" : Notifications.focusApps.length === 0 ? "Choose the apps to quiet, then switch it on" : "Off"
+            symbol: "focus"
+            on: Notifications.focusOn
+            onSwitched: SystemBridge.action("focus")
+        }
+        Repeater {
+            model: page.apps
+            delegate: ToggleRow {
+                required property string modelData
+                required property int index
+                objectName: "focus-app-" + index
+                width: parent ? parent.width : 600
+                title: modelData
+                supporting: on ? "Quiet during Focus mode" : "Notifies as usual"
+                symbol: on ? "notifications_off" : "notifications"
+                on: Notifications.focusApps.indexOf(modelData) >= 0
+                onSwitched: value => SystemBridge.setFocusApp(modelData, value)
+            }
+        }
+        Label {
+            width: parent.width
+            visible: page.apps.length === 0
+            leftPadding: 16
+            rightPadding: 16
+            topPadding: 8
+            bottomPadding: 8
+            text: "Apps that send notifications will appear here so you can choose which ones Focus mode quiets."
+            role: "bodyMedium"
+            color: Theme.surfaceVariantInk
+            wrapMode: Text.WordWrap
         }
     }
     SettingsGroup {
@@ -84,6 +123,19 @@ SettingsPage {
             symbol: "trash"
             enabled: Notifications.count > 0
             onClicked: Notifications.clear()
+        }
+    }
+    SettingsGroup {
+        width: parent.width
+        title: "Lock screen"
+        ToggleRow {
+            width: parent.width
+            objectName: "lock-count-toggle"
+            title: "Show notification count"
+            supporting: on ? "The lock screen says how many are waiting, never what they say" : "The lock screen shows no notification information"
+            symbol: "lock"
+            on: SystemBridge.snapshot.settings.lock_notifications !== false
+            onSwitched: value => SystemBridge.setLockScreenCount(value)
         }
     }
     SettingsGroup {

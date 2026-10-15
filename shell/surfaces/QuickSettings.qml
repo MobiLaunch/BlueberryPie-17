@@ -51,6 +51,13 @@ PanelWindow {
         case "dark":
             SystemBridge.action("dark");
             break;
+        case "focus":
+            // With no apps chosen there is nothing to pause: go and choose some.
+            if (Notifications.focusApps.length === 0 && !SystemBridge.snapshot.settings.focus)
+                ShellState.openSettings(root.screen, "notifications");
+            else
+                SystemBridge.action("focus");
+            break;
         case "reduced_motion":
             SystemBridge.action("reduced_motion");
             break;
@@ -65,6 +72,19 @@ PanelWindow {
             break;
         case "night_light":
             SystemBridge.action("night-light");
+            break;
+        case "hotspot":
+            SystemBridge.action("hotspot");
+            break;
+        case "screen_record":
+            ShellState.toggleRecording();
+            break;
+        case "vpn":
+            // With no VPN set up there is nothing to switch: show how to add one instead.
+            if (SystemBridge.snapshot.vpn.available)
+                SystemBridge.action("vpn");
+            else
+                tileDetails("vpn");
             break;
         case "screenshot":
             ShellState.screenshot("area");
@@ -142,7 +162,8 @@ PanelWindow {
         visible: root.dual
         anchors.left: parent.left
         anchors.top: parent.top
-        anchors.bottom: parent.bottom
+        // Sized to what it shows (a few cards, or the "all caught up" note), up to the full height.
+        height: Math.max(160, Math.min(parent.height, dualList.height + 36))
         width: root.paneWidth
         radius: Theme.shape.extraLargeIncreased + 4
         color: Theme.surfaceContainerLow
@@ -231,9 +252,19 @@ PanelWindow {
                             font.letterSpacing: -1
                         }
                         Label {
-                            text: root.dateText + (root.batteryText ? "  ·  " + root.batteryText : "")
+                            width: parent.width
+                            text: root.dateText
                             role: "bodyMedium"
                             color: Theme.surfaceVariantInk
+                            wrapMode: Text.WordWrap
+                        }
+                        Label {
+                            width: parent.width
+                            visible: root.batteryText.length > 0
+                            text: "Battery " + root.batteryText
+                            role: "bodySmall"
+                            color: Theme.surfaceVariantInk
+                            wrapMode: Text.WordWrap
                         }
                     }
                     IconButton {

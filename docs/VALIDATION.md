@@ -1,4 +1,144 @@
-# Validation record — 2026-10-15 (v0.9 through round nine)
+# Validation record — 2026-10-15 (v0.9 through round eleven)
+
+## Addendum: round eleven (closing the Android gaps)
+
+### Slice 1: volume and brightness indicator — executed
+
+| Check | Result |
+| --- | --- |
+| Key binds | Each hardware key runs `prism-shell ipc <target> \|\| prismctl action <fallback>`; every target exists in the wrapper allowlist and the shell's IPC handler |
+| Indicator | Volume up, down, mute, microphone mute and brightness each show the right level or "Muted" straight after the press; brightness stops at 1%; it hides itself; nothing is shown when the control is missing (the command reports why); no elided text |
+| Writes | Toggles and steps are never merged; slider values for the same control are (first and last run, middle superseded) |
+
+### Not executed
+
+- Real hardware keys, a real Hyprland `exec` of the `||` fallback, and the feel of a held key on real audio and backlight devices.
+
+### Slice 2: notification reply, snooze and lock screen count — executed
+
+| Check | Result |
+| --- | --- |
+| Inline reply | The server advertises reply support; only a notification that accepts replies shows the box; the trimmed text reaches the sending app; "Reply sent" shows and the card clears itself; the heads-up banner never offers a reply (it cannot take keyboard focus) |
+| Snooze | Important notifications have no snooze; the chips set 15 / 60 / 240 minutes; a snoozed one leaves the shade and the count while the sender's notification stays alive; when its time is up it returns with a banner; clearing forgets snoozes |
+| Lock screen count | The bridge stores only a number (0600 file in a 0700 runtime directory, atomic, bounded 0 to 999, bad or damaged values read as 0); the shell writes 0 at start and the count after each change; the summary is plain text for hyprlock and empty when off or zero; turning it off in Settings empties it; no notification text is ever stored |
+
+### Slice 3: hotspot and VPN tiles — executed
+
+| Check | Result |
+| --- | --- |
+| Hotspot adapter | Names (1 to 32 bytes) and passwords (8 to 63 printable ASCII) are validated; the first password is generated, saved and then reused, so the one shown, copied and used to start the hotspot is the same; the file is 0600 in a 0700 folder; turning it on never puts the password in a command line (a 0600 password file that is removed afterwards carries it) and marks the profile so NetworkManager keeps no copy; failures give fixed messages that do not echo settings; missing `dnsmasq`, no Wi-Fi adapter and no AP support are reported plainly; turning off only acts when it is on; changing the name or password applies next time and a running hotspot is not touched; copying uses a pipe |
+| VPN adapter | Only `vpn` and `wireguard` profiles with real UUIDs are listed (names may contain colons); toggling disconnects an active VPN or connects the chosen (else first) one; unknown or malformed choices are refused before any command runs; "secrets were required" becomes a helpful message; a corrupt saved choice is ignored |
+| Status | Hotspot and VPN come from the same single `nmcli` call as the other connection state; a missing `nmcli` marks both unavailable |
+| Tiles | Both tiles toggle with an immediate predicted state; they run on their own write queue; the hotspot details hide the password until asked, copy it, switch off, make a new one and forget the password when closed (including when a late reply arrives after closing); the VPN details connect and disconnect profiles; with no VPN set up the tile opens an explanation; both sections appear in Settings → Network; no elided text |
+
+### Not executed
+
+- Real NetworkManager: hotspot activation with `passwd-file` and `psk-flags 2` (the fake `nmcli` accepts it), NAT through `dnsmasq` and firewall rules, single-radio adapters dropping their Wi-Fi, WPA3 hotspots, VPN plugins that prompt for secrets, and Quick Settings latency with a real VPN. The runtime tests use a small fake `nmcli`.
+
+### Slice 4: screen recording — executed
+
+| Check | Result |
+| --- | --- |
+| Recorder | With a stand-in `wf-recorder` that really runs and finishes on SIGINT: start, status with elapsed time, refusal of a second recording, stop saving a non-empty file, state file removed; files in `Videos/Screen recordings`, never overwriting (`-2`); a stale state file or a live process that is not a recorder is never signalled; a recorder that exits at once is reported and leaves no state |
+| Arguments | Full screen uses the focused output (or lets the recorder choose when `hyprctl` is absent); an area comes from `slurp` and must match a strict region pattern (anything else counts as cancelled); a window uses its box from `hyprctl`; microphone audio is added only when switched on |
+| Shell | The tile starts a recording after the shade has closed, the top-bar chip appears with an `m:ss` timer, pressing it stops at once and a "saved" toast follows with the file present; without `wf-recorder` the tile says what is missing and the details explain it; `Super + Shift + R` reaches the shell |
+
+### Not executed
+
+- A real `wf-recorder` under Hyprland (portal and screencopy permissions, codecs, audio devices, large recordings, GPU load), and what happens to a recording if the session ends abruptly.
+
+### Slice 5: app info — executed
+
+| Check | Result |
+| --- | --- |
+| Adapter | Pacman apps show package, version and size plus a copyable `sudo pacman -Rns` command and are never uninstalled; a user Flatpak is removable with the fixed command `flatpak uninstall --user -y --noninteractive ID`; a system Flatpak only shows a command; unknown or malformed desktop IDs are refused before any command runs; running state matches windows by class like the dock |
+| Force stop | With real child processes: a polite one ends on SIGTERM, one that ignores SIGTERM is killed after the grace period; the shell, the bridge, PID 1, other users' processes, protected names and processes that no longer exist are never signalled; stopping an app that is not running is an error |
+| Copy | Only the generated command (never caller text) is written to `wl-copy`; nothing to copy for removable apps |
+| Shell | The page opens from the app menu, shows name, status and source rows, Force stop works against a real process through a fake `hyprctl`, a user Flatpak is removed only after the confirm step, a slow earlier read can no longer overwrite the page of the app opened next, no elided text |
+
+### Not executed (slice 5)
+
+- Real Hyprland window PIDs (Flatpak sandboxes report the sandbox's PID namespace, so force stop may not reach a sandboxed app), a real `flatpak uninstall` and `pacman -Qo/-Qi` output across versions and locales.
+
+### Slice 6: gestures, Home and split screen — executed
+
+| Check | Result |
+| --- | --- |
+| Show desktop | Hides only the visible windows of the current workspace and remembers them in a private runtime file; the second press restores exactly those (skipping ones that closed or were minimized earlier); nothing to do when the workspace is empty; a corrupt or hostile state file is ignored |
+| Split | Brings both windows to the current workspace silently, snaps the first left and the second right with the existing snap geometry, focuses the second; the same window twice, unknown, malformed or injected addresses are refused before any dispatch |
+| Config | The Lua mock now validates `hl.gesture` (finger count, direction, action) and runs each gesture action: 3-finger up/down reach `prism-shell ipc recents`/`home`, `Super + D` falls back to `prismctl windows show-desktop`; refused gesture APIs still leave binds and autostart intact |
+| Shell | Home closes an open panel first and only then shows the desktop; Recents split buttons choose a first then a second card (cancelable, Esc) and issue one `windows split` request |
+
+### Not executed (slice 6)
+
+- Real touchpad swipes (libinput finger counts, conflicts with app gestures), `hyprctl dispatch` behaviour for `movetoworkspacesilent` with `special:minimized` on a Lua-configured Hyprland, and the look of tiled windows being floated into halves.
+
+### Slice 7: Focus mode — executed
+
+| Check | Result |
+| --- | --- |
+| Settings | `focus` and `focus_apps` default off/empty, load validated (non-boolean flag, control characters, duplicates, overlong names dropped), toggle through the bridge, app list separate from the muted list, 50-app cap, bad names/flags refused |
+| Tile | In the tile catalog; answers at once with "N apps paused"; with no apps chosen it opens Settings → Notifications instead of switching on |
+| Notifications | While on, a chosen app gets no banner yet still appears in the shade; other apps and critical notifications still banner; turning it off restores banners; per-app switches in the Settings page persist |
+
+### Not executed (slice 7)
+
+- A schedule or timer for Focus mode, pausing the apps themselves (only their notifications are quieted), and notification sounds (the shell has no per-notification sound path to silence).
+
+### Slice 8: software update — executed
+
+| Check | Result |
+| --- | --- |
+| Adapter | Only well-formed `name old -> new` lines and Flatpak IDs are kept (injected names, broken lines dropped), sorted and capped; exit code 2 means "nothing to update"; errors and timeouts are reported per source; missing tools are explained and both missing is an error; checking runs only `checkupdates` and `flatpak remote-ls --updates` |
+| Cache | The last result is stored 0600 in a 0700 folder, read back validated, and a corrupt file is ignored |
+| Install | Opens `foot` on one of three fixed commands (`pacman`, `flatpak`, `all`); any other kind is refused, a missing terminal is reported |
+| Shell | The page reads "Not checked yet", Install is disabled until there is something to install, a check lists packages and Flatpak apps, and Install starts the terminal with the expected fixed arguments; checking started no terminal; no elided text |
+
+### Not executed (slice 8)
+
+- A real `checkupdates` against live mirrors (network, mirror failures, partial-upgrade warnings), and the terminal flow with a real `sudo pacman -Syu`. Reboot-required detection and automatic or scheduled checks are not built: a check happens only when asked.
+
+### Slice 9: emoji picker — executed
+
+| Check | Result |
+| --- | --- |
+| Data and search | 1,906 emoji in nine groups; labels and tags matched case-insensitively with exact and prefix matches first (`ok` finds "OK hand", `cat` finds the plain cat), unknown recents skipped, no duplicates (`tests/emojisearch.spec.cjs`) |
+| Adapter | Only short symbol/joiner/variation-selector sequences or keycaps are accepted; text, control characters, shell syntax and overlong input are refused before `wl-copy` or the settings file are touched; **every emoji the picker offers passes the validator**; copying pipes the text to `wl-copy` on stdin, remembers the newest 24 without duplicates, a tampered recents list is cleaned on load |
+| Shell | `Super + .` toggles the picker, browsing starts with the first group, searching narrows the grid, choosing an emoji copies it (fake `wl-copy`), closes the picker and shows a toast; a Recent tab appears afterwards and lists it |
+
+### Not executed (slice 9)
+
+- Glyph rendering with the real `noto-fonts-emoji` (the offscreen runtime has no colour emoji font, so only the text is checked), skin-tone and gender variants (only the base emoji are listed), and pasting into other apps.
+
+### Not executed (slice 2)
+
+- Real messengers: whether their notifications set the inline-reply capability and how they react to a reply or to a dismissal; the lock screen label in a real `hyprlock` (the config is only checked for structure).
+
+## Previous record — 2026-10-15 (through round ten)
+
+## Addendum: round ten (icons, Hyprland errors, responsiveness, polish)
+
+### Executed
+
+| Check | Result |
+| --- | --- |
+| Hyprland Lua config | The mock now rejects a spring without numeric `mass`, `stiffness` and `dampening` and an animation naming a curve that does not exist. The previous config fails it with exactly the reported `dampening expects a number`; the new one passes, registers the spring and names it for `windowsIn`; a variant that Hyprland would refuse falls back to the bezier and the binds after it still run; with curves, animations and gestures all refused the file still finishes, registers every bind and still starts the shell at `hyprland.start` |
+| Icon set | Generated data equals the vendored SVGs; every icon name used by the shell exists (a test scans the QML); every mapped symbol has outlined and filled variants; each vendored file is a single path; Apache-2.0 license and notice present; battery has all seven level glyphs |
+| Icon theme | The shell wrapper selects Papirus when installed, leaves the system theme alone otherwise and lets an explicit `QS_ICON_THEME` win; the theme is in the PKGBUILD and ISO package list |
+| App icons | An app with no `Icon=` key, or one the theme lacks, gets a letter tile with the right initial; nothing in the shell references the generic executable icon |
+| Responsiveness | Dark mode, Wi-Fi, mute, volume and brightness clicks change the snapshot before the command returns; sliders stay in range; unavailable hardware and unknown actions are not guessed; a read that began before a click is discarded; a guess the system does not confirm is replaced by the real state; the command really runs and the final state matches |
+| Bridge speed | Median `prismctl` call: about 150 ms to about 90 ms (`about`), 216 ms to 123 ms (`status`), 136 ms to 87 ms (`tiles list`) on the build machine |
+| Layout | Slider rows show their value once, in their own units; no elided text on the Settings pages at normal and largest text size |
+| Browser preview | `tests/preview.spec.cjs` passes with the new icons |
+| `scripts/check.sh` | Passed |
+
+### Not executed
+
+- A real Hyprland session: whether 0.56 accepts the spring exactly as written (the field name comes from the error text you reported and the Hyprland wiki, which itself spells it both ways).
+- Whether Quickshell honours `QS_ICON_THEME` and finds Papirus icons for every installed app; the harness uses a stand-in theme lookup.
+- Optical comparison of the icons against Android 17 on a real display.
+
+## Previous record — 2026-10-15 (through round nine)
 
 ## Addendum: round nine (notification history)
 

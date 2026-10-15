@@ -20,7 +20,7 @@ PanelWindow {
             title: "Network & internet",
             symbol: "wifi",
             page: "NetworkPage",
-            keywords: "wifi wi-fi wireless internet ethernet vpn connection"
+            keywords: "wifi wi-fi wireless internet ethernet vpn connection hotspot tethering share"
         },
         {
             id: "bluetooth",
@@ -74,14 +74,14 @@ PanelWindow {
         {
             id: "input",
             title: "Pointer & keyboard",
-            symbol: "keyboard",
+            symbol: "mouse",
             page: "InputPage",
             keywords: "mouse touchpad scrolling tap keyboard repeat pointer"
         },
         {
             id: "shortcuts",
             title: "Shortcuts & gestures",
-            symbol: "keyboard",
+            symbol: "shortcuts",
             page: "ShortcutsPage",
             keywords: "shortcuts keys keyboard gestures touchpad swipe bindings hotkeys"
         },
@@ -105,6 +105,13 @@ PanelWindow {
             symbol: "storage",
             page: "StoragePage",
             keywords: "storage disk space files free used documents downloads cache clean"
+        },
+        {
+            id: "update",
+            title: "Software update",
+            symbol: "update",
+            page: "UpdatePage",
+            keywords: "update upgrade software packages pacman flatpak security patches"
         },
         {
             id: "about",
@@ -145,6 +152,8 @@ PanelWindow {
             return SystemBridge.apps.length + " installed";
         case "storage":
             return StorageState.loaded ? StorageState.size(StorageState.usage.free) + " free" : "Space used by your files";
+        case "update":
+            return UpdateState.summary;
         case "power":
             return snap.battery.available ? snap.battery.value + "%" + (snap.battery.charging ? " · Charging" : "") : "Plugged in";
         default:
