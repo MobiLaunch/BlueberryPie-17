@@ -3,7 +3,7 @@ import json
 import sys
 
 from . import sound as alert_sound
-from . import about, alarms, android, apps, audio, clipboard, clockset, worldclock, displays, drives, favorites, fdroid, files, inputs, installer, notifyprefs, screenshot, settings, stats, store, system, theme, tiles, wallpaper, weather, websearch, widgets, windows, wireless
+from . import about, alarms, android, apps, audio, clipboard, clockset, thumbnails, worldclock, displays, drives, favorites, fdroid, files, inputs, installer, notifyprefs, screenshot, settings, stats, store, system, theme, tiles, wallpaper, weather, websearch, widgets, windows, wireless
 
 
 def main(argv=None):
@@ -23,6 +23,9 @@ def main(argv=None):
     clock.add_argument("--time")
     clock.add_argument("--days", default="")
     clock.add_argument("--label", default="")
+    thumbs = sub.add_parser("thumbnails")
+    thumbs.add_argument("operation", choices=("capture", "list", "clear", "enable"))
+    thumbs.add_argument("value", nargs="?")
     when = sub.add_parser("datetime")
     when.add_argument("operation", choices=("get", "timezone", "ntp", "24h"))
     when.add_argument("value", nargs="?")
@@ -151,6 +154,10 @@ def main(argv=None):
                 if args.id is None or not args.id.isdigit():
                     raise ValueError("An alarm number is required")
                 result = alarms.toggle(args.id) if args.operation == "toggle" else alarms.remove(args.id)
+        elif args.command == "thumbnails":
+            op = args.operation
+            result = (thumbnails.capture() if op == "capture" else thumbnails.status() if op == "list"
+                      else thumbnails.clear() if op == "clear" else thumbnails.set_enabled(args.value))
         elif args.command == "datetime":
             op = args.operation
             result = (clockset.status() if op == "get" else clockset.set_timezone(args.value) if op == "timezone"

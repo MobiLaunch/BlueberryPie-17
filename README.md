@@ -95,6 +95,15 @@ ISO and hardware qualification have not been completed in this release.
 - **Alarm banner**: alarms and timers show a ringing banner on every screen with Dismiss, and
   Snooze (10 minutes) for alarms; the sound repeats until dismissed or two minutes pass.
 
+### Round five: Recents previews, lock screen and the glance
+
+- **Recents previews** (`Super + Tab`): small screenshots of the windows that are on screen when the
+  overview opens (grim, scaled to 30%); windows on other workspaces keep their last preview, else
+  an app icon. Previews live in the per-login runtime directory (removed at sign-out), are deleted
+  when their window closes, and can be turned off in Settings → Wallpaper & style.
+- **Lock screen**: user name, battery and a dimmed blurred background in the same dark Material roles.
+- **At a glance** shows the next alarm ("Tomorrow 07:30") and a running timer.
+
 ## Build the ISO on Windows
 
 See **[Windows build instructions](docs/WINDOWS-ISO.md)** for the

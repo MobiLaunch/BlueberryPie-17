@@ -145,13 +145,45 @@ QtObject {
         activeScreen = screen;
         filesOpen = true;
     }
+    // Recents takes fresh window previews first (the overview itself must not be in them).
+    property var pendingRecents: null
     function toggleRecents(screen) {
         const open = !recentsOpen || activeScreen !== screen;
         close();
+        pendingRecents = null;
+        recentsFallback.stop();
+        if (!open)
+            return;
+        Windows.refresh();
+        if (SystemBridge.snapshot.settings.recents_previews === false || !Windows.capture()) {
+            showRecents(screen);
+            return;
+        }
+        pendingRecents = screen;
+        recentsFallback.restart();
+    }
+    function showRecents(screen) {
         activeScreen = screen;
-        recentsOpen = open;
-        if (open)
-            Windows.refresh();
+        recentsOpen = true;
+        Windows.refresh();
+    }
+    function finishRecents() {
+        recentsFallback.stop();
+        if (pendingRecents === null)
+            return;
+        const screen = pendingRecents;
+        pendingRecents = null;
+        showRecents(screen);
+    }
+    property Timer recentsFallback: Timer {
+        interval: 1500
+        onTriggered: root.finishRecents()
+    }
+    property Connections previewsReady: Connections {
+        target: Windows
+        function onCaptured() {
+            root.finishRecents();
+        }
     }
     function openPower(screen) {
         close();

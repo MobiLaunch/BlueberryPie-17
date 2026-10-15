@@ -12,6 +12,19 @@ QtObject {
     property bool available: false
     readonly property bool busy: actor.running
     readonly property var focused: list.find(window => window.focused) || null
+    // Previews of windows ({address: file path}); captured just before Recents opens.
+    property var thumbs: ({})
+    signal captured
+    function capture() {
+        if (capturer.running)
+            return false;
+        capturer.running = true;
+        return true;
+    }
+    function thumbFor(address) {
+        const path = thumbs[address];
+        return path ? "file://" + path : "";
+    }
     function refresh() {
         if (reader.running)
             return;
@@ -51,6 +64,21 @@ QtObject {
         actor.command = ["prismctl", "windows", operation, address];
         actor.running = true;
         return true;
+    }
+    property Process capturer: Process {
+        command: ["prismctl", "thumbnails", "capture"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const data = JSON.parse(text);
+                    if (data.ok !== false && data.thumbs)
+                        root.thumbs = data.thumbs;
+                } catch (e) {
+                    // No previews is a fine fallback; Recents still shows icons.
+                }
+            }
+        }
+        onExited: root.captured()
     }
     property Process reader: Process {
         command: ["prismctl", "windows", "list"]

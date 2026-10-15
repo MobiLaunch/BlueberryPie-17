@@ -100,6 +100,12 @@ QtObject {
         pending = queue;
         drain();
     }
+    function setPreviews(on) {
+        const queue = pending.filter(item => item[1] !== "thumbnails");
+        queue.push(["prismctl", "thumbnails", "enable", on ? "yes" : "no"]);
+        pending = queue;
+        drain();
+    }
     function setTiles(ids) {
         const queue = pending.filter(item => item[1] !== "tiles");
         queue.push(["prismctl", "tiles", "set"].concat(ids));

@@ -8,7 +8,7 @@ import "../services"
 import "../services/LaunchTracking.js" as LaunchTracking
 
 // Recents overview: open windows, most recently used first. Pick one to switch
-// to it, dismiss one to close it. Cards show the app, not a live preview.
+// to it, dismiss one to close it. Cards show a preview taken when the overview opened (older for windows on other workspaces).
 PanelWindow {
     id: root
     property bool opened: ShellState.recentsOpen && ShellState.activeScreen === screen
@@ -150,17 +150,31 @@ PanelWindow {
                         onClicked: Windows.close(slot.modelData.address)
                     }
                     Rectangle {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        y: 66
-                        width: 128
-                        height: 128
-                        radius: 40
+                        id: preview
+                        readonly property string shot: Windows.thumbFor(slot.modelData.address)
+                        x: 16
+                        y: 56
+                        width: card.width - 32
+                        height: 140
+                        radius: 24
+                        clip: true
                         color: slot.modelData.focused ? Theme.primary : Theme.secondaryContainer
                         Image {
+                            anchors.fill: parent
+                            visible: preview.shot.length > 0 && status === Image.Ready
+                            source: preview.shot
+                            asynchronous: true
+                            cache: false
+                            fillMode: Image.PreserveAspectCrop
+                            horizontalAlignment: Image.AlignLeft
+                            verticalAlignment: Image.AlignTop
+                        }
+                        Image {
                             anchors.centerIn: parent
-                            width: 80
-                            height: 80
-                            sourceSize: Qt.size(160, 160)
+                            width: 72
+                            height: 72
+                            visible: preview.shot.length === 0
+                            sourceSize: Qt.size(144, 144)
                             fillMode: Image.PreserveAspectFit
                             source: Quickshell.iconPath(slot.app ? slot.app.icon : slot.modelData.class.toLowerCase(), "application-x-executable")
                         }

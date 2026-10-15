@@ -49,12 +49,15 @@ def clients():
             recency = int(item.get("focusHistoryID", 999))  # 0 is the most recently focused
             monitor = int(item.get("monitor", 0))
             fullscreen = int(item.get("fullscreen", 0) or 0)
+            x, y = (int(v) for v in item.get("at", (0, 0)))
+            width, height = (int(v) for v in item.get("size", (0, 0)))
         except (TypeError, ValueError):
             workspace_id, pid, recency, monitor, fullscreen = 0, 0, 999, 0, 0
+            x = y = width = height = 0
         result.append({"address": address.lower(), "class": app_class,
                        "title": str(item.get("title") or "")[:200],
                        "workspace": workspace_id, "pid": pid, "recency": recency,
-                       "monitor": monitor,
+                       "monitor": monitor, "x": x, "y": y, "width": width, "height": height,
                        "focused": address == focused,
                        "floating": bool(item.get("floating", False)),
                        "maximized": fullscreen != 0,

@@ -44,4 +44,22 @@ Column {
             opacity: 0.9
         }
     }
+    Row {
+        spacing: 8
+        visible: ClockState.timerRunning || ClockState.nextAlarmText.length > 0
+        Symbol {
+            anchors.verticalCenter: parent.verticalCenter
+            width: 20
+            height: 20
+            name: "recents"
+            color: root.ink
+        }
+        Label {
+            anchors.verticalCenter: parent.verticalCenter
+            text: ClockState.timerRunning ? "Timer " + ClockState.clock(Math.ceil(ClockState.timerLeft / 1000) * 1000, false) : "Alarm " + ClockState.nextAlarmText
+            role: "bodyMedium"
+            color: root.ink
+            opacity: 0.85
+        }
+    }
 }

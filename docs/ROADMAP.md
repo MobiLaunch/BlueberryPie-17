@@ -195,3 +195,10 @@ clipboard search and pinning, world clock.
 ## Round four (development slice)
 
 - Date & time settings with a 12/24-hour clock, keyboard layout picker, world clock, alarm snooze and ringing banner.
+
+## Round five (development slice)
+
+- Recents window previews, refreshed lock screen, next alarm and timer on the desktop glance.
+
+Still open: per-tile detail panels, clipboard search/pinning, resizable widgets, true live thumbnails
+(needs a screencopy client), measurements against the Android reference.

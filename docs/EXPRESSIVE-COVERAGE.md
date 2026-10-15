@@ -23,7 +23,8 @@ HARDWARE = real compositor/device testing still required, GAP = missing.
 | Calculator, timer, stopwatch | SOURCE / QA | no alarms; timer has no sound |
 | Alarms, quiet hours, clipboard history, converter | SOURCE / QA | no snooze or looping ringer; real cliphist and audio unverified |
 | Date & time page, 12/24-hour clock, keyboard layouts, world clock, ringing banner | SOURCE / QA | timedatectl/polkit and live layout changes unverified |
-| Recents overview (windows via hyprctl) | SOURCE / QA | verify focus/close dispatch on Hyprland 0.56 Lua; no thumbnails yet |
+| Lock screen layout and glance alarm/timer | SOURCE / QA | hyprlock rendering unverified |
+| Recents overview (windows via hyprctl) with window previews | SOURCE / QA | verify focus/close dispatch and grim captures on Hyprland 0.56 Lua; previews are snapshots, not live |
 | Heads-up banners and grouped swipe-dismiss shade | SOURCE / QA | real notification clients, long text, many apps |
 | Settings app (11 sections) | SOURCE / QA | real adapters on hardware; per-app notification controls missing |
 | Hardware volume / brightness / mute keys | SOURCE | real keyboard; bind flags unverified |

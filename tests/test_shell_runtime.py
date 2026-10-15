@@ -515,6 +515,57 @@ class ShellRuntimeTests(unittest.TestCase):
         self.assertEqual(harness.truncated_texts(), [])
         self.assertEqual(harness.problems(), [])
 
+    def test_recents_shows_window_previews_and_falls_back_to_icons(self):
+        import tempfile
+        from PIL import Image
+        folder = tempfile.mkdtemp()
+        self.addCleanup(lambda: __import__("shutil").rmtree(folder, ignore_errors=True))
+        shot = Path(folder) / "0xaa01-1.png"
+        Image.new("RGB", (96, 60), (200, 40, 40)).save(shot)
+        harness = self.boot()
+        harness.ipc("recents")
+        harness.pump(900)
+        self.assertEqual(harness.eval_value("ShellState.recentsOpen"), "true", "opens even when no preview can be taken")
+        harness.eval(WINDOWS + 'Windows.thumbs = {"0xaa01": "%s"};' % shot)
+
+        def previews():
+            return [item for item in harness.visible_items()
+                    if item.metaObject().className().startswith("QQuickImage") and "0xaa01-1.png" in str(item.property("source"))]
+        self.assertTrue(harness.wait_for(lambda: len(previews()) == 1, 3000))
+        previews = previews()
+        self.assertEqual(harness.truncated_texts(), [])
+        self.assertEqual(harness.problems(), [])
+
+    def test_preview_toggle_goes_to_the_bridge(self):
+        from prismos import settings
+        harness = self.boot()
+        harness.ipc("settings")
+        harness.pump(500)
+        row = harness.find("section-style")
+        harness.reveal(row)
+        harness.click(*harness.scene_pos(row))
+        harness.pump(700)
+        toggle = next(item for item in harness.visible_items()
+                      if item.metaObject().className().startswith("ToggleRow") and item.property("title") == "Window previews in Recents")
+        harness.reveal(toggle)
+        harness.click(*harness.scene_pos(toggle))
+        self.assertTrue(harness.wait_for(lambda: settings.load()["recents_previews"] is False, 6000))
+
+    def test_glance_shows_the_next_alarm_and_a_running_timer(self):
+        harness = Harness()
+        self.addCleanup(harness.close)
+        harness.write_settings(onboarding_complete=True, alarms=[
+            {"id": 1, "time": "23:59", "days": [], "label": "", "enabled": True}])
+        harness.load()
+        harness.pump(1800)
+        texts = lambda: {str(item.property("text")) for item in harness.visible_items() if item.property("text")}
+        self.assertTrue(any(text.startswith("Alarm ") and "23:59" in text for text in texts()), texts())
+        harness.eval("ClockState.setTimer(90); ClockState.startTimer()")
+        harness.pump(300)
+        self.assertTrue(any(text.startswith("Timer ") for text in texts()))
+        self.assertEqual(harness.truncated_texts(), [])
+        self.assertEqual(harness.problems(), [])
+
     def test_settings_search_filters_sections(self):
         harness = self.boot()
         harness.ipc("settings")

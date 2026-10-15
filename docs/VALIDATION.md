@@ -1,4 +1,26 @@
-# Validation record — 2026-10-15 (v0.9 through round four)
+# Validation record — 2026-10-15 (v0.9 through round five)
+
+## Addendum: round five (Recents previews, lock screen, glance)
+
+### Executed
+
+| Check | Result |
+| --- | --- |
+| `scripts/check.sh` | Python suites, Node specs (now including next-alarm arithmetic), shell syntax and the QML runtime suite passed |
+| Preview adapter | Mocked `grim`/`hyprctl`: only visible windows on the current workspace are captured, bounded integer regions, old previews replaced, closed windows' previews deleted, earlier previews kept for other workspaces, one failure does not lose the rest, private (0700) runtime directory, off switch deletes everything |
+| Recents | Opens even when no preview can be taken; a preview image renders on the right card, others fall back to icons; the Settings switch reaches the bridge |
+| Next alarm arithmetic | Spec: later today, passed time rolls to tomorrow, weekday/weekend sets, once-only alarms, month/year rollover, malformed times ignored |
+| Glance | Shows the next alarm and a running timer, no elided text |
+| Lock screen config | Structural test of `hyprlock.conf` (documented blocks, color roles, static label commands) |
+
+### Not executed
+
+- `grim` window captures on a real compositor: overlapping floating windows will appear in each other's
+  preview, HiDPI scaling and multi-monitor offsets are unverified, and capture latency before Recents opens
+  (up to 1.5 s timeout) has not been measured.
+- `hyprlock` rendering (`$USER`, the battery command, `brightness`) on a real session.
+
+## Previous record — 2026-10-15 (through round four)
 
 ## Addendum: round four (Date & time, keyboard layout, world clock, snooze)
 

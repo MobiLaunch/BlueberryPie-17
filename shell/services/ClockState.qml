@@ -1,5 +1,6 @@
 pragma Singleton
 import QtQuick
+import "AlarmMath.js" as AlarmMath
 
 // Timer and stopwatch state. They keep running while the panel is closed; a finished
 // timer raises a toast. Times use wall-clock deltas so a slow frame never drifts them.
@@ -22,6 +23,9 @@ QtObject {
     readonly property bool ticking: timerRunning || watchRunning
     // Alarms live in the user's settings and are checked twice a minute.
     readonly property var alarmList: SystemBridge.snapshot.settings.alarms || []
+    property real wall: Date.now()
+    readonly property var nextAlarm: AlarmMath.nextOccurrence(alarmList, wall)
+    readonly property string nextAlarmText: AlarmMath.describe(nextAlarm, wall, date => Theme.timeText(date))
     property var fired: ({})
     onAlarmListChanged: checkAlarms(new Date())
     function checkAlarms(date) {
@@ -188,6 +192,9 @@ QtObject {
         repeat: true
         running: true
         triggeredOnStart: true
-        onTriggered: root.checkAlarms(new Date())
+        onTriggered: {
+            root.wall = Date.now();
+            root.checkAlarms(new Date());
+        }
     }
 }

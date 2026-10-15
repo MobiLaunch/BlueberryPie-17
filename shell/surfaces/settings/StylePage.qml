@@ -354,6 +354,14 @@ SettingsPage {
         }
         ToggleRow {
             width: parent.width
+            title: "Window previews in Recents"
+            supporting: on ? "Small screenshots of open windows, removed at sign-out" : "Recents shows app icons only"
+            symbol: "recents"
+            on: SystemBridge.snapshot.settings.recents_previews !== false
+            onSwitched: value => SystemBridge.setPreviews(value)
+        }
+        ToggleRow {
+            width: parent.width
             title: "Reduce motion"
             supporting: "Keep the colors, simplify movement"
             symbol: "motion"
