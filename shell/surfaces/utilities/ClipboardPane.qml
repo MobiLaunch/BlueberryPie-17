@@ -8,6 +8,10 @@ import "../../services"
 ColumnLayout {
     id: root
     spacing: 10
+    readonly property var shown: {
+        const needle = search.text.trim().toLowerCase();
+        return needle.length === 0 ? ClipboardState.items : ClipboardState.items.filter(item => item.preview.toLowerCase().includes(needle));
+    }
     function load() {
         ClipboardState.refresh();
     }
@@ -31,13 +35,20 @@ ColumnLayout {
         color: Theme.surfaceVariantInk
         wrapMode: Text.WordWrap
     }
+    SearchField {
+        id: search
+        Layout.fillWidth: true
+        implicitHeight: 44
+        visible: ClipboardState.enabled
+        placeholderText: "Search history"
+    }
     ListView {
         Layout.fillWidth: true
         Layout.fillHeight: true
         clip: true
         spacing: 4
         visible: ClipboardState.enabled
-        model: ClipboardState.items
+        model: root.shown
         boundsBehavior: Flickable.StopAtBounds
         ScrollBar.vertical: ScrollBar {
             policy: ScrollBar.AsNeeded
@@ -62,7 +73,7 @@ ColumnLayout {
         Label {
             anchors.centerIn: parent
             visible: parent.count === 0
-            text: "Nothing copied yet"
+            text: ClipboardState.items.length === 0 ? "Nothing copied yet" : "No matches"
             role: "bodyMedium"
             color: Theme.surfaceVariantInk
         }

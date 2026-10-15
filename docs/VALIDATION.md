@@ -1,4 +1,22 @@
-# Validation record — 2026-10-15 (v0.9 through round five)
+# Validation record — 2026-10-15 (v0.9 through round six)
+
+## Addendum: round six (notes, warmth, power modes, clipboard search)
+
+### Executed
+
+| Check | Result |
+| --- | --- |
+| Notes | Round trip, private (0600/0700) atomic writes, control characters stripped, 4000-character limit, bad input keeps the old note; the widget saved typed text through the bridge |
+| Night Light warmth | Bounded integer only; applied live only while Night Light is on; the saved value is reused when it is turned on; failures not persisted |
+| Power modes | Fixed `powerprofilesctl set` values for three modes; the Settings row sends the right action |
+| Clipboard search | Filters the injected history and shows "No matches" |
+| `scripts/check.sh` | Passed |
+
+### Not executed
+
+- `hyprsunset` warmth changes and `powerprofilesctl` on real hardware (mocked here); the Performance profile exists only on some machines.
+
+## Previous record — 2026-10-15 (through round five)
 
 ## Addendum: round five (Recents previews, lock screen, glance)
 

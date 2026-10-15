@@ -104,6 +104,14 @@ ISO and hardware qualification have not been completed in this release.
 - **Lock screen**: user name, battery and a dimmed blurred background in the same dark Material roles.
 - **At a glance** shows the next alarm ("Tomorrow 07:30") and a running timer.
 
+### Round six: Notes, Night Light warmth, power modes and clipboard search
+
+- **Notes widget** (Settings → Widgets): a scratchpad kept in `~/.local/share/prismos/notes.txt`
+  (private, 4000 characters, saved as you type).
+- **Night Light warmth** slider (Settings → Display, 2500 to 5500 K) and **Power mode**
+  (Power saver, Balanced, Performance) in Settings → Battery & power, when power-profiles-daemon is present.
+- **Clipboard search** in the clipboard history panel.
+
 ## Build the ISO on Windows
 
 See **[Windows build instructions](docs/WINDOWS-ISO.md)** for the

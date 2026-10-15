@@ -3,7 +3,7 @@ import json
 import sys
 
 from . import sound as alert_sound
-from . import about, alarms, android, apps, audio, clipboard, clockset, thumbnails, worldclock, displays, drives, favorites, fdroid, files, inputs, installer, notifyprefs, screenshot, settings, stats, store, system, theme, tiles, wallpaper, weather, websearch, widgets, windows, wireless
+from . import about, alarms, android, apps, audio, clipboard, clockset, notes, thumbnails, worldclock, displays, drives, favorites, fdroid, files, inputs, installer, notifyprefs, screenshot, settings, stats, store, system, theme, tiles, wallpaper, weather, websearch, widgets, windows, wireless
 
 
 def main(argv=None):
@@ -23,6 +23,8 @@ def main(argv=None):
     clock.add_argument("--time")
     clock.add_argument("--days", default="")
     clock.add_argument("--label", default="")
+    jot = sub.add_parser("notes")
+    jot.add_argument("operation", choices=("get", "set"))
     thumbs = sub.add_parser("thumbnails")
     thumbs.add_argument("operation", choices=("capture", "list", "clear", "enable"))
     thumbs.add_argument("value", nargs="?")
@@ -154,6 +156,14 @@ def main(argv=None):
                 if args.id is None or not args.id.isdigit():
                     raise ValueError("An alarm number is required")
                 result = alarms.toggle(args.id) if args.operation == "toggle" else alarms.remove(args.id)
+        elif args.command == "notes":
+            if args.operation == "get":
+                result = notes.get()
+            else:
+                try:
+                    result = notes.save(json.loads(sys.stdin.read(32768))["text"])
+                except (KeyError, TypeError, json.JSONDecodeError):
+                    raise ValueError("The note was not valid") from None
         elif args.command == "thumbnails":
             op = args.operation
             result = (thumbnails.capture() if op == "capture" else thumbnails.status() if op == "list"

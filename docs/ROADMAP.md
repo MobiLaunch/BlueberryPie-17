@@ -202,3 +202,7 @@ clipboard search and pinning, world clock.
 
 Still open: per-tile detail panels, clipboard search/pinning, resizable widgets, true live thumbnails
 (needs a screencopy client), measurements against the Android reference.
+
+## Round six (development slice)
+
+- Notes widget, Night Light warmth, power modes, clipboard search.

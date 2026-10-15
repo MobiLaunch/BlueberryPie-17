@@ -9,6 +9,7 @@ CATALOG = [
     {"id": "media", "title": "Now playing", "description": "Appears while a player is active", "default": True},
     {"id": "weather", "title": "Weather", "description": "Temperature and conditions (set up in Settings)", "default": False},
     {"id": "system", "title": "System", "description": "Processor, memory and storage", "default": False},
+    {"id": "notes", "title": "Notes", "description": "A scratchpad that stays on your desktop", "default": False},
     {"id": "analog", "title": "Analog clock", "description": "A Material cookie-shaped clock", "default": False},
 ]
 IDS = tuple(item["id"] for item in CATALOG)

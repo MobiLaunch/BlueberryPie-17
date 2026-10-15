@@ -52,6 +52,12 @@ QtObject {
             symbol: "memory"
         },
         {
+            id: "notes",
+            title: "Notes",
+            description: "A scratchpad that stays on your desktop",
+            symbol: "document"
+        },
+        {
             id: "analog",
             title: "Analog clock",
             description: "A Material cookie-shaped clock",

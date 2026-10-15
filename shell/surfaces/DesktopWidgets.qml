@@ -51,6 +51,9 @@ Item {
         SystemWidget {
             visible: WidgetsState.has("system")
         }
+        NotesWidget {
+            visible: WidgetsState.has("notes")
+        }
         AnalogClockWidget {
             visible: WidgetsState.has("analog")
         }

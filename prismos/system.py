@@ -103,7 +103,6 @@ def power():
 
 
 PROFILES = ("power-saver", "balanced", "performance")
-NIGHT_TEMPERATURE = 3800
 
 
 def power_profile():
@@ -187,6 +186,24 @@ def action(name, value=None):
             run(["nmcli", "radio", "wifi", "off" if turning_on else "on"])
         if radios["bluetooth"]["available"]:
             run(["bluetoothctl", "power", "off" if turning_on else "on"])
+    elif name == "night-temp":
+        low, high = settings.NIGHT_TEMPS
+        try:
+            kelvin = int(value)
+        except (TypeError, ValueError):
+            raise ValueError("Warmth must be a number") from None
+        if not low <= kelvin <= high:
+            raise ValueError(f"Warmth must be between {low} and {high}")
+        if settings.load()["night_light"]:
+            if not shutil.which("hyprsunset"):
+                raise CommandError("Night Light needs the hyprsunset package")
+            run(["hyprctl", "hyprsunset", "temperature", str(kelvin)], timeout=5)
+        settings.update(night_temp=kelvin)
+    elif name in ("power-saver", "power-balanced", "power-performance"):
+        state = power_profile()
+        if not state["available"]:
+            raise CommandError("Power profiles are not available on this computer")
+        run(["powerprofilesctl", "set", name.split("-", 1)[1] if name != "power-saver" else "power-saver"])
     elif name == "battery-saver":
         state = power_profile()
         if not state["available"]:
@@ -196,7 +213,7 @@ def action(name, value=None):
         if not shutil.which("hyprsunset"):
             raise CommandError("Night Light needs the hyprsunset package")
         wanted = settings.load()["night_light"] if name == "night-light-apply" else not settings.load()["night_light"]
-        run(["hyprctl", "hyprsunset", "temperature", str(NIGHT_TEMPERATURE)] if wanted
+        run(["hyprctl", "hyprsunset", "temperature", str(settings.load()["night_temp"])] if wanted
             else ["hyprctl", "hyprsunset", "identity"], timeout=5)
         if name == "night-light":
             settings.update(night_light=wanted)

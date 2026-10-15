@@ -37,6 +37,46 @@ SettingsPage {
     }
     SettingsGroup {
         width: parent.width
+        title: "Power mode"
+        visible: SystemBridge.snapshot.profile.available
+        Repeater {
+            model: [
+                {
+                    id: "power-saver",
+                    profile: "power-saver",
+                    title: "Power saver",
+                    note: "Longest battery life",
+                    symbol: "battery"
+                },
+                {
+                    id: "power-balanced",
+                    profile: "balanced",
+                    title: "Balanced",
+                    note: "A good mix of speed and battery",
+                    symbol: "battery"
+                },
+                {
+                    id: "power-performance",
+                    profile: "performance",
+                    title: "Performance",
+                    note: "Fastest, uses more power",
+                    symbol: "bolt"
+                }
+            ]
+            delegate: ListRow {
+                required property var modelData
+                width: parent ? parent.width : 600
+                title: modelData.title
+                supporting: modelData.note
+                symbol: modelData.symbol
+                selected: SystemBridge.snapshot.profile.profile === modelData.profile
+                Accessible.role: Accessible.RadioButton
+                onClicked: SystemBridge.action(modelData.id)
+            }
+        }
+    }
+    SettingsGroup {
+        width: parent.width
         title: "Session"
         ListRow {
             width: parent.width

@@ -566,6 +566,69 @@ class ShellRuntimeTests(unittest.TestCase):
         self.assertEqual(harness.truncated_texts(), [])
         self.assertEqual(harness.problems(), [])
 
+    def test_notes_widget_saves_what_you_type(self):
+        from prismos import notes
+        harness = Harness()
+        self.addCleanup(harness.close)
+        harness.write_settings(onboarding_complete=True, widgets=["glance", "notes"])
+        harness.load()
+        harness.pump(1500)
+        area = next(item for item in harness.visible_items()
+                    if "TextArea" in item.metaObject().className() and item.property("placeholderText") == "Jot something down…")
+        self.assertTrue(harness.wait_for(lambda: area.property("enabled") is True, 4000))
+        area.forceActiveFocus()
+        from PySide6.QtTest import QTest
+        for character in "buy milk":
+            QTest.keyClick(harness.view, character)
+        self.assertTrue(harness.wait_for(lambda: notes.get()["text"] == "buy milk", 6000))
+        self.assertTrue(harness.wait_for(lambda: "Saved" in {str(i.property("text")) for i in harness.visible_items() if i.property("text")}, 3000))
+        self.assertEqual(harness.truncated_texts(), [])
+        self.assertEqual(harness.problems(), [])
+
+    def test_power_mode_and_night_light_settings_reach_the_bridge(self):
+        from qml_runtime.stubs import Process
+        harness = self.boot()
+        harness.ipc("settings")
+        harness.pump(500)
+        row = harness.find("section-display")
+        harness.reveal(row)
+        harness.click(*harness.scene_pos(row))
+        harness.pump(700)
+        texts = {str(item.property("text")) for item in harness.visible_items() if item.property("text")}
+        self.assertIn("Night Light", texts)
+        self.assertIn("Needs the hyprsunset package", texts)
+        self.assertEqual(harness.truncated_texts(), [])
+        row = harness.find("section-power")
+        harness.reveal(row)
+        harness.click(*harness.scene_pos(row))
+        harness.eval('const snap = JSON.parse(JSON.stringify(SystemBridge.snapshot)); snap.profile = {available: true, profile: "balanced", saver: false}; SystemBridge.snapshot = snap;')
+        find = lambda: next((item for item in harness.visible_items()
+                             if item.metaObject().className().startswith("ListRow") and item.property("title") == "Power saver"), None)
+        self.assertTrue(harness.wait_for(lambda: find() is not None, 1500))
+        saver = find()
+        harness.reveal(saver)
+        Process.log.clear()
+        harness.click(*harness.scene_pos(saver))
+        self.assertTrue(harness.wait_for(lambda: ["prismctl", "action", "power-saver"] in Process.log, 4000))
+        self.assertEqual(harness.truncated_texts(), [])
+
+    def test_clipboard_history_can_be_searched(self):
+        from PySide6.QtTest import QTest
+        harness = self.boot()
+        harness.ipc("clipboard")
+        harness.pump(600)
+        harness.eval('ClipboardState.available = true; ClipboardState.enabled = true; ClipboardState.items = ['
+                     '{id:"12", kind:"text", preview:"hello world"}, {id:"11", kind:"text", preview:"grocery list"}]')
+        harness.pump(300)
+        titles = lambda: sorted(str(item.property("title")) for item in harness.visible_items()
+                                if item.metaObject().className().startswith("ListRow") and item.property("title") in ("hello world", "grocery list"))
+        self.assertEqual(titles(), ["grocery list", "hello world"])
+        self.type_into(harness, "Search history", "gro")
+        self.assertEqual(titles(), ["grocery list"])
+        self.type_into(harness, "Search history", "zzz")
+        self.assertEqual(titles(), [])
+        self.assertTrue(any(str(item.property("text")) == "No matches" for item in harness.visible_items()))
+
     def test_settings_search_filters_sections(self):
         harness = self.boot()
         harness.ipc("settings")

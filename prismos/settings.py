@@ -12,6 +12,7 @@ from .theme import SCHEME_SPECS
 FONT_SCALES = (0.9, 1.0, 1.15, 1.3)
 TIME = re.compile(r"(?:[01]\d|2[0-3]):[0-5]\d\Z")
 MAX_ALARMS = 10
+NIGHT_TEMPS = (2500, 5500)
 MAX_WORLD_CLOCKS = 6
 
 
@@ -35,9 +36,9 @@ def clean_alarms(items):
 
 TILE_IDS = ("wifi", "bluetooth", "sound", "microphone", "dnd", "dark", "reduced_motion", "audio_devices",
             "airplane", "battery_saver", "night_light", "screenshot", "lock")
-WIDGET_IDS = ("glance", "clock", "search", "calendar", "media", "weather", "system", "analog")
+WIDGET_IDS = ("glance", "clock", "search", "calendar", "media", "weather", "system", "analog", "notes")
 DEFAULTS = {"seed": "#8469cf", "dark": False, "reduced_motion": False, "dnd": False,
-            "favorites": None, "recent_apps": [], "wallpaper": "", "widgets": None, "weather": {}, "keyboard": "us", "recents_previews": True, "clock_24h": True, "world_clocks": [], "tiles": None, "alarms": [], "dnd_schedule": {"enabled": False, "start": "22:00", "end": "07:00"}, "clipboard_history": False, "muted_apps": [], "night_light": False, "scheme": "tonal_spot", "font_scale": 1.0, "android_enabled": False, "onboarding_complete": False,
+            "favorites": None, "recent_apps": [], "wallpaper": "", "widgets": None, "weather": {}, "keyboard": "us", "night_temp": 3800, "recents_previews": True, "clock_24h": True, "world_clocks": [], "tiles": None, "alarms": [], "dnd_schedule": {"enabled": False, "start": "22:00", "end": "07:00"}, "clipboard_history": False, "muted_apps": [], "night_light": False, "scheme": "tonal_spot", "font_scale": 1.0, "android_enabled": False, "onboarding_complete": False,
             "natural_scroll": True, "tap_to_click": True,
             "pointer_speed": 0.0, "repeat_rate": 25, "display_scales": {}, "display_positions": {}}
 
@@ -117,6 +118,9 @@ def load():
                     valid["weather"] = {"lat": lat, "lon": lon, "label": label, "units": units}
             except (KeyError, TypeError, ValueError):
                 pass
+        warmth = data.get("night_temp")
+        if type(warmth) is int and NIGHT_TEMPS[0] <= warmth <= NIGHT_TEMPS[1]:
+            valid["night_temp"] = warmth
         if data.get("scheme") in SCHEME_SPECS:
             valid["scheme"] = data["scheme"]
         scale = data.get("font_scale")
