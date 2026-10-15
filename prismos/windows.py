@@ -9,7 +9,10 @@ Dispatcher compatibility with a Lua-configured Hyprland is unverified (see
 docs/VALIDATION.md); a rejected request is reported and changes nothing.
 """
 import json
+import os
 import re
+import tempfile
+from pathlib import Path
 
 from .system import CommandError, run
 
@@ -17,7 +20,7 @@ ADDRESS = re.compile(r"0x[0-9a-fA-F]{1,16}\Z")
 CLASS = re.compile(r"[^\x00-\x1f]{1,120}\Z")
 MINIMIZED = "special:minimized"
 GAP = 12  # breathing room around snapped windows, matching the session's gaps
-from .windowops import OPERATIONS  # noqa: E402  (re-exported)
+from .windowops import OPERATIONS, SCREEN_OPERATIONS  # noqa: E402,F401  (re-exported)
 
 
 def _json(command):
@@ -152,12 +155,88 @@ def dispatch(operation, address):
     else:  # snap-left / snap-right
         if window["minimized"]:
             raise ValueError("Restore the window first")
-        x, y, width, height = snap_rect(work_area(window), operation.split("-")[1])
-        if window["maximized"]:
-            hypr("focuswindow", target)
-            hypr("fullscreen", "1")
-        if not window["floating"]:
-            hypr("togglefloating", target)
-        hypr("resizewindowpixel", f"exact {width} {height},{target}")
-        hypr("movewindowpixel", f"exact {x} {y},{target}")
+        snap(window, operation.split("-")[1])
     return {"ok": True, "action": operation, "address": window["address"]}
+
+
+def snap(window, side):
+    target = "address:" + window["address"]
+    x, y, width, height = snap_rect(work_area(window), side)
+    if window["maximized"]:
+        hypr("focuswindow", target)
+        hypr("fullscreen", "1")
+    if not window["floating"]:
+        hypr("togglefloating", target)
+    hypr("resizewindowpixel", f"exact {width} {height},{target}")
+    hypr("movewindowpixel", f"exact {x} {y},{target}")
+
+
+def bring_here(window):
+    """Move a minimized window, or one on another workspace, to the current workspace without following it."""
+    workspace = _json(["hyprctl", "-j", "activeworkspace"])
+    current = workspace.get("id") if isinstance(workspace, dict) else None
+    if not isinstance(current, int) or current < 1:
+        raise CommandError("Could not find the current workspace")
+    if window["minimized"] or window["workspace"] != current:
+        hypr("movetoworkspacesilent", f"{current},address:{window['address']}")
+
+
+def split(first, second):
+    """Put two windows side by side: ``first`` on the left, ``second`` on the right."""
+    all_windows = clients()
+    left, right = resolve(first, all_windows), resolve(second, all_windows)
+    if left["address"] == right["address"]:
+        raise ValueError("Choose two different windows")
+    for window in (left, right):
+        bring_here(window)
+    # Snap against the current layout: both are no longer minimized once brought back.
+    for window, side in ((left, "left"), (right, "right")):
+        snap(dict(window, minimized=False), side)
+    hypr("focuswindow", "address:" + right["address"])
+    return {"ok": True, "action": "split", "left": left["address"], "right": right["address"]}
+
+
+def desktop_state():
+    return Path(os.environ.get("XDG_RUNTIME_DIR") or tempfile.gettempdir()) / "prismos-desktop.json"
+
+
+def remembered():
+    try:
+        value = json.loads(desktop_state().read_text())
+    except (OSError, ValueError):
+        return []
+    return [a for a in value if isinstance(a, str) and ADDRESS.fullmatch(a)] if isinstance(value, list) else []
+
+
+def remember(addresses):
+    path = desktop_state()
+    if not addresses:
+        path.unlink(missing_ok=True)
+        return
+    descriptor, name = tempfile.mkstemp(prefix=".desktop-", dir=path.parent)
+    with os.fdopen(descriptor, "w") as stream:  # mkstemp creates the file private (0600)
+        json.dump(addresses, stream)
+    os.replace(name, path)
+
+
+def show_desktop():
+    """Android's Home: tuck every window on the current workspace away; do it again to bring them back."""
+    all_windows = clients()
+    workspace = _json(["hyprctl", "-j", "activeworkspace"])
+    current = workspace.get("id") if isinstance(workspace, dict) else None
+    if not isinstance(current, int) or current < 1:
+        raise CommandError("Could not find the current workspace")
+    visible = [w for w in all_windows if w["workspace"] == current and not w["minimized"]]
+    if visible:
+        for window in visible:
+            hypr("movetoworkspacesilent", f"{MINIMIZED},address:{window['address']}")
+        remember([w["address"] for w in visible])
+        return {"ok": True, "action": "show-desktop", "hidden": len(visible), "restored": 0}
+    open_now = {w["address"]: w for w in all_windows if w["minimized"]}
+    back = [open_now[a] for a in remembered() if a in open_now]
+    remember([])
+    for window in back:
+        hypr("movetoworkspacesilent", f"{current},address:{window['address']}")
+    if back:
+        hypr("focuswindow", "address:" + back[0]["address"])
+    return {"ok": True, "action": "show-desktop", "hidden": 0, "restored": len(back)}

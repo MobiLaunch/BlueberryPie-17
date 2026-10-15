@@ -217,6 +217,17 @@ QtObject {
             root.finishRecents();
         }
     }
+    readonly property bool anyOpen: shadeOpen || drawerOpen || settingsOpen || powerOpen || appInfoOpen
+        || storeOpen || filesOpen || recentsOpen || utilitiesOpen
+    // Home: first leaves whatever is open; with nothing open it shows the desktop.
+    function goHome() {
+        if (anyOpen) {
+            close();
+            return "closed";
+        }
+        Windows.showDesktop();
+        return "desktop";
+    }
     function openAppInfo(app, screen) {
         close();
         AppInfoState.open(app);

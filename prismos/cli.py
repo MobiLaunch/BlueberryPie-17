@@ -105,8 +105,9 @@ def main(argv=None):
     appinfo_cmd.add_argument("operation", choices=("info", "force-stop", "uninstall", "copy-command"))
     appinfo_cmd.add_argument("desktop_id")
     win = sub.add_parser("windows")
-    win.add_argument("operation", choices=("list",) + windowops.OPERATIONS)
+    win.add_argument("operation", choices=("list",) + windowops.OPERATIONS + windowops.SCREEN_OPERATIONS)
     win.add_argument("address", nargs="?")
+    win.add_argument("second", nargs="?")
     inp = sub.add_parser("input")
     inp.add_argument("operation", choices=("list", "set", "apply"))
     inp.add_argument("key", nargs="?")
@@ -290,8 +291,16 @@ def main(argv=None):
             result = {"info": appinfo.info, "force-stop": appinfo.force_stop,
                       "uninstall": appinfo.uninstall, "copy-command": appinfo.copy_command}[args.operation](args.desktop_id)
         elif args.command == "windows":
-            result = (windows.status() if args.operation == "list"
-                      else windows.dispatch(args.operation, args.address))
+            if args.operation == "list":
+                result = windows.status()
+            elif args.operation == "show-desktop":
+                result = windows.show_desktop()
+            elif args.operation == "split":
+                if not args.address or not args.second:
+                    raise ValueError("Split needs two windows")
+                result = windows.split(args.address, args.second)
+            else:
+                result = windows.dispatch(args.operation, args.address)
         elif args.command == "input":
             if args.operation == "list":
                 result = inputs.list_settings()

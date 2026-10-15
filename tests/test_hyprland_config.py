@@ -40,8 +40,22 @@ local function animation(opts)
   if opts.bezier and curves[opts.bezier] ~= "bezier" then error("no such bezier " .. tostring(opts.bezier)) end
   log[#log + 1] = "animation\t" .. opts.leaf .. "\t" .. tostring(opts.spring or opts.bezier or "-")
 end
+local DIRECTIONS = { up = true, down = true, left = true, right = true, horizontal = true, vertical = true, pinch = true }
+local function gesture(opts)
+  if type(opts.fingers) ~= "number" or opts.fingers < 2 or opts.fingers > 5 then error("fingers expects 2-5") end
+  if not DIRECTIONS[opts.direction] then error("unknown direction " .. tostring(opts.direction)) end
+  if type(opts.action) ~= "string" and type(opts.action) ~= "function" then error("action expects a string or function") end
+  local commands = {}
+  if type(opts.action) == "function" then
+    local real = hl.exec_cmd
+    hl.exec_cmd = function(cmd) commands[#commands + 1] = cmd end
+    opts.action()
+    hl.exec_cmd = real
+  end
+  log[#log + 1] = "gesture\t" .. opts.fingers .. "\t" .. opts.direction .. "\t" .. (commands[1] or tostring(opts.action))
+end
 hl = {
-  monitor = noop, env = noop, config = noop, curve = curve, animation = animation, gesture = noop,
+  monitor = noop, env = noop, config = noop, curve = curve, animation = animation, gesture = gesture,
   on = function(event) log[#log + 1] = "on\t" .. event end,
   exec_cmd = noop,
   bind = function(keys, action, options)
@@ -141,6 +155,18 @@ class HyprlandConfigTests(unittest.TestCase):
         }
         for keys, command in expected.items():
             self.assertEqual(self.binds.get(keys), command, keys)
+
+    def test_touchpad_gestures_are_valid_and_reach_the_shell(self):
+        gestures = {(fingers, direction): command for kind, fingers, direction, command in
+                    (row for row in self.log if row[0] == "gesture")}
+        self.assertEqual(gestures[("3", "horizontal")], "workspace")
+        self.assertEqual(gestures[("3", "up")], "prism-shell ipc recents")
+        self.assertEqual(gestures[("3", "down")], "prism-shell ipc home || prismctl windows show-desktop")
+        self.assertEqual(gestures[("4", "up")], "prism-shell ipc launcher")
+        self.assertEqual(gestures[("4", "down")], "prism-shell ipc shade")
+
+    def test_home_key_shows_the_desktop_even_without_the_shell(self):
+        self.assertEqual(self.binds.get("SUPER + D"), "prism-shell ipc home || prismctl windows show-desktop")
 
     def test_screenshot_keys_and_night_light_autostart(self):
         self.assertEqual(self.binds.get("SUPER + C"), "prism-shell ipc calculator")

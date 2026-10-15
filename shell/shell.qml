@@ -61,6 +61,9 @@ ShellRoot {
         function recents(): void {
             ShellState.toggleRecents(ShellState.focusedScreen());
         }
+        function home(): void {
+            ShellState.goHome();
+        }
         function power(): void {
             ShellState.openPower(ShellState.focusedScreen());
         }

@@ -200,6 +200,12 @@ One slice per gap an Android user notices first.
   service: a polite stop first, then a hard one after two seconds. **Uninstall** is offered only for Flatpaks
   installed for your user, after a confirmation; for system packages the page shows the exact
   `sudo pacman -Rns ...` command with a **Copy command** button and never removes anything itself.
+- **Gestures, Home and split screen**: a three-finger swipe up opens Recents and a three-finger swipe down is
+  **Home** (`Super + D`): it first leaves whatever is open (Quick Settings, launcher, Settings), and with
+  nothing open it tucks every window on this workspace away; Home again brings back only those windows (not
+  ones you had minimized yourself). In Recents each card has a **split** button: pick one app, then another,
+  and they take the left and right halves of the screen (windows on other workspaces or minimized are
+  brought here first). Without the shell running, the keys and gestures fall back to `prismctl windows`.
 
 ## Build the ISO on Windows
 

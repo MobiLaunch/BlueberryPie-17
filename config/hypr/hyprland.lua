@@ -36,6 +36,11 @@ try(hl.animation, { leaf = "layers", enabled = false }) -- The shell animates it
 -- plus Android-like 4-finger launcher / Quick Settings reveals.
 -- These do not intercept ordinary two-finger app scrolling.
 try(hl.gesture, { fingers = 3, direction = "horizontal", action = "workspace" })
+-- 3-finger swipe up opens Recents; 3-finger swipe down is Home (leave what is open, else show the desktop).
+try(hl.gesture, { fingers = 3, direction = "up",
+    action = function() hl.exec_cmd("prism-shell ipc recents") end })
+try(hl.gesture, { fingers = 3, direction = "down",
+    action = function() hl.exec_cmd("prism-shell ipc home || prismctl windows show-desktop") end })
 try(hl.gesture, { fingers = 4, direction = "up",
     action = function() hl.exec_cmd("prism-shell ipc launcher") end })
 try(hl.gesture, { fingers = 4, direction = "down",
@@ -67,6 +72,7 @@ key_bind("SUPER + DOWN", "prismctl windows minimize active")
 key_bind("SUPER + LEFT", "prismctl windows snap-left active")
 key_bind("SUPER + RIGHT", "prismctl windows snap-right active")
 key_bind("SUPER + F", "prismctl windows float active")
+key_bind("SUPER + D", "prism-shell ipc home || prismctl windows show-desktop")
 key_bind("Print", "prism-shell ipc screenshot")
 key_bind("SHIFT + Print", "prism-shell ipc screenshotFull")
 key_bind("SUPER + SHIFT + R", "prism-shell ipc record")

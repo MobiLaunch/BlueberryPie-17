@@ -80,9 +80,6 @@ class WindowTests(unittest.TestCase):
         self.assertEqual(len(json.loads(out.getvalue())["windows"]), 2)
 
 
-if __name__ == "__main__":
-    unittest.main()
-
 
 MONITORS = [{"id": 0, "x": 0, "y": 0, "width": 2560, "height": 1600, "scale": 2.0, "reserved": [0, 44, 0, 92]}]
 CLIENTS_STATE = [
@@ -168,3 +165,116 @@ class WindowManagementTests(unittest.TestCase):
             with self.subTest(operation=operation, address=address), self.assertRaises(ValueError):
                 windows.dispatch(operation, address)
         self.assertEqual(self.sent, [])
+
+
+SPLIT_CLIENTS = [
+    {"address": "0xaa01", "mapped": True, "class": "firefox", "title": "Docs", "workspace": {"id": 1, "name": "1"},
+     "pid": 1, "floating": False, "fullscreen": 0, "monitor": 0, "focusHistoryID": 0},
+    {"address": "0xaa02", "mapped": True, "class": "foot", "title": "~", "workspace": {"id": -98, "name": "special:minimized"},
+     "pid": 2, "floating": True, "fullscreen": 0, "monitor": 0, "focusHistoryID": 2},
+    {"address": "0xaa03", "mapped": True, "class": "thunar", "title": "Files", "workspace": {"id": 4, "name": "4"},
+     "pid": 3, "floating": False, "fullscreen": 0, "monitor": 0, "focusHistoryID": 1},
+]
+
+
+class DesktopAndSplitTests(unittest.TestCase):
+    def setUp(self):
+        import os
+        import tempfile
+        self.sent = []
+        self.clients = [dict(c, workspace=dict(c["workspace"])) for c in SPLIT_CLIENTS]
+        self.current = 1
+        folder = tempfile.TemporaryDirectory()
+        self.addCleanup(folder.cleanup)
+        runtime = patch.dict(os.environ, {"XDG_RUNTIME_DIR": folder.name})
+        runtime.start(); self.addCleanup(runtime.stop)
+        self.folder = folder.name
+
+        def fake(args, timeout=4):
+            if args[:3] == ["hyprctl", "-j", "clients"]:
+                return json.dumps(self.clients)
+            if args[:3] == ["hyprctl", "-j", "activewindow"]:
+                return json.dumps({"address": "0xaa01"})
+            if args[:3] == ["hyprctl", "-j", "monitors"]:
+                return json.dumps(MONITORS)
+            if args[:3] == ["hyprctl", "-j", "activeworkspace"]:
+                return json.dumps({"id": self.current})
+            if args[:2] == ["hyprctl", "dispatch"]:
+                self.sent.append(args[2:])
+                self.apply(args[2], args[3])
+                return "ok"
+            raise AssertionError(args)
+        patcher = patch("prismos.windows.run", side_effect=fake)
+        patcher.start(); self.addCleanup(patcher.stop)
+
+    def apply(self, name, argument):
+        """Just enough of the compositor to follow a window between workspaces."""
+        if name == "movetoworkspacesilent":
+            where, target = argument.split(",address:")
+            for client in self.clients:
+                if client["address"] == target:
+                    client["workspace"] = {"id": -98 if where == windows.MINIMIZED else int(where), "name": where}
+
+    def test_show_desktop_tucks_away_the_current_workspace_and_a_second_press_brings_it_back(self):
+        result = windows.show_desktop()
+        self.assertEqual((result["hidden"], result["restored"]), (1, 0))
+        self.assertEqual(self.sent, [["movetoworkspacesilent", "special:minimized,address:0xaa01"]])
+        self.assertTrue((__import__("pathlib").Path(self.folder) / "prismos-desktop.json").exists())
+        self.sent.clear()
+        result = windows.show_desktop()
+        self.assertEqual((result["hidden"], result["restored"]), (0, 1))
+        self.assertEqual(self.sent, [["movetoworkspacesilent", "1,address:0xaa01"], ["focuswindow", "address:0xaa01"]],
+                         "only what the first press hid comes back, not the window minimized earlier")
+        self.assertFalse((__import__("pathlib").Path(self.folder) / "prismos-desktop.json").exists())
+
+    def test_show_desktop_with_nothing_to_hide_or_restore_does_nothing(self):
+        self.clients = [c for c in self.clients if c["address"] != "0xaa01"]
+        self.assertEqual(windows.show_desktop()["restored"], 0)
+        self.assertEqual(self.sent, [])
+
+    def test_a_remembered_window_that_has_since_closed_is_skipped(self):
+        windows.show_desktop()
+        self.clients = [c for c in self.clients if c["address"] != "0xaa01"]
+        self.sent.clear()
+        self.assertEqual(windows.show_desktop()["restored"], 0)
+        self.assertEqual(self.sent, [])
+
+    def test_a_corrupt_state_file_is_ignored(self):
+        (__import__("pathlib").Path(self.folder) / "prismos-desktop.json").write_text('["0xaa01; reboot", 7]')
+        self.clients[0]["workspace"] = {"id": -98, "name": windows.MINIMIZED}
+        self.assertEqual(windows.show_desktop()["restored"], 0)
+        self.assertEqual(self.sent, [])
+
+    def test_split_brings_both_windows_here_and_snaps_left_and_right(self):
+        result = windows.split("0xaa03", "0xaa02")
+        self.assertEqual((result["left"], result["right"]), ("0xaa03", "0xaa02"))
+        self.assertEqual(self.sent[:2], [["movetoworkspacesilent", "1,address:0xaa03"],
+                                         ["movetoworkspacesilent", "1,address:0xaa02"]])
+        left = [c for c in self.sent if c[0] in ("resizewindowpixel", "movewindowpixel") and c[1].endswith("0xaa03")]
+        right = [c for c in self.sent if c[0] in ("resizewindowpixel", "movewindowpixel") and c[1].endswith("0xaa02")]
+        self.assertEqual(left[-1], ["movewindowpixel", "exact 12 56,address:0xaa03"])
+        self.assertEqual(right[-1], ["movewindowpixel", "exact 646 56,address:0xaa02"])
+        self.assertEqual(self.sent[-1], ["focuswindow", "address:0xaa02"])
+
+    def test_split_rejects_the_same_window_and_unknown_or_hostile_addresses(self):
+        for first, second in (("0xaa01", "0xaa01"), ("0xaa01", "0xdead"), ("0xaa01", "0xaa02; reboot"), ("nope", "0xaa02")):
+            with self.subTest(first=first, second=second), self.assertRaises(ValueError):
+                windows.split(first, second)
+        self.assertEqual(self.sent, [])
+
+    def test_cli_runs_both_screen_operations(self):
+        import contextlib
+        import io
+        for argv, key in ((["windows", "show-desktop"], "hidden"), (["windows", "split", "0xaa01", "0xaa03"], "left")):
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                self.assertEqual(cli.main(argv), 0)
+            self.assertIn(key, json.loads(out.getvalue()))
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.assertEqual(cli.main(["windows", "split", "0xaa01"]), 1)
+        self.assertFalse(json.loads(out.getvalue())["ok"])
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -60,6 +60,19 @@
 
 - Real Hyprland window PIDs (Flatpak sandboxes report the sandbox's PID namespace, so force stop may not reach a sandboxed app), a real `flatpak uninstall` and `pacman -Qo/-Qi` output across versions and locales.
 
+### Slice 6: gestures, Home and split screen — executed
+
+| Check | Result |
+| --- | --- |
+| Show desktop | Hides only the visible windows of the current workspace and remembers them in a private runtime file; the second press restores exactly those (skipping ones that closed or were minimized earlier); nothing to do when the workspace is empty; a corrupt or hostile state file is ignored |
+| Split | Brings both windows to the current workspace silently, snaps the first left and the second right with the existing snap geometry, focuses the second; the same window twice, unknown, malformed or injected addresses are refused before any dispatch |
+| Config | The Lua mock now validates `hl.gesture` (finger count, direction, action) and runs each gesture action: 3-finger up/down reach `prism-shell ipc recents`/`home`, `Super + D` falls back to `prismctl windows show-desktop`; refused gesture APIs still leave binds and autostart intact |
+| Shell | Home closes an open panel first and only then shows the desktop; Recents split buttons choose a first then a second card (cancelable, Esc) and issue one `windows split` request |
+
+### Not executed (slice 6)
+
+- Real touchpad swipes (libinput finger counts, conflicts with app gestures), `hyprctl dispatch` behaviour for `movetoworkspacesilent` with `special:minimized` on a Lua-configured Hyprland, and the look of tiled windows being floated into halves.
+
 ### Not executed (slice 2)
 
 - Real messengers: whether their notifications set the inline-reply capability and how they react to a reply or to a dismissal; the lock screen label in a real `hyprlock` (the config is only checked for structure).

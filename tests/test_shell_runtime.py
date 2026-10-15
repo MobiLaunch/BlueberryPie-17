@@ -1695,6 +1695,47 @@ class ShellRuntimeTests(unittest.TestCase):
         self.assertEqual(now("ShellState.appInfoOpen"), "false")
         self.assertEqual(harness.problems(), [])
 
+    def test_recents_can_put_two_apps_side_by_side(self):
+        from qml_runtime.stubs import Process
+        harness = self.boot()
+        harness.ipc("recents")
+        harness.pump(900)
+        harness.eval(WINDOWS)
+        harness.pump(400)
+        hint = harness.find("recents-hint")
+        self.assertIn("Enter to open", hint.property("text"))
+        first = harness.find("recents-split-0")
+        harness.click(*harness.scene_pos(first))
+        harness.pump(200)
+        self.assertIn("second app", hint.property("text"))
+        harness.click(*harness.scene_pos(first))      # the same button again cancels
+        harness.pump(200)
+        self.assertIn("Enter to open", hint.property("text"))
+        harness.click(*harness.scene_pos(first))
+        harness.pump(200)
+        Process.log.clear()
+        second = harness.find("recents-split-1")
+        harness.click(second.mapToScene(second.boundingRect().center()).x() - 90,
+                      harness.scene_pos(second)[1] + 90)   # the second card's preview area
+        self.assertTrue(harness.wait_for(
+            lambda: ["prismctl", "windows", "split", "0xaa01", "0xaa02"] in Process.log, 8000), Process.log)
+        self.assertEqual(harness.eval_value("ShellState.recentsOpen"), "false")
+        self.assertEqual(harness.problems(), [])
+
+    def test_home_closes_what_is_open_and_otherwise_shows_the_desktop(self):
+        from qml_runtime.stubs import Process
+        harness = self.boot()
+        harness.ipc("shade")
+        harness.pump(500)
+        Process.log.clear()
+        harness.ipc("home")
+        harness.pump(500)
+        self.assertEqual(harness.eval_value("ShellState.shadeOpen"), "false")
+        self.assertNotIn(["prismctl", "windows", "show-desktop"], Process.log, "the first press only leaves the shade")
+        harness.ipc("home")
+        self.assertTrue(harness.wait_for(lambda: ["prismctl", "windows", "show-desktop"] in Process.log, 6000), Process.log)
+        self.assertEqual(harness.problems(), [])
+
     def test_every_surface_opens_without_qml_errors(self):
         harness = self.boot()
         for surface in SURFACES:
