@@ -180,6 +180,14 @@ One slice per gap an Android user notices first.
   returns with a banner (the app's own notification stays alive, so replies and actions still work). The
   lock screen shows how many are waiting ("3 notifications"), a number only, never any text. It is read from
   a file in the login's runtime directory; turn it off in Settings → Notifications → Lock screen.
+- **Hotspot and VPN tiles** (add them in the tile editor): **Hotspot** shares this computer's internet
+  through NetworkManager (needs `dnsmasq`, now a dependency). Its details show the network name and a
+  password that stays hidden until you press the eye, with copy and "New password"; the password lives in a
+  private file in `~/.local/share/prismos`, is handed to `nmcli` through a password file (never a command
+  line) and is not kept by NetworkManager. **VPN** switches an existing OpenVPN, WireGuard or other
+  NetworkManager VPN on and off, lists the profiles with Connect/Disconnect and remembers which one the tile
+  uses; PrismOS never creates VPNs or handles their credentials. Both are also in Settings → Network &
+  internet. Starting one can take seconds, so it runs on its own queue and never holds up the volume keys.
 
 ## Build the ISO on Windows
 

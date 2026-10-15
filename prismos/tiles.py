@@ -16,6 +16,8 @@ CATALOG = [
     {"id": "night_light", "title": "Night Light", "large": False, "default": False},
     {"id": "screenshot", "title": "Screenshot", "large": False, "default": False},
     {"id": "lock", "title": "Lock screen", "large": False, "default": False},
+    {"id": "hotspot", "title": "Hotspot", "large": False, "default": False},
+    {"id": "vpn", "title": "VPN", "large": False, "default": False},
 ]
 IDS = tuple(item["id"] for item in CATALOG)
 assert IDS == settings.TILE_IDS

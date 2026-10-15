@@ -35,6 +35,40 @@ SettingsPage {
     }
     SettingsGroup {
         width: parent.width
+        title: "Hotspot"
+        Rectangle {
+            width: parent.width
+            height: hotspotPanel.implicitHeight + 28
+            radius: Theme.shape.extraLarge - 4
+            color: Theme.surfaceContainer
+            property bool interactive: false
+            HotspotPanel {
+                id: hotspotPanel
+                x: 16
+                y: 14
+                width: parent.width - 32
+            }
+        }
+    }
+    SettingsGroup {
+        width: parent.width
+        title: "VPN"
+        Rectangle {
+            width: parent.width
+            height: vpnPanel.implicitHeight + 28
+            radius: Theme.shape.extraLarge - 4
+            color: Theme.surfaceContainer
+            property bool interactive: false
+            VpnPanel {
+                id: vpnPanel
+                x: 16
+                y: 14
+                width: parent.width - 32
+            }
+        }
+    }
+    SettingsGroup {
+        width: parent.width
         ListRow {
             width: parent.width
             title: "Advanced network settings"

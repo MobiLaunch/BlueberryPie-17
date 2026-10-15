@@ -1108,6 +1108,128 @@ class ShellRuntimeTests(unittest.TestCase):
         self.assertEqual(harness.truncated_texts(), [])
         self.assertEqual(harness.problems(), [])
 
+    def fake_network(self, harness, connections):
+        """Put a fake nmcli, dnsmasq and wl-copy on PATH for the commands the shell starts."""
+        import json
+        import os
+        import shutil
+        from pathlib import Path
+        folder = Path(harness.sandbox) / "fakebin"
+        folder.mkdir()
+        shutil.copy(Path(__file__).parent / "fakes" / "nmcli", folder / "nmcli")
+        (folder / "dnsmasq").write_text("#!/bin/sh\nexit 0\n")
+        copied = Path(harness.sandbox) / "copied.txt"
+        (folder / "wl-copy").write_text(f"#!/bin/sh\ncat > '{copied}'\n")
+        for name in ("dnsmasq", "wl-copy"):
+            (folder / name).chmod(0o755)
+        state = Path(harness.sandbox) / "nm.json"
+        state.write_text(json.dumps({"connections": connections}))
+        os.environ["PATH"] = f"{folder}:{os.environ['PATH']}"
+        os.environ["FAKE_NM_STATE"] = str(state)
+        return state, copied
+
+    def test_hotspot_and_vpn_tiles_switch_and_show_their_details(self):
+        import json
+        from pathlib import Path
+        from PySide6.QtCore import Qt
+        from prismos import hotspot
+        harness = Harness()
+        self.addCleanup(harness.close)
+        harness.write_settings(onboarding_complete=True, tiles=["hotspot", "vpn", "dnd"])
+        uuid_a, uuid_b = "11111111-2222-3333-4444-555555555555", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+        state, copied = self.fake_network(harness, [
+            {"name": "Home", "uuid": "99999999-9999-9999-9999-999999999999", "type": "802-11-wireless", "active": True},
+            {"name": "Work VPN", "uuid": uuid_a, "type": "vpn", "active": False},
+            {"name": "wg0", "uuid": uuid_b, "type": "wireguard", "active": False}])
+        harness.load()
+        harness.pump(2500)
+        harness.ipc("shade")
+        harness.pump(700)
+        current = lambda: json.loads(state.read_text())
+        commands = lambda: [json.loads(line) for line in Path(str(state) + ".log").read_text().splitlines()]
+        texts = lambda: {str(item.property("text")) for item in harness.visible_items() if item.property("text")}
+        active = lambda key, value: any(c[key] == value and c["active"] for c in current()["connections"])
+
+        def tile(title):
+            return next(item for item in harness.visible_items()
+                        if item.metaObject().className().startswith("QuickTile") and item.property("title") == title)
+        self.assertEqual(tile("Hotspot").property("subtitle"), "Off")
+        self.assertEqual(tile("VPN").property("subtitle"), "Off")
+        # Hotspot: the tile answers at once, then the real state confirms it.
+        harness.click(*harness.scene_pos(tile("Hotspot")))
+        self.assertTrue(tile("Hotspot").property("activated"))
+        self.assertTrue(harness.wait_for(lambda: active("name", hotspot.NAME), 10000))
+        password = hotspot.load()["password"]
+        self.assertEqual(current()["secret_seen"], [f"802-11-wireless-security.psk:{password}\n", 0o600])
+        for call in commands():
+            self.assertNotIn(password, " ".join(call), "the password never reaches a command line")
+        self.assertTrue(harness.wait_for(lambda: harness.eval_value("SystemBridge.snapshot.hotspot.enabled") == "true", 8000))
+        # Details: the name, a hidden password that can be revealed and copied.
+        harness.click(*harness.scene_pos(tile("Hotspot")), button=Qt.RightButton)
+        self.assertTrue(harness.wait_for(lambda: harness.find("hotspot-ssid") is not None
+                                         and harness.find("hotspot-ssid").property("text").startswith("PrismOS-"), 6000))
+        self.assertNotIn(password, texts(), "the password is hidden until asked for")
+        reveal = harness.find("hotspot-reveal")
+        harness.click(*harness.scene_pos(reveal))
+        harness.pump(200)
+        self.assertEqual(harness.find("hotspot-password").property("text"), password)
+        harness.click(*harness.scene_pos(harness.find("hotspot-copy")))
+        self.assertTrue(harness.wait_for(lambda: copied.exists() and copied.read_text() == password, 6000))
+        harness.click(*harness.scene_pos(harness.find("hotspot-toggle")))
+        self.assertTrue(harness.wait_for(lambda: not active("name", hotspot.NAME), 10000))
+        # A new password is saved and applied the next time (the hotspot is off now).
+        self.assertTrue(harness.wait_for(lambda: harness.find("hotspot-regenerate").isEnabled(), 6000), "enabled once the panel has settled")
+        harness.click(*harness.scene_pos(harness.find("hotspot-regenerate")))
+        self.assertTrue(harness.wait_for(lambda: hotspot.load()["password"] != password, 6000))
+        # Closing the panel makes the shell forget the password.
+        harness.click(*harness.scene_pos(tile("Hotspot")), button=Qt.RightButton)
+        harness.pump(300)
+        self.assertEqual(harness.eval_value("NetShareState.hotspot.password"), "")
+        # VPN: connects the first profile, then disconnects it.
+        harness.click(*harness.scene_pos(tile("VPN")))
+        self.assertTrue(harness.wait_for(lambda: active("uuid", uuid_a), 10000))
+        self.assertTrue(harness.wait_for(lambda: tile("VPN").property("subtitle") == "Work VPN", 8000))
+        harness.click(*harness.scene_pos(tile("VPN")), button=Qt.RightButton)
+        self.assertTrue(harness.wait_for(lambda: harness.find("vpn-name-1") is not None, 6000))
+        self.assertEqual(harness.find("vpn-name-1").property("text"), "wg0")
+        harness.click(*harness.scene_pos(harness.find("vpn-toggle-1")))
+        self.assertTrue(harness.wait_for(lambda: active("uuid", uuid_b), 10000))
+        self.assertEqual(harness.truncated_texts(), [])
+        self.assertEqual(harness.problems(), [])
+
+    def test_a_vpn_tile_with_no_profile_explains_how_to_add_one(self):
+        harness = Harness()
+        self.addCleanup(harness.close)
+        harness.write_settings(onboarding_complete=True, tiles=["vpn", "dnd"])
+        self.fake_network(harness, [{"name": "Home", "uuid": "99999999-9999-9999-9999-999999999999", "type": "802-11-wireless", "active": True}])
+        harness.load()
+        harness.pump(2500)
+        harness.ipc("shade")
+        harness.pump(700)
+        tile = next(item for item in harness.visible_items()
+                    if item.metaObject().className().startswith("QuickTile") and item.property("title") == "VPN")
+        self.assertEqual(tile.property("subtitle"), "None set up")
+        harness.click(*harness.scene_pos(tile))
+        self.assertTrue(harness.wait_for(lambda: harness.find("vpn-empty") is not None and harness.find("vpn-empty").isVisible(), 6000))
+        self.assertEqual(harness.problems(), [])
+
+    def test_the_network_page_has_hotspot_and_vpn_sections(self):
+        harness = Harness()
+        self.addCleanup(harness.close)
+        harness.write_settings(onboarding_complete=True)
+        self.fake_network(harness, [{"name": "Work VPN", "uuid": "11111111-2222-3333-4444-555555555555", "type": "vpn", "active": False}])
+        harness.load()
+        harness.pump(2500)
+        harness.ipc("settings")
+        harness.pump(700)
+        row = harness.find("section-network")
+        harness.reveal(row)
+        harness.click(*harness.scene_pos(row))
+        self.assertTrue(harness.wait_for(lambda: harness.find("hotspot-ssid") is not None and harness.find("vpn-name-0") is not None, 6000))
+        self.assertEqual(harness.find("vpn-name-0").property("text"), "Work VPN")
+        self.assertEqual(harness.truncated_texts(), [])
+        self.assertEqual(harness.problems(), [])
+
     def test_settings_search_filters_sections(self):
         harness = self.boot()
         harness.ipc("settings")

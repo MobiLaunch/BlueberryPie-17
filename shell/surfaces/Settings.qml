@@ -20,7 +20,7 @@ PanelWindow {
             title: "Network & internet",
             symbol: "wifi",
             page: "NetworkPage",
-            keywords: "wifi wi-fi wireless internet ethernet vpn connection"
+            keywords: "wifi wi-fi wireless internet ethernet vpn connection hotspot tethering share"
         },
         {
             id: "bluetooth",

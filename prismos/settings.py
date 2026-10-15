@@ -37,10 +37,10 @@ def clean_alarms(items):
     return result[:MAX_ALARMS]
 
 TILE_IDS = ("wifi", "bluetooth", "sound", "microphone", "dnd", "dark", "reduced_motion", "audio_devices",
-            "airplane", "battery_saver", "night_light", "screenshot", "lock")
+            "airplane", "battery_saver", "night_light", "screenshot", "lock", "hotspot", "vpn")
 WIDGET_IDS = ("glance", "clock", "search", "calendar", "media", "weather", "system", "analog", "notes")
 DEFAULTS = {"seed": "#8469cf", "dark": False, "reduced_motion": False, "dnd": False,
-            "favorites": None, "recent_apps": [], "wallpaper": "", "widgets": None, "weather": {}, "keyboard": "us", "widget_sizes": {}, "night_temp": 3800, "recents_previews": True, "clock_24h": True, "world_clocks": [], "tiles": None, "alarms": [], "dnd_schedule": {"enabled": False, "start": "22:00", "end": "07:00"}, "clipboard_history": False, "notification_history": False, "lock_notifications": True, "muted_apps": [], "night_light": False, "scheme": "tonal_spot", "font_scale": 1.0, "android_enabled": False, "onboarding_complete": False,
+            "favorites": None, "recent_apps": [], "wallpaper": "", "widgets": None, "weather": {}, "keyboard": "us", "widget_sizes": {}, "night_temp": 3800, "recents_previews": True, "clock_24h": True, "world_clocks": [], "tiles": None, "alarms": [], "dnd_schedule": {"enabled": False, "start": "22:00", "end": "07:00"}, "clipboard_history": False, "notification_history": False, "lock_notifications": True, "vpn_profile": "", "muted_apps": [], "night_light": False, "scheme": "tonal_spot", "font_scale": 1.0, "android_enabled": False, "onboarding_complete": False,
             "natural_scroll": True, "tap_to_click": True,
             "pointer_speed": 0.0, "repeat_rate": 25, "display_scales": {}, "display_positions": {}}
 
@@ -115,6 +115,9 @@ def load():
         if isinstance(quiet, dict) and type(quiet.get("enabled")) is bool \
                 and TIME.fullmatch(str(quiet.get("start"))) and TIME.fullmatch(str(quiet.get("end"))):
             valid["dnd_schedule"] = {"enabled": quiet["enabled"], "start": quiet["start"], "end": quiet["end"]}
+        profile = data.get("vpn_profile")
+        if isinstance(profile, str) and re.fullmatch(r"[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}", profile):
+            valid["vpn_profile"] = profile.lower()
         muted = data.get("muted_apps")
         if isinstance(muted, list):
             valid["muted_apps"] = list(dict.fromkeys(

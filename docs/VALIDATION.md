@@ -22,7 +22,20 @@
 | Snooze | Important notifications have no snooze; the chips set 15 / 60 / 240 minutes; a snoozed one leaves the shade and the count while the sender's notification stays alive; when its time is up it returns with a banner; clearing forgets snoozes |
 | Lock screen count | The bridge stores only a number (0600 file in a 0700 runtime directory, atomic, bounded 0 to 999, bad or damaged values read as 0); the shell writes 0 at start and the count after each change; the summary is plain text for hyprlock and empty when off or zero; turning it off in Settings empties it; no notification text is ever stored |
 
+### Slice 3: hotspot and VPN tiles — executed
+
+| Check | Result |
+| --- | --- |
+| Hotspot adapter | Names (1 to 32 bytes) and passwords (8 to 63 printable ASCII) are validated; the first password is generated, saved and then reused, so the one shown, copied and used to start the hotspot is the same; the file is 0600 in a 0700 folder; turning it on never puts the password in a command line (a 0600 password file that is removed afterwards carries it) and marks the profile so NetworkManager keeps no copy; failures give fixed messages that do not echo settings; missing `dnsmasq`, no Wi-Fi adapter and no AP support are reported plainly; turning off only acts when it is on; changing the name or password applies next time and a running hotspot is not touched; copying uses a pipe |
+| VPN adapter | Only `vpn` and `wireguard` profiles with real UUIDs are listed (names may contain colons); toggling disconnects an active VPN or connects the chosen (else first) one; unknown or malformed choices are refused before any command runs; "secrets were required" becomes a helpful message; a corrupt saved choice is ignored |
+| Status | Hotspot and VPN come from the same single `nmcli` call as the other connection state; a missing `nmcli` marks both unavailable |
+| Tiles | Both tiles toggle with an immediate predicted state; they run on their own write queue; the hotspot details hide the password until asked, copy it, switch off, make a new one and forget the password when closed (including when a late reply arrives after closing); the VPN details connect and disconnect profiles; with no VPN set up the tile opens an explanation; both sections appear in Settings → Network; no elided text |
+
 ### Not executed
+
+- Real NetworkManager: hotspot activation with `passwd-file` and `psk-flags 2` (the fake `nmcli` accepts it), NAT through `dnsmasq` and firewall rules, single-radio adapters dropping their Wi-Fi, WPA3 hotspots, VPN plugins that prompt for secrets, and Quick Settings latency with a real VPN. The runtime tests use a small fake `nmcli`.
+
+### Not executed (slice 2)
 
 - Real messengers: whether their notifications set the inline-reply capability and how they react to a reply or to a dismissal; the lock screen label in a real `hyprlock` (the config is only checked for structure).
 

@@ -66,6 +66,16 @@ PanelWindow {
         case "night_light":
             SystemBridge.action("night-light");
             break;
+        case "hotspot":
+            SystemBridge.action("hotspot");
+            break;
+        case "vpn":
+            // With no VPN set up there is nothing to switch: show how to add one instead.
+            if (SystemBridge.snapshot.vpn.available)
+                SystemBridge.action("vpn");
+            else
+                tileDetails("vpn");
+            break;
         case "screenshot":
             ShellState.screenshot("area");
             break;

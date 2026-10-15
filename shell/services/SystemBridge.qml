@@ -36,6 +36,15 @@ QtObject {
                 available: false,
                 enabled: false
             },
+            hotspot: {
+                available: false,
+                enabled: false
+            },
+            vpn: {
+                available: false,
+                enabled: false,
+                count: 0
+            },
             profile: {
                 available: false,
                 saver: false
@@ -140,6 +149,18 @@ QtObject {
                     enabled: s.airplane.enabled && s.bluetooth.available
                 }
             }) : null;
+        case "hotspot":
+            return s.hotspot.available ? patched({
+                hotspot: {
+                    enabled: !s.hotspot.enabled
+                }
+            }) : null;
+        case "vpn":
+            return s.vpn.available ? patched({
+                vpn: {
+                    enabled: !s.vpn.enabled
+                }
+            }) : null;
         case "night-light":
             return s.night_light.available ? patched({
                 night_light: {
@@ -212,6 +233,18 @@ QtObject {
         let args = ["prismctl", "action", name];
         if (value !== undefined)
             args.push(String(Math.round(value)));
+        if (name === "hotspot" || name === "vpn") {
+            // Starting these can take many seconds; they get their own writer so volume keys,
+            // brightness and everything else keep working meanwhile.
+            if (!slowWriter.running) {
+                slowWriter.command = args;
+                slowWriter.running = true;
+            } else {
+                // Already working on one: undo the guess for this extra tap.
+                snapshot = predict(name, value) || snapshot;
+            }
+            return;
+        }
         // Sliders coalesce pending writes of the same control (only the newest value matters);
         // toggles and steps are never merged. Commands are arrays, never shell text.
         let queue = value !== undefined ? pending.filter(item => item[2] !== name) : pending.slice();
@@ -447,6 +480,23 @@ QtObject {
             if (AudioState.panelOpen)
                 AudioState.refresh();
             nextWrite.restart();
+        }
+    }
+    property Process slowWriter: Process {
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const data = JSON.parse(text);
+                    if (data.ok === false)
+                        root.error = data.error;
+                } catch (e) {
+                    root.error = "The network action did not respond";
+                }
+            }
+        }
+        onExited: {
+            root.refresh();
+            NetShareState.refreshHotspotIfOpen();
         }
     }
     property Timer nextWrite: Timer {

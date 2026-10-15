@@ -69,6 +69,16 @@ QtObject {
             id: "lock",
             title: "Lock screen",
             large: false
+        },
+        {
+            id: "hotspot",
+            title: "Hotspot",
+            large: false
+        },
+        {
+            id: "vpn",
+            title: "VPN",
+            large: false
         }
     ]
     readonly property var defaults: ["wifi", "bluetooth", "sound", "microphone", "dnd", "dark", "reduced_motion", "audio_devices"]
@@ -78,7 +88,7 @@ QtObject {
     readonly property var arranged: enabled.concat(catalog.map(item => item.id).filter(id => enabled.indexOf(id) < 0))
 
     // Compact tiles that open an inline details panel (long-press or right-click).
-    readonly property var detailTiles: ["night_light", "battery_saver", "screenshot", "dnd", "dark"]
+    readonly property var detailTiles: ["night_light", "battery_saver", "screenshot", "dnd", "dark", "hotspot", "vpn"]
     function entry(id) {
         return catalog.find(item => item.id === id) || {
             id: id,
@@ -213,6 +223,27 @@ QtObject {
                 subtitle: "",
                 symbol: "screenshot",
                 activated: false,
+                enabled: true,
+                hasDetails: true
+            };
+        case "hotspot":
+            return {
+                title: base.title,
+                large: false,
+                subtitle: !s.hotspot.available ? "Unavailable" : s.hotspot.enabled ? (s.hotspot.ssid || "On") : "Off",
+                symbol: "hotspot",
+                activated: s.hotspot.enabled === true,
+                enabled: s.hotspot.available === true,
+                hasDetails: true
+            };
+        case "vpn":
+            return {
+                title: base.title,
+                large: false,
+                subtitle: !s.vpn.available ? "None set up" : s.vpn.enabled ? s.vpn.label : "Off",
+                symbol: "vpn",
+                activated: s.vpn.enabled === true,
+                // Without a profile the tile stays tappable: its details explain how to add one.
                 enabled: true,
                 hasDetails: true
             };

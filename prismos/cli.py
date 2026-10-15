@@ -22,12 +22,12 @@ class _Lazy:
 
 
 (about, alarms, android, apps, audio, clipboard, clockset, notes, thumbnails, worldclock, displays, drives,
- favorites, fdroid, files, inputs, installer, notifyprefs, screenshot, settings, stats, storage, store,
+ favorites, fdroid, files, inputs, installer, notifyprefs, hotspot, vpn, screenshot, settings, stats, storage, store,
  system, tiles, wallpaper, weather, websearch, widgets, windows, wireless) = (
     _Lazy(name) for name in (
         "about", "alarms", "android", "apps", "audio", "clipboard", "clockset", "notes", "thumbnails",
         "worldclock", "displays", "drives", "favorites", "fdroid", "files", "inputs", "installer",
-        "notifyprefs", "screenshot", "settings", "stats", "storage", "store", "system", "tiles",
+        "notifyprefs", "hotspot", "vpn", "screenshot", "settings", "stats", "storage", "store", "system", "tiles",
         "wallpaper", "weather", "websearch", "widgets", "windows", "wireless"))
 alert_sound = _Lazy("sound")
 
@@ -50,6 +50,11 @@ def main(argv=None):
     clock.add_argument("--time")
     clock.add_argument("--days", default="")
     clock.add_argument("--label", default="")
+    spot = sub.add_parser("hotspot")
+    spot.add_argument("operation", choices=("status", "info", "enable", "disable", "set", "copy-password"))
+    tunnel = sub.add_parser("vpn")
+    tunnel.add_argument("operation", choices=("list", "toggle", "connect", "disconnect", "choose"))
+    tunnel.add_argument("uuid", nargs="?")
     jot = sub.add_parser("notes")
     jot.add_argument("operation", choices=("get", "set"))
     thumbs = sub.add_parser("thumbnails")
@@ -184,6 +189,23 @@ def main(argv=None):
                 if args.id is None or not args.id.isdigit():
                     raise ValueError("An alarm number is required")
                 result = alarms.toggle(args.id) if args.operation == "toggle" else alarms.remove(args.id)
+        elif args.command == "hotspot":
+            op = args.operation
+            if op == "set":
+                try:
+                    wanted = json.loads(sys.stdin.read(4096))
+                    result = hotspot.configure(wanted.get("ssid"), wanted.get("password"), wanted.get("regenerate") is True)
+                except (AttributeError, TypeError, json.JSONDecodeError):
+                    raise ValueError("Invalid hotspot request") from None
+            else:
+                result = (hotspot.status() if op == "status" else hotspot.info() if op == "info"
+                          else hotspot.enable() if op == "enable" else hotspot.disable() if op == "disable"
+                          else hotspot.copy_password())
+        elif args.command == "vpn":
+            op = args.operation
+            result = (vpn.listing() if op == "list" else vpn.toggle() if op == "toggle"
+                      else vpn.connect(args.uuid) if op == "connect" else vpn.disconnect(args.uuid) if op == "disconnect"
+                      else vpn.choose(args.uuid))
         elif args.command == "notes":
             if args.operation == "get":
                 result = notes.get()

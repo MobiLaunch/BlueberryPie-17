@@ -34,6 +34,17 @@ Rectangle {
                 onClicked: root.closeRequested()
             }
         }
+        // Hotspot and VPN
+        HotspotPanel {
+            Layout.fillWidth: true
+            visible: root.tile === "hotspot"
+            active: root.tile === "hotspot"
+        }
+        VpnPanel {
+            Layout.fillWidth: true
+            visible: root.tile === "vpn"
+            active: root.tile === "vpn"
+        }
         // Night Light
         ColumnLayout {
             Layout.fillWidth: true

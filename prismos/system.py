@@ -124,13 +124,27 @@ def airplane(radios):
     return {"available": bool(present), "enabled": bool(present) and not any(radio["enabled"] for radio in present)}
 
 
+def connections():
+    """Hotspot and VPN state from a single nmcli call."""
+    try:
+        raw = run(["nmcli", "-t", "--escape", "no", "-f", "NAME,UUID,TYPE,ACTIVE", "connection", "show"])
+    except CommandError as error:
+        reason = {"available": False, "enabled": False, "label": str(error)}
+        return {"hotspot": reason, "vpn": {**reason, "count": 0}}
+    from . import hotspot, vpn
+    rows = [line.rsplit(":", 3) for line in raw.splitlines() if line.count(":") >= 3]
+    return {"hotspot": hotspot.status([[name, kind, active] for name, _uuid, kind, active in rows]),
+            "vpn": vpn.status(vpn.rows_from(raw))}
+
+
 def status():
     readers = {"wifi": wifi, "bluetooth": bluetooth, "volume": volume, "microphone": microphone, "brightness": brightness,
-               "battery": battery, "power": power, "profile": power_profile}
+               "battery": battery, "power": power, "profile": power_profile, "connections": connections}
     from concurrent.futures import ThreadPoolExecutor
     with ThreadPoolExecutor(max_workers=len(readers)) as pool:
         futures = {key: pool.submit(reader) for key, reader in readers.items()}
         result = {key: future.result() for key, future in futures.items()}
+    result.update(result.pop("connections"))
     result["airplane"] = airplane(result)
     result["night_light"] = night_light()
     result["settings"] = settings.load()
@@ -186,6 +200,12 @@ def action(name, value=None):
             run(["nmcli", "radio", "wifi", "off" if turning_on else "on"])
         if radios["bluetooth"]["available"]:
             run(["bluetoothctl", "power", "off" if turning_on else "on"])
+    elif name == "hotspot":
+        from . import hotspot
+        hotspot.toggle()
+    elif name == "vpn":
+        from . import vpn
+        vpn.toggle()
     elif name == "night-temp":
         low, high = settings.NIGHT_TEMPS
         try:
