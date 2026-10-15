@@ -79,6 +79,11 @@ QtObject {
             id: "vpn",
             title: "VPN",
             large: false
+        },
+        {
+            id: "screen_record",
+            title: "Screen record",
+            large: false
         }
     ]
     readonly property var defaults: ["wifi", "bluetooth", "sound", "microphone", "dnd", "dark", "reduced_motion", "audio_devices"]
@@ -88,7 +93,7 @@ QtObject {
     readonly property var arranged: enabled.concat(catalog.map(item => item.id).filter(id => enabled.indexOf(id) < 0))
 
     // Compact tiles that open an inline details panel (long-press or right-click).
-    readonly property var detailTiles: ["night_light", "battery_saver", "screenshot", "dnd", "dark", "hotspot", "vpn"]
+    readonly property var detailTiles: ["night_light", "battery_saver", "screenshot", "dnd", "dark", "hotspot", "vpn", "screen_record"]
     function entry(id) {
         return catalog.find(item => item.id === id) || {
             id: id,
@@ -245,6 +250,16 @@ QtObject {
                 activated: s.vpn.enabled === true,
                 // Without a profile the tile stays tappable: its details explain how to add one.
                 enabled: true,
+                hasDetails: true
+            };
+        case "screen_record":
+            return {
+                title: base.title,
+                large: false,
+                subtitle: !s.recording.available ? "Needs wf-recorder" : s.recording.recording ? "Recording" : "Off",
+                symbol: s.recording.recording ? "stop" : "record",
+                activated: s.recording.recording === true,
+                enabled: s.recording.available === true,
                 hasDetails: true
             };
         case "lock":

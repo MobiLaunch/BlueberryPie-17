@@ -188,6 +188,12 @@ One slice per gap an Android user notices first.
   NetworkManager VPN on and off, lists the profiles with Connect/Disconnect and remembers which one the tile
   uses; PrismOS never creates VPNs or handles their credentials. Both are also in Settings → Network &
   internet. Starting one can take seconds, so it runs on its own queue and never holds up the volume keys.
+- **Screen recording** (the **Screen record** tile, or `Super + Shift + R`): records the focused screen with
+  `wf-recorder` (now a dependency) into `~/Videos/Screen recordings`. The tile's details also record an
+  area or the focused window and can include the microphone. While recording, a red timer chip sits in the
+  top bar and stops the recording when pressed; a toast says where the file went. The shade closes first so
+  it is not in the video, the recorder keeps running if the shell restarts, and stopping finishes the
+  file properly.
 
 ## Build the ISO on Windows
 

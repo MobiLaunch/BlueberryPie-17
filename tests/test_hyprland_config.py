@@ -148,6 +148,7 @@ class HyprlandConfigTests(unittest.TestCase):
         self.assertIn("prismctl clipboard resume", (ROOT / "config/hypr/hyprland.lua").read_text())
         self.assertEqual(self.binds.get("Print"), "prism-shell ipc screenshot")
         self.assertEqual(self.binds.get("SHIFT + Print"), "prism-shell ipc screenshotFull")
+        self.assertEqual(self.binds.get("SUPER + SHIFT + R"), "prism-shell ipc record")
         source = (ROOT / "config/hypr/hyprland.lua").read_text()
         self.assertIn("prismctl action night-light-apply", source)
 

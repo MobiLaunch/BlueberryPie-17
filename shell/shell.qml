@@ -64,6 +64,9 @@ ShellRoot {
         function power(): void {
             ShellState.openPower(ShellState.focusedScreen());
         }
+        function record(): void {
+            ShellState.toggleRecording();
+        }
         function volumeUp(): void {
             if (SystemBridge.step("volume", 5))
                 ShellState.showOsd("volume");

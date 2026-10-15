@@ -35,6 +35,18 @@
 
 - Real NetworkManager: hotspot activation with `passwd-file` and `psk-flags 2` (the fake `nmcli` accepts it), NAT through `dnsmasq` and firewall rules, single-radio adapters dropping their Wi-Fi, WPA3 hotspots, VPN plugins that prompt for secrets, and Quick Settings latency with a real VPN. The runtime tests use a small fake `nmcli`.
 
+### Slice 4: screen recording — executed
+
+| Check | Result |
+| --- | --- |
+| Recorder | With a stand-in `wf-recorder` that really runs and finishes on SIGINT: start, status with elapsed time, refusal of a second recording, stop saving a non-empty file, state file removed; files in `Videos/Screen recordings`, never overwriting (`-2`); a stale state file or a live process that is not a recorder is never signalled; a recorder that exits at once is reported and leaves no state |
+| Arguments | Full screen uses the focused output (or lets the recorder choose when `hyprctl` is absent); an area comes from `slurp` and must match a strict region pattern (anything else counts as cancelled); a window uses its box from `hyprctl`; microphone audio is added only when switched on |
+| Shell | The tile starts a recording after the shade has closed, the top-bar chip appears with an `m:ss` timer, pressing it stops at once and a "saved" toast follows with the file present; without `wf-recorder` the tile says what is missing and the details explain it; `Super + Shift + R` reaches the shell |
+
+### Not executed
+
+- A real `wf-recorder` under Hyprland (portal and screencopy permissions, codecs, audio devices, large recordings, GPU load), and what happens to a recording if the session ends abruptly.
+
 ### Not executed (slice 2)
 
 - Real messengers: whether their notifications set the inline-reply capability and how they react to a reply or to a dismissal; the lock screen label in a real `hyprlock` (the config is only checked for structure).

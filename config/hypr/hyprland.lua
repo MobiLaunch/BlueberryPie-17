@@ -69,6 +69,7 @@ key_bind("SUPER + RIGHT", "prismctl windows snap-right active")
 key_bind("SUPER + F", "prismctl windows float active")
 key_bind("Print", "prism-shell ipc screenshot")
 key_bind("SHIFT + Print", "prism-shell ipc screenshotFull")
+key_bind("SUPER + SHIFT + R", "prism-shell ipc record")
 -- The shell shows the volume / brightness indicator; if it is not running the key still works.
 local function via_shell(target, fallback)
     return "prism-shell ipc " .. target .. " || prismctl action " .. fallback

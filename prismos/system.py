@@ -124,6 +124,11 @@ def airplane(radios):
     return {"available": bool(present), "enabled": bool(present) and not any(radio["enabled"] for radio in present)}
 
 
+def recording_status():
+    from . import recorder
+    return recorder.status()
+
+
 def connections():
     """Hotspot and VPN state from a single nmcli call."""
     try:
@@ -139,7 +144,7 @@ def connections():
 
 def status():
     readers = {"wifi": wifi, "bluetooth": bluetooth, "volume": volume, "microphone": microphone, "brightness": brightness,
-               "battery": battery, "power": power, "profile": power_profile, "connections": connections}
+               "battery": battery, "power": power, "profile": power_profile, "connections": connections, "recording": recording_status}
     from concurrent.futures import ThreadPoolExecutor
     with ThreadPoolExecutor(max_workers=len(readers)) as pool:
         futures = {key: pool.submit(reader) for key, reader in readers.items()}

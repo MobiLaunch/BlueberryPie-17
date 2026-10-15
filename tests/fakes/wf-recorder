@@ -1,0 +1,9 @@
+#!/bin/bash
+# Stands in for wf-recorder: writes the file named after -f and finishes it on SIGINT.
+while [ $# -gt 0 ]; do [ "$1" = "-f" ] && file="$2"; shift; done
+exec -a wf-recorder python3 -c '
+import signal, sys, time
+open(sys.argv[1], "wb").write(b"fake video")
+signal.signal(signal.SIGINT, lambda *a: sys.exit(0))
+while True: time.sleep(0.05)
+' "$file"

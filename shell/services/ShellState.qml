@@ -121,6 +121,23 @@ QtObject {
         interval: 380
         onTriggered: SystemBridge.screenshot(root.screenshotMode)
     }
+    // Recording starts after the panels have faded so they are not in the video.
+    property string recordMode: "full"
+    function startRecording(mode) {
+        close();
+        recordMode = mode;
+        recordTimer.restart();
+    }
+    function toggleRecording() {
+        if (SystemBridge.snapshot.recording.recording)
+            SystemBridge.record("stop");
+        else
+            startRecording("full");
+    }
+    property Timer recordTimer: Timer {
+        interval: 450
+        onTriggered: SystemBridge.record("start", root.recordMode)
+    }
     function openInstaller(screen) {
         if (!InstallerState.live) {
             toast = "Installing is only available from the PrismOS live USB";
@@ -253,6 +270,12 @@ QtObject {
         function onErrorChanged() {
             if (SystemBridge.error) {
                 root.toast = SystemBridge.error;
+                toastTimer.restart();
+            }
+        }
+        function onRecordingFinished(success, message) {
+            if (success || message !== "Recording cancelled") {
+                root.toast = message;
                 toastTimer.restart();
             }
         }

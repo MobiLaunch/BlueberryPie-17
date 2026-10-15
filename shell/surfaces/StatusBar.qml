@@ -123,6 +123,58 @@ PanelWindow {
         anchors.rightMargin: 8
         anchors.verticalCenter: parent.verticalCenter
         spacing: 6
+        Button {
+            id: recordingChip
+            objectName: "recording-chip"
+            visible: SystemBridge.snapshot.recording.recording === true
+            Layout.preferredHeight: 32
+            implicitWidth: chipRow.implicitWidth + 24
+            hoverEnabled: true
+            focusPolicy: Qt.StrongFocus
+            Accessible.name: "Stop screen recording, " + chipTime.text
+            property real now: Date.now()
+            Timer {
+                interval: 1000
+                repeat: true
+                running: recordingChip.visible
+                triggeredOnStart: true
+                onTriggered: recordingChip.now = Date.now()
+            }
+            background: Rectangle {
+                radius: height / 2
+                color: Theme.errorContainer
+                border.width: recordingChip.visualFocus ? 2 : 0
+                border.color: Theme.error
+            }
+            contentItem: Row {
+                id: chipRow
+                spacing: 8
+                Rectangle {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 10
+                    height: 10
+                    radius: 5
+                    color: Theme.error
+                }
+                Label {
+                    id: chipTime
+                    anchors.verticalCenter: parent.verticalCenter
+                    readonly property int total: Math.max(0, Math.floor((recordingChip.now - SystemBridge.snapshot.recording.started * 1000) / 1000))
+                    text: Math.floor(total / 60) + ":" + (total % 60 < 10 ? "0" : "") + (total % 60)
+                    role: "labelLarge"
+                    color: Theme.errorContainerInk
+                }
+                Symbol {
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 18
+                    height: 18
+                    name: "stop"
+                    filled: true
+                    color: Theme.errorContainerInk
+                }
+            }
+            onClicked: ShellState.toggleRecording()
+        }
         Flickable {
             visible: SystemTray.items.values.length > 0
             Layout.preferredWidth: Math.max(0, Math.min(trayRow.implicitWidth, 160))

@@ -45,6 +45,53 @@ Rectangle {
             visible: root.tile === "vpn"
             active: root.tile === "vpn"
         }
+        // Screen record
+        ColumnLayout {
+            Layout.fillWidth: true
+            visible: root.tile === "screen_record"
+            spacing: 8
+            Flow {
+                Layout.fillWidth: true
+                spacing: 8
+                Repeater {
+                    model: [
+                        {
+                            mode: "full",
+                            title: "Full screen"
+                        },
+                        {
+                            mode: "area",
+                            title: "Area"
+                        },
+                        {
+                            mode: "window",
+                            title: "Window"
+                        }
+                    ]
+                    delegate: FilterChip {
+                        required property var modelData
+                        objectName: "record-" + modelData.mode
+                        text: modelData.title
+                        enabled: SystemBridge.snapshot.recording.available && !SystemBridge.snapshot.recording.recording
+                        onClicked: ShellState.startRecording(modelData.mode)
+                    }
+                }
+            }
+            FilterChip {
+                objectName: "record-audio"
+                text: "Record microphone"
+                enabled: SystemBridge.snapshot.recording.available
+                selected: SystemBridge.snapshot.recording.audio === true
+                onClicked: SystemBridge.setRecordAudio(!SystemBridge.snapshot.recording.audio)
+            }
+            Label {
+                Layout.fillWidth: true
+                text: SystemBridge.snapshot.recording.available ? "Recordings are saved in Videos/Screen recordings. Press the tile again, or the red button in the top bar, to stop." : "Screen recording needs the wf-recorder package."
+                role: "bodySmall"
+                color: Theme.surfaceVariantInk
+                wrapMode: Text.WordWrap
+            }
+        }
         // Night Light
         ColumnLayout {
             Layout.fillWidth: true

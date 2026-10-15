@@ -1230,6 +1230,69 @@ class ShellRuntimeTests(unittest.TestCase):
         self.assertEqual(harness.truncated_texts(), [])
         self.assertEqual(harness.problems(), [])
 
+    def test_screen_recording_starts_from_the_tile_shows_a_timer_and_stops_with_a_saved_toast(self):
+        import os
+        import shutil
+        from pathlib import Path
+        harness = Harness()
+        self.addCleanup(harness.close)
+        harness.write_settings(onboarding_complete=True, tiles=["screen_record", "dnd"])
+        folder = Path(harness.sandbox) / "recbin"
+        folder.mkdir()
+        shutil.copy(Path(__file__).parent / "fakes" / "wf-recorder", folder / "wf-recorder")
+        os.environ["PATH"] = f"{folder}:{os.environ['PATH']}"
+        harness.load()
+        harness.pump(2500)
+        harness.ipc("shade")
+        harness.pump(700)
+        now = harness.eval_value
+
+        def tile():
+            return next(item for item in harness.visible_items()
+                        if item.metaObject().className().startswith("QuickTile") and item.property("title") == "Screen record")
+        self.assertEqual(tile().property("subtitle"), "Off")
+        state = Path(os.environ["XDG_RUNTIME_DIR"]) / "prismos-recording.json"
+        harness.click(*harness.scene_pos(tile()))
+        self.assertEqual(now("ShellState.shadeOpen"), "false", "the shade closes so it is not in the video")
+        self.assertTrue(harness.wait_for(state.exists, 8000))
+        self.assertTrue(harness.wait_for(lambda: now("SystemBridge.snapshot.recording.recording") == "true", 8000))
+        chip = harness.find("recording-chip")
+        self.assertTrue(harness.wait_for(lambda: chip.isVisible(), 4000))
+        harness.pump(1200)
+        label = next(item for item in harness.visible_items(chip) if item.property("text") and ":" in str(item.property("text")))
+        self.assertRegex(str(label.property("text")), r"^\d+:\d\d$")
+        self.assertEqual(harness.truncated_texts(), [])
+        # Stopping from the top bar saves the file and says where.
+        harness.click(*harness.scene_pos(chip))
+        self.assertTrue(harness.wait_for(lambda: not chip.isVisible(), 4000), "the chip answers at once")
+        self.assertTrue(harness.wait_for(lambda: "saved" in now("ShellState.toast"), 12000), now("ShellState.toast"))
+        self.assertFalse(state.exists())
+        saved = list((Path(os.environ["HOME"]) / "Videos" / "Screen recordings").glob("Recording-*.mp4"))
+        self.assertEqual(len(saved), 1)
+        self.assertEqual(saved[0].read_bytes(), b"fake video")
+        self.assertEqual(harness.problems(), [])
+
+    def test_the_record_details_choose_a_mode_and_microphone_and_explain_missing_tools(self):
+        from prismos import settings
+        harness = Harness()
+        self.addCleanup(harness.close)
+        harness.write_settings(onboarding_complete=True, tiles=["screen_record", "dnd"])
+        harness.load()
+        harness.pump(2500)
+        harness.ipc("shade")
+        harness.pump(700)
+        from PySide6.QtCore import Qt
+        tile = next(item for item in harness.visible_items()
+                    if item.metaObject().className().startswith("QuickTile") and item.property("title") == "Screen record")
+        self.assertEqual(tile.property("subtitle"), "Needs wf-recorder", "no recorder in the sandbox")
+        harness.click(*harness.scene_pos(tile), button=Qt.RightButton)
+        harness.pump(500)
+        texts = {str(item.property("text")) for item in harness.visible_items() if item.property("text")}
+        self.assertIn("Screen recording needs the wf-recorder package.", texts)
+        self.assertFalse(harness.find("record-full").isEnabled())
+        self.assertEqual(harness.truncated_texts(), [])
+        self.assertEqual(harness.problems(), [])
+
     def test_settings_search_filters_sections(self):
         harness = self.boot()
         harness.ipc("settings")

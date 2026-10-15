@@ -45,6 +45,13 @@ QtObject {
                 enabled: false,
                 count: 0
             },
+            recording: {
+                available: false,
+                recording: false,
+                seconds: 0,
+                started: 0,
+                audio: false
+            },
             profile: {
                 available: false,
                 saver: false
@@ -344,6 +351,47 @@ QtObject {
         queue.push(["prismctl", "notifications", "history", on ? "yes" : "no"]);
         pending = queue;
         drain();
+    }
+    // Screen recording. Starting an area waits for the user's selection, so it has its own process.
+    signal recordingFinished(bool success, string message)
+    property string recorderOp: ""
+    function record(op, mode) {
+        if (recorder.running)
+            return;
+        recorderOp = op;
+        // Stopping always works if it was recording, so the tile and top-bar chip answer at once;
+        // starting may be cancelled (an area selection), so it waits for the real state.
+        if (op === "stop")
+            applyGuess(patched({
+                recording: {
+                    recording: false,
+                    seconds: 0
+                }
+            }));
+        recorder.command = ["prismctl", "record", op].concat(mode ? [mode] : []);
+        recorder.running = true;
+    }
+    function setRecordAudio(on) {
+        const queue = pending.filter(item => !(item[1] === "record" && item[2] === "audio"));
+        queue.push(["prismctl", "record", "audio", on ? "yes" : "no"]);
+        pending = queue;
+        drain();
+    }
+    property Process recorder: Process {
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const data = JSON.parse(text);
+                    if (data.ok === false)
+                        root.recordingFinished(false, data.error);
+                    else if (root.recorderOp === "stop" || (root.recorderOp === "toggle" && data.recording === false))
+                        root.recordingFinished(true, "Recording saved to Videos/Screen recordings");
+                } catch (e) {
+                    root.recordingFinished(false, "The recorder did not respond");
+                }
+            }
+        }
+        onExited: root.refresh()
     }
     function screenshot(mode) {
         if (shooter.running)

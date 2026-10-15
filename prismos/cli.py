@@ -22,12 +22,12 @@ class _Lazy:
 
 
 (about, alarms, android, apps, audio, clipboard, clockset, notes, thumbnails, worldclock, displays, drives,
- favorites, fdroid, files, inputs, installer, notifyprefs, hotspot, vpn, screenshot, settings, stats, storage, store,
+ favorites, fdroid, files, inputs, installer, notifyprefs, hotspot, vpn, recorder, screenshot, settings, stats, storage, store,
  system, tiles, wallpaper, weather, websearch, widgets, windows, wireless) = (
     _Lazy(name) for name in (
         "about", "alarms", "android", "apps", "audio", "clipboard", "clockset", "notes", "thumbnails",
         "worldclock", "displays", "drives", "favorites", "fdroid", "files", "inputs", "installer",
-        "notifyprefs", "hotspot", "vpn", "screenshot", "settings", "stats", "storage", "store", "system", "tiles",
+        "notifyprefs", "hotspot", "vpn", "recorder", "screenshot", "settings", "stats", "storage", "store", "system", "tiles",
         "wallpaper", "weather", "websearch", "widgets", "windows", "wireless"))
 alert_sound = _Lazy("sound")
 
@@ -50,6 +50,9 @@ def main(argv=None):
     clock.add_argument("--time")
     clock.add_argument("--days", default="")
     clock.add_argument("--label", default="")
+    rec = sub.add_parser("record")
+    rec.add_argument("operation", choices=("status", "start", "stop", "toggle", "audio"))
+    rec.add_argument("value", nargs="?")
     spot = sub.add_parser("hotspot")
     spot.add_argument("operation", choices=("status", "info", "enable", "disable", "set", "copy-password"))
     tunnel = sub.add_parser("vpn")
@@ -189,6 +192,11 @@ def main(argv=None):
                 if args.id is None or not args.id.isdigit():
                     raise ValueError("An alarm number is required")
                 result = alarms.toggle(args.id) if args.operation == "toggle" else alarms.remove(args.id)
+        elif args.command == "record":
+            op = args.operation
+            result = (recorder.status() if op == "status" else recorder.stop() if op == "stop"
+                      else recorder.start(args.value or "full") if op == "start"
+                      else recorder.toggle(args.value or "full") if op == "toggle" else recorder.set_audio(args.value))
         elif args.command == "hotspot":
             op = args.operation
             if op == "set":

@@ -69,6 +69,9 @@ PanelWindow {
         case "hotspot":
             SystemBridge.action("hotspot");
             break;
+        case "screen_record":
+            ShellState.toggleRecording();
+            break;
         case "vpn":
             // With no VPN set up there is nothing to switch: show how to add one instead.
             if (SystemBridge.snapshot.vpn.available)

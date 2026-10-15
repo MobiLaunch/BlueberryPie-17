@@ -39,6 +39,7 @@ sound-theme-freedesktop
 cliphist
 papirus-icon-theme
 dnsmasq
+wf-recorder
 waydroid
 xdg-desktop-portal-gtk
 # Disk installer (prismos/installer.py); releng ships most of these, listed so they are never dropped.
