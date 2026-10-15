@@ -7,6 +7,7 @@ import "surfaces"
 ShellRoot {
     Component.onCompleted: {
         SystemBridge.refresh();
+        InstallerState.probe();
         console.info("PrismOS 0.9 shell started");
     }
     Variants {
@@ -29,6 +30,9 @@ ShellRoot {
         }
         function store(): void {
             ShellState.openStore(ShellState.focusedScreen());
+        }
+        function installer(): void {
+            ShellState.openInstaller(ShellState.focusedScreen());
         }
         function recents(): void {
             ShellState.toggleRecents(ShellState.focusedScreen());

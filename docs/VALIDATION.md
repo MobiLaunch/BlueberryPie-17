@@ -1,4 +1,40 @@
-# Validation record — 2026-10-15 (v0.9)
+# Validation record — 2026-10-15 (v0.9 + window management, widgets, installer)
+
+## Addendum: window controls, desktop widgets, disk installer
+
+### Executed
+
+| Check | Result |
+| --- | --- |
+| `scripts/check.sh` | 270 Python tests passed, 0 skipped (PySide6, Lua and Pillow present); shell, PKGBUILD, Node and compile checks passed |
+| `qmlformat` over all 92 QML files | Pass (the `check.sh` QML step still skips without Qt's own `qmlformat`) |
+| Window adapter (`prismos/windows.py`) with mocked `hyprctl`: focus, close, minimize, restore, maximize, float, snap | Argument lists, refusal of bad addresses/minimized snaps/too-small areas and the `special:minimized` workspace checked |
+| Caption controls clicked in the offscreen shell | Buttons call the adapter with the focused address; snap menu opens; no QML errors or elided text |
+| `config/hypr/hyprland.lua` against a mock `hl` | New `Super + arrow/F` binds exist and map to `prismctl windows ...` |
+| Widgets: adapters (`stats`, `weather`, `widgets`, `websearch`) and every widget rendered | Weather host allowlist, no-redirect and size bounds, cache, WMO mapping; light and dark screenshots reviewed; search hands off to the launcher |
+| Installer engine with a recording host | Disk eligibility (live USB incl. label/ISO 9660, mounted, read-only, small, zram/loop), strict request validation, typed confirmation, UEFI/BIOS/NVMe layouts, argv-only commands, password only on `chpasswd` stdin, step ordering, failure → unmount, optional steps, progress, write containment, pacman.conf generation |
+| Installer wizard clicked through in the offscreen shell | Every page, unusable disks unselectable, password mismatch, typed confirmation gate, progress, success and failure/return; the password reached the process on stdin and never in argv; light and dark screenshots reviewed |
+
+### Not executed — still open
+
+- **Any real installation.** No partition table, filesystem, `pacstrap`, `arch-chroot`,
+  `grub-install` or `efibootmgr` call has run. The installer's commands are asserted as
+  data, not executed. Needs UEFI and BIOS VMs, NVMe/virtio/SATA, failure and retry, and
+  hardware.
+- **polkit on the live session**: the prompt, the admin identity and `pkexec` stdin/stdout
+  passing are unverified. The package/ISO changes (`/opt/prismos/repo`, the desktop entry,
+  extra packages) are unbuilt.
+- **`hyprctl dispatch` names** `movetoworkspacesilent`, `resizewindowpixel`,
+  `movewindowpixel`, `fullscreen 1`, `togglefloating` and the `special:minimized`
+  workspace on Hyprland 0.56 with a Lua config; the adapter reports a rejected dispatch
+  and leaves windows untouched. Snap uses the monitor's reserved area and may disagree
+  with real gaps.
+- **Weather over the network** (only fixtures were used); CPU/memory/storage values on
+  real machines; widget layout on real monitors and at fractional scales.
+- **Hyprland keyboard layout** via `input:kb_layout` / `input:kb_variant` at session start.
+- Windows are not exercised under a real compositor; the harness stubs layer-shell.
+
+## Earlier record — v0.9 shell pass
 
 This pass rebuilt most of the native shell. A new **offscreen QML runtime harness**
 (`tests/qml_runtime/`) loads the real `shell/` QML with *stub* Quickshell modules

@@ -6,9 +6,11 @@ import tempfile
 from contextlib import contextmanager
 from pathlib import Path
 
+from .regional import KEYBOARD_IDS
+
 WIDGET_IDS = ("glance", "clock", "search", "calendar", "media", "weather", "system", "analog")
 DEFAULTS = {"seed": "#8469cf", "dark": False, "reduced_motion": False, "dnd": False,
-            "favorites": None, "recent_apps": [], "wallpaper": "", "widgets": None, "weather": {}, "android_enabled": False, "onboarding_complete": False,
+            "favorites": None, "recent_apps": [], "wallpaper": "", "widgets": None, "weather": {}, "keyboard": "us", "android_enabled": False, "onboarding_complete": False,
             "natural_scroll": True, "tap_to_click": True,
             "pointer_speed": 0.0, "repeat_rate": 25, "display_scales": {}, "display_positions": {}}
 
@@ -68,6 +70,9 @@ def load():
                     valid["weather"] = {"lat": lat, "lon": lon, "label": label, "units": units}
             except (KeyError, TypeError, ValueError):
                 pass
+        layout = data.get("keyboard")
+        if isinstance(layout, str) and layout in KEYBOARD_IDS:
+            valid["keyboard"] = layout
         wallpaper = data.get("wallpaper")
         if (isinstance(wallpaper, str) and wallpaper.startswith("/") and len(wallpaper) <= 4096
                 and "\x00" not in wallpaper

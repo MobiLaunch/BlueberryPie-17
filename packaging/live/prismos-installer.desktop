@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Install PrismOS
+Comment=Install PrismOS to this computer
+Exec=prism-shell ipc installer
+Icon=system-software-install
+Terminal=false
+Categories=System;
+Keywords=install;installer;setup;disk;

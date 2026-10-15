@@ -34,6 +34,9 @@ Scope {
     FirstRun {
         screen: root.screen
     }
+    Installer {
+        screen: root.screen
+    }
     Recents {
         screen: root.screen
     }

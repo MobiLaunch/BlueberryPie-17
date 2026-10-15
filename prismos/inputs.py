@@ -3,7 +3,7 @@
 Only fixed Hyprland keys and typed numeric/boolean values may be applied.
 Never edits the user's personal Hyprland config or executes arbitrary commands.
 """
-from . import settings
+from . import regional, settings
 from .system import run
 
 KEYS = {
@@ -67,4 +67,7 @@ def apply():
     current = settings.load()
     for name in KEYS:
         apply_one(name, current[name])
+    layout = regional.keyboard(current["keyboard"])
+    run(["hyprctl", "keyword", "input:kb_layout", layout["layout"]], timeout=5)
+    run(["hyprctl", "keyword", "input:kb_variant", layout["variant"]], timeout=5)
     return {"ok": True, "applied": True}

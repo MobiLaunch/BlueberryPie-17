@@ -25,6 +25,11 @@ Item {
             ink: root.ink
             size: Math.min(130, root.width * .12)
         }
+        InstallerWidget {
+            visible: InstallerState.live
+            screen: root.screen
+            width: Math.min(440, root.width - root.gutter * 2)
+        }
         SearchWidget {
             visible: WidgetsState.has("search")
             screen: root.screen

@@ -154,7 +154,10 @@ class Process(QObject):
     stdout = Property(QObject, lambda s: s._stdout, _set_stdout, notify=stdoutChanged)
 
     def _set_stdin(self, value):
+        was = self._stdin
         self._stdin = bool(value)
+        if was and not self._stdin and self._proc is not None:
+            self._proc.closeWriteChannel()  # Quickshell closes the pipe when stdin is disabled
         self.stdinEnabledChanged.emit()
 
     stdinEnabled = Property(bool, lambda s: s._stdin, _set_stdin, notify=stdinEnabledChanged)

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-# Runs only inside the live rootfs. There is no disk installer in v0.1.
+# Runs only inside the live rootfs. The disk installer is prismos/installer.py (prism-installer-helper).
 if ! id prism >/dev/null 2>&1; then
     useradd --create-home --groups wheel,audio,video,input --shell /bin/bash prism
     printf 'prism:prism\n' | chpasswd

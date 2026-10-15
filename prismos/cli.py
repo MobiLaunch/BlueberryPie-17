@@ -2,7 +2,7 @@ import argparse
 import json
 import sys
 
-from . import about, android, apps, audio, displays, drives, favorites, fdroid, files, inputs, settings, stats, store, system, theme, wallpaper, weather, websearch, widgets, windows, wireless
+from . import about, android, apps, audio, displays, drives, favorites, fdroid, files, inputs, installer, settings, stats, store, system, theme, wallpaper, weather, websearch, widgets, windows, wireless
 
 
 def main(argv=None):
@@ -14,6 +14,8 @@ def main(argv=None):
     sub.add_parser("stats")
     web = sub.add_parser("websearch")
     web.add_argument("query")
+    setup = sub.add_parser("installer")
+    setup.add_argument("operation", choices=("status", "options", "disks", "plan", "install"))
     gadget = sub.add_parser("widgets")
     gadget.add_argument("operation", choices=("list", "set"))
     gadget.add_argument("ids", nargs="*")
@@ -96,6 +98,17 @@ def main(argv=None):
         elif args.command == "wallpaper":
             result = (wallpaper.status() if args.operation == "list" else
                       wallpaper.clear() if args.operation == "clear" else wallpaper.choose(args.path))
+        elif args.command == "installer":
+            if args.operation == "install":
+                return installer.install(sys.stdin.read(65536))
+            if args.operation == "plan":
+                try:
+                    result = installer.preview(json.loads(sys.stdin.read(65536)))
+                except (TypeError, json.JSONDecodeError):
+                    raise ValueError("The installation request is not valid") from None
+            else:
+                result = {"status": installer.status, "options": installer.options,
+                          "disks": installer.disk_listing}[args.operation]()
         elif args.command == "websearch":
             result = websearch.search(args.query)
         elif args.command == "stats":

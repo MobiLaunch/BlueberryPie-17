@@ -8,6 +8,7 @@ QtObject {
     id: root
     property var activeScreen: Quickshell.screens.length ? Quickshell.screens[0] : null
     property bool onboardingOpen: false
+    property bool installerOpen: false
     property bool firstRunChecked: false
     property bool shadeOpen: false
     property bool drawerOpen: false
@@ -92,6 +93,17 @@ QtObject {
         launcherQuery = query || "";
         drawerOpen = true;
         SystemBridge.refreshApps();
+    }
+    function openInstaller(screen) {
+        if (!InstallerState.live) {
+            toast = "Installing is only available from the PrismOS live USB";
+            toastTimer.restart();
+            return;
+        }
+        close();
+        activeScreen = screen || focusedScreen();
+        InstallerState.open();
+        installerOpen = true;
     }
     function openSettings(screen, page) {
         close();

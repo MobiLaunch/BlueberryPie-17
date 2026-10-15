@@ -40,6 +40,23 @@ ISO and hardware qualification have not been completed in this release.
 - **Verification**: `tests/test_shell_runtime.py` loads the real shell QML offscreen with
   stub Quickshell modules; it needs PySide6 and is skipped when unavailable.
 
+### Added after v0.9: window controls, desktop widgets and an installer
+
+- **Window controls**: the status bar carries Google-style caption controls for the
+  focused window (minimize, maximize/restore, snap left/right, close; the title and app
+  icon sit beside them). Windows can be floated, snapped to halves of the work area,
+  minimized to a hidden workspace and restored from the dock or Recents. Keys:
+  `Super + ↑/↓/←/→` maximize, minimize and snap, `Super + F` float. Everything goes through
+  `prismctl windows ...` with fixed `hyprctl dispatch` calls; the dispatchers are
+  unverified on Hyprland 0.56 with a Lua config (see `docs/VALIDATION.md`).
+- **Desktop widgets** in a classic Google style, chosen in Settings → Widgets: At a glance,
+  clock, search (apps first, then a web search), month calendar, now playing, system
+  (CPU, memory, storage), analog clock and opt-in weather. Weather talks only to fixed
+  HTTPS hosts after you pick a place; nothing leaves the machine otherwise.
+- **Installer**: a wizard from the live USB (`docs/INSTALLER.md`). It erases and installs
+  to one whole disk after a typed confirmation and runs the root work through a
+  polkit-protected helper. It is **unrun on real disks**; try it in a VM first.
+
 ## Build the ISO on Windows
 
 See **[Windows build instructions](docs/WINDOWS-ISO.md)** for the
@@ -219,7 +236,7 @@ Logs go to `build/iso-build.log`; successful ISO output goes to `out/`.
 Use `bash ./build.sh --stage-only` to inspect just the generated Arch profile.
 
 This ISO remains **unverified until an Arch build and physical boot succeed**.
-There is no permanent disk installer yet. Live login: `prism` / `prism`.
+The live session has an "Install PrismOS" wizard (see `docs/INSTALLER.md`; it has never been run on a real disk). Live login: `prism` / `prism`.
 
 ### Make a bootable USB
 

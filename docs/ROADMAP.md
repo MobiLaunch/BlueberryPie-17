@@ -100,6 +100,7 @@ acceptance target, not a claim about the first prototype.
 2. Verify UEFI and legacy BIOS, Intel/AMD graphics, laptops and physical USB.
 3. Add a first-run wizard: language, keyboard, account, network, accessibility.
 4. Build a disk installer with explicit target selection, review and progress.
+   *Source slice delivered after v0.9 (`docs/INSTALLER.md`); not yet run on a disk or VM.*
 5. Add transactional configuration updates, logs, rollback and recovery shell.
 6. Sign packages, publish a distribution repository and record ISO manifests.
 
@@ -164,3 +165,14 @@ Follow-on acceptance: run the packaged session on real Arch + Hyprland hardware,
 verify `hyprctl` focus/close and hardware-key binds, then M2 reference measurements
 (Pixel SystemUI proportions), Recents thumbnails, tile edit/reorder,
 other Material scheme variants and per-app notification controls.
+
+## Delivered after v0.9 (development slice)
+
+- Window management: caption controls in the status bar, snap/maximize/minimize/float,
+  minimized state in the dock and Recents, `Super + arrows/F` binds.
+- Desktop widgets (glance, clock, search, calendar, system, analog clock, media, opt-in weather).
+- Disk installer (whole disk, UEFI/BIOS, GRUB, polkit helper) and a live-USB entry point.
+
+Follow-on acceptance: run all three on Arch + Hyprland; install into UEFI and BIOS VMs and
+on hardware; measure caption-control hit areas against the reference; add resizable
+widgets, thumbnails in Recents, an offline install mode and a published package repository.

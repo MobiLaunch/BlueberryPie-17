@@ -235,6 +235,164 @@ class ShellRuntimeTests(unittest.TestCase):
         self.assertTrue(settings.load()["onboarding_complete"])
         self.assertEqual(harness.problems(), [])
 
+    # -- installer wizard ----------------------------------------------------
+    def installer_session(self, runner_script, stdin_file):
+        """Open the installer with the bridge calls replaced by canned, argv-only scripts."""
+        import json
+        harness = self.boot()
+        py = sys.executable
+        status = json.dumps({"ok": True, "live": True, "firmware": "uefi", "connectivity": "full", "online": True,
+                             "battery": {"available": False}, "min_disk_label": "16 GB"})
+        disks = json.dumps({"ok": True, "disks": [
+            {"path": "/dev/nvme0n1", "name": "nvme0n1", "size": 5 * 10**11, "size_label": "500 GB", "model": "Test NVMe",
+             "transport": "NVME", "removable": False, "eligible": True, "reason": "",
+             "partitions": [{"path": "/dev/nvme0n1p1", "size_label": "100 MB", "fstype": "vfat", "label": "EFI"},
+                            {"path": "/dev/nvme0n1p2", "size_label": "499 GB", "fstype": "ntfs", "label": "Windows"}]},
+            {"path": "/dev/sda", "name": "sda", "size": 3 * 10**10, "size_label": "30 GB", "model": "Live USB", "transport": "USB",
+             "removable": True, "eligible": False, "reason": "This is the USB you started from", "partitions": []}]})
+        plan = json.dumps({"ok": True, "partitions": [{"name": "EFI system partition", "detail": "1 GB"},
+                                                       {"name": "PrismOS", "detail": "rest"}]})
+        for target, script in (("statusReader", "print(%r)" % status), ("diskReader", "print(%r)" % disks),
+                               ("planner", "import sys; sys.stdin.read(); print(%r)" % plan),
+                               ("runner", runner_script)):
+            harness.eval("InstallerState.%s.command = %s" % (target, json.dumps([py, "-c", script.replace("STDIN_FILE", str(stdin_file))])))
+        harness.eval("InstallerState.live = true")
+        harness.ipc("installer")
+        harness.pump(900)
+        return harness
+
+    def press(self, harness, label):
+        button = next(item for item in harness.visible_items()
+                      if item.metaObject().className().startswith("PillButton") and item.property("text") == label)
+        self.assertTrue(button.property("enabled"), f"{label} should be enabled")
+        harness.click(*harness.scene_pos(button))
+        harness.pump(500)
+
+    def type_into(self, harness, placeholder, text):
+        from PySide6.QtTest import QTest
+        field = next(item for item in harness.visible_items()
+                     if "TextField" in item.metaObject().className() and item.property("placeholderText") == placeholder)
+        field.forceActiveFocus()
+        for character in text:
+            QTest.keyClick(harness.view, character)
+        harness.pump(150)
+
+    def click_row(self, harness, title):
+        row = next(item for item in harness.visible_items()
+                   if item.metaObject().className().startswith("ListRow") and str(item.property("title")).startswith(title))
+        harness.reveal(row)
+        harness.click(*harness.scene_pos(row))
+        harness.pump(300)
+
+    def test_installer_wizard_collects_choices_and_sends_the_password_privately(self):
+        import json
+        import tempfile
+        from qml_runtime import stubs
+        record = Path(tempfile.mkdtemp()) / "request.json"
+        self.addCleanup(lambda: record.parent.exists() and __import__("shutil").rmtree(record.parent))
+        script = ("import sys, json\nraw = sys.stdin.read()\nopen('STDIN_FILE', 'w').write(raw)\n"
+                  "for percent, phase, label in ((5, 'partition', 'Creating partitions'), (60, 'packages', 'Installing PrismOS')):\n"
+                  "    print(json.dumps({'ok': True, 'phase': phase, 'label': label, 'percent': percent, 'detail': 'installing foo'}), flush=True)\n"
+                  "print(json.dumps({'ok': True, 'phase': 'done', 'label': 'PrismOS is installed', 'percent': 100, 'done': True}), flush=True)\n")
+        harness = self.installer_session(script, record)
+        texts = lambda: {str(item.property("text")) for item in harness.visible_items() if item.property("text")}
+        self.assertIn("Install PrismOS", texts())
+        self.assertEqual(harness.problems(), [])
+        self.press(harness, "Get started")
+        self.assertIn("Language and region", texts())
+        self.click_row(harness, "Português (Portugal)")
+        self.click_row(harness, "Portuguese")
+        self.assertEqual(harness.truncated_texts(), [])
+        self.press(harness, "Continue")
+        self.assertIn("You're online", texts())
+        self.press(harness, "Continue")
+        self.assertIn("Choose a disk", texts())
+        sda = next(item for item in harness.visible_items()
+                   if item.metaObject().className().startswith("ListRow") and str(item.property("title")).startswith("Live USB"))
+        self.assertFalse(sda.property("enabled"))
+        harness.click(*harness.scene_pos(sda))
+        continue_button = next(item for item in harness.visible_items()
+                               if item.metaObject().className().startswith("PillButton") and item.property("text") == "Continue")
+        self.assertFalse(continue_button.property("enabled"), "an unusable disk can't be selected")
+        self.click_row(harness, "Test NVMe")
+        self.assertEqual(harness.truncated_texts(), [])
+        self.press(harness, "Continue")
+        self.assertIn("Create your account", texts())
+        self.type_into(harness, "Alex Doe", "Alex Doe")
+        username = next(item for item in harness.visible_items()
+                        if "TextField" in item.metaObject().className() and item.property("placeholderText") == "alex")
+        self.assertEqual(username.property("text"), "alexdoe")
+        self.type_into(harness, "At least 8 characters", "tr0ub4dor&3")
+        self.type_into(harness, "Type it again", "mismatch")
+        self.assertIn("The passwords don't match", texts())
+        continue_button = next(item for item in harness.visible_items()
+                               if item.metaObject().className().startswith("PillButton") and item.property("text") == "Continue")
+        self.assertFalse(continue_button.property("enabled"))
+        repeat = next(item for item in harness.visible_items()
+                      if "TextField" in item.metaObject().className() and item.property("placeholderText") == "Type it again")
+        repeat.setProperty("text", "")
+        self.type_into(harness, "Type it again", "tr0ub4dor&3")
+        self.assertEqual(harness.truncated_texts(), [])
+        self.press(harness, "Continue")
+        self.assertIn("Ready to install", texts())
+        self.assertTrue(harness.wait_for(lambda: "EFI system partition + PrismOS" in texts(), 4000))
+        self.assertTrue(any("will be erased" in text for text in texts()))
+        install = next(item for item in harness.visible_items()
+                       if item.metaObject().className().startswith("PillButton") and item.property("text") == "Erase and install")
+        self.assertFalse(install.property("enabled"), "typed confirmation is required")
+        self.type_into(harness, "Type nvme0n1 to confirm", "wrong")
+        self.assertFalse(install.property("enabled"))
+        field = next(item for item in harness.visible_items()
+                     if "TextField" in item.metaObject().className() and str(item.property("placeholderText")).startswith("Type nvme0n1"))
+        field.setProperty("text", "")
+        self.type_into(harness, "Type nvme0n1 to confirm", "nvme0n1")
+        self.assertEqual(harness.truncated_texts(), [])
+        self.press(harness, "Erase and install")
+        self.assertTrue(harness.wait_for(lambda: "PrismOS is installed" in texts(), 8000))
+        sent = json.loads(record.read_text())
+        self.assertEqual((sent["disk"], sent["confirm"], sent["username"], sent["fullname"]), ("/dev/nvme0n1", "nvme0n1", "alexdoe", "Alex Doe"))
+        self.assertEqual((sent["locale"], sent["keyboard"], sent["password"]), ("pt_PT.UTF-8", "pt", "tr0ub4dor&3"))
+        self.assertFalse(any("tr0ub4dor" in " ".join(command) for command in stubs.Process.log), "the password must never be in argv")
+        self.assertEqual(harness.problems(), [])
+
+    def test_installer_failure_returns_to_the_review_without_losing_choices(self):
+        import tempfile
+        record = Path(tempfile.mkdtemp()) / "request.json"
+        self.addCleanup(lambda: record.parent.exists() and __import__("shutil").rmtree(record.parent))
+        script = ("import sys, json\nsys.stdin.read()\n"
+                  "print(json.dumps({'ok': True, 'phase': 'partition', 'label': 'Creating partitions', 'percent': 4}), flush=True)\n"
+                  "print(json.dumps({'ok': False, 'error': 'Formatting failed: no space'}), flush=True)\nsys.exit(1)\n")
+        harness = self.installer_session(script, record)
+        texts = lambda: {str(item.property("text")) for item in harness.visible_items() if item.property("text")}
+        for label in ("Get started", "Continue", "Continue"):
+            self.press(harness, label)
+        self.click_row(harness, "Test NVMe")
+        self.press(harness, "Continue")
+        self.type_into(harness, "Alex Doe", "Sam")
+        self.type_into(harness, "At least 8 characters", "longenough1")
+        self.type_into(harness, "Type it again", "longenough1")
+        self.press(harness, "Continue")
+        harness.wait_for(lambda: "EFI system partition + PrismOS" in texts(), 4000)
+        self.type_into(harness, "Type nvme0n1 to confirm", "nvme0n1")
+        self.press(harness, "Erase and install")
+        self.assertTrue(harness.wait_for(lambda: "The installation didn't finish" in texts(), 8000))
+        self.assertIn("Formatting failed: no space", texts())
+        self.assertEqual(harness.truncated_texts(), [])
+        self.press(harness, "Back")
+        self.assertIn("Ready to install", texts())
+        field = next(item for item in harness.visible_items()
+                     if "TextField" in item.metaObject().className() and str(item.property("placeholderText")).startswith("Type nvme0n1"))
+        self.assertEqual(field.property("text"), "", "the confirmation must be typed again")
+        self.assertEqual(harness.problems(), [])
+
+    def test_installer_is_refused_off_the_live_usb(self):
+        harness = self.boot()
+        harness.ipc("installer")
+        harness.pump(400)
+        texts = {str(item.property("text")) for item in harness.visible_items() if item.property("text")}
+        self.assertIn("Installing is only available from the PrismOS live USB", texts)
+        self.assertNotIn("Install PrismOS", texts)
+
     def test_dark_theme_text_stays_legible(self):
         harness = Harness()
         self.addCleanup(harness.close)

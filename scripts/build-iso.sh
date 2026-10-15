@@ -70,6 +70,10 @@ printf '%%wheel ALL=(ALL:ALL) NOPASSWD: ALL\n' > "$prism_airoot/etc/sudoers.d/pr
 chmod 440 "$prism_airoot/etc/sudoers.d/prismos-live"
 cp -- "$prism_package" "$prism_staging/repo/"
 repo-add "$prism_staging/repo/prismos.db.tar.gz" "$prism_staging/repo/$(basename -- "$prism_package")"
+# The live installer installs prism-shell from this bundled repo (the base system comes from mirrors).
+install -d -m755 "$prism_airoot/opt/prismos"
+cp -a -- "$prism_staging/repo" "$prism_airoot/opt/prismos/repo"
+install -Dm644 "$prism_root/packaging/live/prismos-installer.desktop" "$prism_airoot/usr/share/applications/prismos-installer.desktop"
 # Commit the stage at its fixed final location before writing the local repo URL.
 rm -rf -- "$prism_profile"
 mv -- "$prism_staging" "$prism_profile"

@@ -16,6 +16,8 @@ package() {
     cp -r shell design config docs "${pkgdir}/usr/share/prismos/"
     cp -r prismos "${pkgdir}/usr/lib/prismos/"
     install -Dm755 bin/prism-android-helper "${pkgdir}/usr/libexec/prism-android-helper"
+    install -Dm755 bin/prism-installer-helper "${pkgdir}/usr/libexec/prism-installer-helper"
+    install -Dm644 packaging/polkit/org.prismos.installer.policy "${pkgdir}/usr/share/polkit-1/actions/org.prismos.installer.policy"
     install -Dm644 packaging/polkit/org.prismos.android.policy "${pkgdir}/usr/share/polkit-1/actions/org.prismos.android.policy"
     install -Dm644 packaging/portals/prismos-portals.conf "${pkgdir}/usr/share/xdg-desktop-portal/prismos-portals.conf"
     install -Dm755 bin/prism-style-env "${pkgdir}/usr/bin/prism-style-env"
