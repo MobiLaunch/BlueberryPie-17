@@ -23,7 +23,7 @@ ExpressiveMenu {
     MenuItem {
         visible: root.running
         text: root.windows.length > 1 ? "Close all windows" : "Close window"
-        onTriggered: root.windows.forEach(window => Windows.close(window.address))
+        onTriggered: Windows.closeMany(root.windows.map(window => window.address))
     }
     MenuSeparator {
         visible: root.running

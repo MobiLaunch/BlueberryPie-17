@@ -750,6 +750,21 @@ class ShellRuntimeTests(unittest.TestCase):
         self.assertEqual([item for item in harness.visible_items() if item.metaObject().className().startswith("LivePreview")], [])
         self.assertEqual(harness.problems(), [])
 
+    def test_close_all_closes_every_window_one_request_at_a_time(self):
+        from qml_runtime.stubs import Process
+        harness = self.boot()
+        harness.ipc("recents")
+        harness.pump(900)
+        harness.eval(WINDOWS)
+        harness.pump(300)
+        button = next(item for item in harness.visible_items()
+                      if item.metaObject().className().startswith("PillButton") and item.property("text") == "Close all")
+        Process.log.clear()
+        harness.click(*harness.scene_pos(button))
+        wanted = [["prismctl", "windows", "close", "0xaa01"], ["prismctl", "windows", "close", "0xaa02"]]
+        self.assertTrue(harness.wait_for(lambda: all(command in Process.log for command in wanted), 8000), Process.log)
+        self.assertEqual(harness.eval_value("Windows.closing.length"), "0")
+
     def test_settings_search_filters_sections(self):
         harness = self.boot()
         harness.ipc("settings")

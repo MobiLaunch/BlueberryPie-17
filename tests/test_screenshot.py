@@ -61,6 +61,15 @@ class ScreenshotTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "No window"):
             screenshot.capture("window", self.when)
 
+    @patch("prismos.screenshot.subprocess.run", return_value=MagicMock(returncode=0))
+    @patch("prismos.screenshot.run")
+    def test_two_captures_in_one_second_never_overwrite_each_other(self, run, copier):
+        run.side_effect = lambda argv, timeout=4: Path(argv[-1]).write_bytes(b"png") and ""
+        names = [screenshot.capture("full", self.when)["name"] for _ in range(3)]
+        self.assertEqual(names, ["Screenshot-2026-10-15-090807.png", "Screenshot-2026-10-15-090807-2.png",
+                                 "Screenshot-2026-10-15-090807-3.png"])
+        self.assertEqual(len(list((Path(self.temp.name) / "Pictures/Screenshots").iterdir())), 3)
+
     def test_unknown_mode_and_missing_tools_are_clear_errors(self):
         with self.assertRaises(ValueError):
             screenshot.capture("everything")

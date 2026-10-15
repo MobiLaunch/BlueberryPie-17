@@ -63,7 +63,7 @@ NAME="PrismOS"
 PRETTY_NAME="PrismOS 0.9 Live Preview"
 ID=prismos
 ID_LIKE=arch
-VERSION_ID=0.8
+VERSION_ID=0.9
 OS
 install -d -m755 "$prism_airoot/etc/sudoers.d"
 printf '%%wheel ALL=(ALL:ALL) NOPASSWD: ALL\n' > "$prism_airoot/etc/sudoers.d/prismos-live"

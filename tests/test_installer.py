@@ -550,6 +550,13 @@ class PackagingTests(unittest.TestCase):
         self.assertIn("prismos-installer.desktop", build)
         self.assertIn("installer", (ROOT / "bin/prism-shell").read_text())
 
+    def test_os_release_version_fields_agree_with_the_package_version(self):
+        import re
+        build = (ROOT / "scripts/build-iso.sh").read_text()
+        pkgver = re.search(r"^pkgver=(\d+\.\d+)", (ROOT / "packaging/arch/PKGBUILD").read_text(), re.M).group(1)
+        self.assertIn(f'PRETTY_NAME="PrismOS {pkgver} Live Preview"', build)
+        self.assertIn(f"VERSION_ID={pkgver}\n", build)
+
     def test_installed_packages_are_real_and_include_the_desktop(self):
         self.assertIn("prism-shell", installer.BASE_PACKAGES)
         self.assertEqual(len(installer.BASE_PACKAGES), len(set(installer.BASE_PACKAGES)))

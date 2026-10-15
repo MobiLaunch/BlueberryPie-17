@@ -56,7 +56,11 @@ def capture(mode, now=None):
     region = region_for(mode)
     directory = folder()
     directory.mkdir(parents=True, exist_ok=True, mode=0o700)
-    path = directory / (now or datetime.now()).strftime("Screenshot-%Y-%m-%d-%H%M%S.png")
+    stem = (now or datetime.now()).strftime("Screenshot-%Y-%m-%d-%H%M%S")
+    path, counter = directory / f"{stem}.png", 1
+    while path.exists():  # two captures in the same second must not overwrite each other
+        counter += 1
+        path = directory / f"{stem}-{counter}.png"
     run(["grim", *(["-g", region] if region else []), str(path)], timeout=20)
     copied = False
     if shutil.which("wl-copy"):

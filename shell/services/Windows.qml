@@ -58,6 +58,19 @@ QtObject {
     function show(window) {
         return window.minimized ? restore(window.address) : focus(window.address);
     }
+    // Several windows to close, one request at a time (the actor runs a single command).
+    property var closing: []
+    function closeMany(addresses) {
+        closing = closing.concat(addresses.filter(address => closing.indexOf(address) < 0));
+        drainClosing();
+    }
+    function drainClosing() {
+        if (actor.running || closing.length === 0)
+            return;
+        const next = closing[0];
+        closing = closing.slice(1);
+        act("close", next);
+    }
     function act(operation, address) {
         if (actor.running)
             return false;
@@ -107,6 +120,7 @@ QtObject {
                 debounce.restart();
             }
         }
+        onExited: root.drainClosing()
     }
     property Timer debounce: Timer {
         interval: 150

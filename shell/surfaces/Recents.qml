@@ -255,7 +255,7 @@ PanelWindow {
                 symbol: "trash"
                 variant: "filled"
                 onClicked: {
-                    root.windows.forEach(window => Windows.close(window.address));
+                    Windows.closeMany(root.windows.map(window => window.address));
                     ShellState.close();
                 }
             }
