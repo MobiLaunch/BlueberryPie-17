@@ -14,6 +14,8 @@ QtObject {
     property bool settingsOpen: false
     // Settings page to show when Settings opens ("" keeps the last one).
     property string settingsPage: ""
+    // Text to prefill in the launcher search when it opens.
+    property string launcherQuery: ""
     property bool powerOpen: false
     property bool storeOpen: false
     property bool filesOpen: false
@@ -83,6 +85,13 @@ QtObject {
         drawerOpen = open;
         if (open)
             SystemBridge.refreshApps();
+    }
+    function openLauncher(screen, query) {
+        close();
+        activeScreen = screen || focusedScreen();
+        launcherQuery = query || "";
+        drawerOpen = true;
+        SystemBridge.refreshApps();
     }
     function openSettings(screen, page) {
         close();

@@ -8,8 +8,6 @@ import "../services"
 // Background layer: artwork, home clock, desktop menu and wallpaper-only swipes.
 PanelWindow {
     id: root
-    property string timeText: Qt.formatTime(new Date(), "hh:mm")
-    property string dateText: Qt.formatDate(new Date(), "dddd, MMMM d")
     anchors {
         top: true
         left: true
@@ -20,15 +18,6 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Background
     WlrLayershell.namespace: "prism-wallpaper"
     color: Theme.primaryContainer
-    Timer {
-        interval: 1000
-        running: true
-        repeat: true
-        onTriggered: {
-            root.timeText = Qt.formatTime(new Date(), "hh:mm");
-            root.dateText = Qt.formatDate(new Date(), "dddd, MMMM d");
-        }
-    }
     readonly property string photoPath: SystemBridge.snapshot.settings.wallpaper || ""
     readonly property bool photo: photoPath.length > 0 && photoImage.status === Image.Ready
     readonly property color ink: photo ? "#ffffff" : Theme.wallpaperInk
@@ -110,6 +99,10 @@ PanelWindow {
         }
         MenuSeparator {}
         MenuItem {
+            text: "Widgets"
+            onTriggered: ShellState.openSettings(root.screen, "widgets")
+        }
+        MenuItem {
             text: "Settings"
             onTriggered: ShellState.openSettings(root.screen)
         }
@@ -126,26 +119,9 @@ PanelWindow {
             }
         }
     }
-    Column {
-        x: Math.max(40, root.width * .075)
-        y: Math.max(90, root.height * .14)
-        spacing: 4
-        Label {
-            text: root.dateText
-            role: "titleLarge"
-            color: root.ink
-        }
-        Label {
-            text: root.timeText
-            font.pixelSize: Math.min(130, root.width * .12)
-            font.weight: Font.Black
-            font.letterSpacing: -6
-            color: root.ink
-        }
-        Label {
-            text: "A little more you."
-            role: "titleMedium"
-            color: root.ink
-        }
+    DesktopWidgets {
+        anchors.fill: parent
+        screen: root.screen
+        ink: root.ink
     }
 }

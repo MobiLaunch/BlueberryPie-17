@@ -20,7 +20,7 @@ else:
     SKIP_REASON = ""
 
 SURFACES = ("shade", "launcher", "settings", "files", "store", "power", "recents")
-SECTIONS = ("network", "bluetooth", "display", "sound", "notifications", "style", "input", "shortcuts", "apps", "power", "about")
+SECTIONS = ("network", "bluetooth", "display", "sound", "notifications", "style", "widgets", "input", "shortcuts", "apps", "power", "about")
 WINDOWS = ('Windows.available = true; Windows.list = ['
            '{address:"0xaa01", class:"firefox", title:"Docs", workspace:1, pid:1, recency:0, focused:true, hidden:false},'
            '{address:"0xaa02", class:"foot", title:"~/code", workspace:2, pid:2, recency:1, focused:false, hidden:false}];')
@@ -157,6 +157,49 @@ class ShellRuntimeTests(unittest.TestCase):
             self.assertTrue(harness.wait_for(lambda: ["prismctl", "windows", symbol, "0xaa01"] in Process.log, 3000), symbol)
             harness.pump(600)
         self.assertEqual(harness.problems(), [])
+
+    def test_default_widgets_show_and_search_hands_off_to_the_launcher(self):
+        harness = self.boot()
+        harness.pump(500)
+        texts = [item.property("text") for item in harness.visible_items() if item.property("text")]
+        import datetime
+        self.assertTrue(any(str(datetime.date.today().year) in str(t) and len(str(t)) < 20 for t in texts), "calendar heading")
+        field = next(item for item in harness.visible_items()
+                     if "TextField" in item.metaObject().className() and item.property("placeholderText") == "Search apps, then the web")
+        field.forceActiveFocus()
+        field.setProperty("text", "firef")
+        harness.pump(100)
+        from PySide6.QtTest import QTest
+        from PySide6.QtCore import Qt
+        QTest.keyClick(harness.view, Qt.Key_Return)
+        harness.pump(900)
+        launcher_field = next(item for item in harness.visible_items()
+                              if "TextField" in item.metaObject().className() and item.property("placeholderText") == "Search apps")
+        self.assertEqual(launcher_field.property("text"), "firef")
+        labels = [item.property("text") for item in harness.visible_items() if item.property("text")]
+        self.assertTrue(any("Search the web for" in str(label) for label in labels))
+        self.assertEqual(harness.problems(), [])
+
+    def test_widget_toggles_persist_and_hide_the_widget(self):
+        from prismos import settings
+        harness = self.boot()
+        harness.ipc("settings")
+        harness.pump(500)
+        row = harness.find("section-widgets")
+        harness.reveal(row)
+        harness.click(*harness.scene_pos(row))
+        harness.pump(800)
+        self.assertEqual(harness.problems(), [])
+        self.assertEqual(harness.truncated_texts(), [])
+        row = next(item for item in harness.visible_items()
+                   if item.metaObject().className().startswith("ToggleRow") and item.property("title") == "System")
+        harness.reveal(row)
+        harness.click(*harness.scene_pos(row))
+        self.assertTrue(harness.wait_for(lambda: "system" in (settings.load()["widgets"] or []), 6000))
+        harness.ipc("close")
+        harness.pump(400)
+        titles = [item.property("text") for item in harness.visible_items() if item.property("text")]
+        self.assertIn("Processor", titles)
 
     def test_heads_up_respects_do_not_disturb_but_not_critical(self):
         from qml_runtime import stubs

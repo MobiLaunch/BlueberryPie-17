@@ -6,8 +6,9 @@ import tempfile
 from contextlib import contextmanager
 from pathlib import Path
 
+WIDGET_IDS = ("glance", "clock", "search", "calendar", "media", "weather", "system", "analog")
 DEFAULTS = {"seed": "#8469cf", "dark": False, "reduced_motion": False, "dnd": False,
-            "favorites": None, "recent_apps": [], "wallpaper": "", "android_enabled": False, "onboarding_complete": False,
+            "favorites": None, "recent_apps": [], "wallpaper": "", "widgets": None, "weather": {}, "android_enabled": False, "onboarding_complete": False,
             "natural_scroll": True, "tap_to_click": True,
             "pointer_speed": 0.0, "repeat_rate": 25, "display_scales": {}, "display_positions": {}}
 
@@ -56,6 +57,17 @@ def load():
             valid["favorites"] = list(dict.fromkeys(value for value in favorites
                 if isinstance(value, str) and value.endswith(".desktop") and len(value) <= 256
                 and not any(char in value for char in ("/", "\\", "\x00"))))[:8]
+        widgets = data.get("widgets")
+        if isinstance(widgets, list):
+            valid["widgets"] = [item for item in WIDGET_IDS if item in widgets]
+        place = data.get("weather")
+        if isinstance(place, dict) and place:
+            try:
+                lat, lon, label, units = float(place["lat"]), float(place["lon"]), str(place["label"])[:60], place["units"]
+                if -90 <= lat <= 90 and -180 <= lon <= 180 and label.strip() and units in ("metric", "imperial"):
+                    valid["weather"] = {"lat": lat, "lon": lon, "label": label, "units": units}
+            except (KeyError, TypeError, ValueError):
+                pass
         wallpaper = data.get("wallpaper")
         if (isinstance(wallpaper, str) and wallpaper.startswith("/") and len(wallpaper) <= 4096
                 and "\x00" not in wallpaper

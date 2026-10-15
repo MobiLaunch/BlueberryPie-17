@@ -2,7 +2,7 @@ import argparse
 import json
 import sys
 
-from . import about, android, apps, audio, displays, drives, favorites, fdroid, files, inputs, settings, store, system, theme, wallpaper, windows, wireless
+from . import about, android, apps, audio, displays, drives, favorites, fdroid, files, inputs, settings, stats, store, system, theme, wallpaper, weather, websearch, widgets, windows, wireless
 
 
 def main(argv=None):
@@ -11,6 +11,19 @@ def main(argv=None):
     sub.add_parser("status")
     sub.add_parser("apps")
     sub.add_parser("about")
+    sub.add_parser("stats")
+    web = sub.add_parser("websearch")
+    web.add_argument("query")
+    gadget = sub.add_parser("widgets")
+    gadget.add_argument("operation", choices=("list", "set"))
+    gadget.add_argument("ids", nargs="*")
+    forecast = sub.add_parser("weather")
+    forecast.add_argument("operation", choices=("get", "search", "set", "disable"))
+    forecast.add_argument("--query")
+    forecast.add_argument("--lat")
+    forecast.add_argument("--lon")
+    forecast.add_argument("--label")
+    forecast.add_argument("--units", default="metric")
     paper = sub.add_parser("wallpaper")
     paper.add_argument("operation", choices=("list", "set", "clear"))
     paper.add_argument("path", nargs="?")
@@ -83,6 +96,21 @@ def main(argv=None):
         elif args.command == "wallpaper":
             result = (wallpaper.status() if args.operation == "list" else
                       wallpaper.clear() if args.operation == "clear" else wallpaper.choose(args.path))
+        elif args.command == "websearch":
+            result = websearch.search(args.query)
+        elif args.command == "stats":
+            result = stats.snapshot()
+        elif args.command == "widgets":
+            result = widgets.status() if args.operation == "list" else widgets.change(args.ids)
+        elif args.command == "weather":
+            if args.operation == "search":
+                result = weather.search(args.query)
+            elif args.operation == "set":
+                result = weather.choose(args.lat, args.lon, args.label, args.units)
+            elif args.operation == "disable":
+                result = weather.disable()
+            else:
+                result = weather.current()
         elif args.command == "about":
             result = about.info()
         elif args.command == "windows":

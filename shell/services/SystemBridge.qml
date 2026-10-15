@@ -94,6 +94,25 @@ QtObject {
         pending = queue;
         drain();
     }
+    function webSearch(query) {
+        if (webSearcher.running)
+            return;
+        webSearcher.command = ["prismctl", "websearch", query];
+        webSearcher.running = true;
+    }
+    property Process webSearcher: Process {
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const data = JSON.parse(text);
+                    if (data.ok === false)
+                        root.error = data.error;
+                } catch (e) {
+                    root.error = "Could not open the browser";
+                }
+            }
+        }
+    }
     function launch(id) {
         if (launcher.running)
             return false;

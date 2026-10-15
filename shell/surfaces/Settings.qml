@@ -58,6 +58,13 @@ PanelWindow {
             keywords: "color palette theme dark light accent motion appearance"
         },
         {
+            id: "widgets",
+            title: "Widgets",
+            symbol: "widgets",
+            page: "WidgetsPage",
+            keywords: "widgets desktop clock calendar weather search glance system analog"
+        },
+        {
             id: "input",
             title: "Pointer & keyboard",
             symbol: "keyboard",
@@ -112,6 +119,8 @@ PanelWindow {
             return snap.settings.dnd ? "Do Not Disturb is on" : Notifications.count + " now";
         case "style":
             return (Theme.dark ? "Dark" : "Light") + " theme";
+        case "widgets":
+            return WidgetsState.enabled.length + (WidgetsState.enabled.length === 1 ? " widget" : " widgets") + " on the desktop";
         case "input":
             return "Touchpad, speed, repeat";
         case "shortcuts":

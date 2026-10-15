@@ -28,7 +28,8 @@ PanelWindow {
     color: "transparent"
     visible: opened || card.opacity > .01
     onOpenedChanged: if (opened) {
-        search.text = "";
+        search.text = ShellState.launcherQuery;
+        ShellState.launcherQuery = "";
         category = "All";
         search.focusField();
     }
@@ -215,6 +216,16 @@ PanelWindow {
                     text: root.results.length + (root.results.length === 1 ? " app" : " apps")
                     role: "labelMedium"
                     color: Theme.surfaceVariantInk
+                }
+                PillButton {
+                    visible: search.text.trim().length > 0
+                    text: "Search the web for \u201c" + search.text.trim() + "\u201d"
+                    symbol: "browser"
+                    variant: "filled"
+                    onClicked: {
+                        SystemBridge.webSearch(search.text.trim());
+                        ShellState.close();
+                    }
                 }
                 PillButton {
                     text: "Get more apps"
