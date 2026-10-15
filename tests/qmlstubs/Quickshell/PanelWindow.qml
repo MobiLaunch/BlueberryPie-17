@@ -21,6 +21,11 @@ QtObject {
     property bool focusable: true
     // Attached properties must be read on the window object itself.
     readonly property int layerZ: WlrLayershell.layer
+    property int mapOrder: 0
+    onVisibleChanged: if (visible)
+        mapOrder = ++HarnessDesk.serial
+    Component.onCompleted: if (visible)
+        mapOrder = ++HarnessDesk.serial
     property Region mask: null
     readonly property real screenWidth: screen ? screen.width : 1280
     readonly property real screenHeight: screen ? screen.height : 800
@@ -33,7 +38,7 @@ QtObject {
         height: win.anchors.top && win.anchors.bottom ? win.screenHeight - win.margins.top - win.margins.bottom : win.implicitHeight
         x: win.anchors.left ? win.margins.left : win.anchors.right ? win.screenWidth - width - win.margins.right : (win.screenWidth - width) / 2
         y: win.anchors.top ? win.margins.top : win.anchors.bottom ? win.screenHeight - height - win.margins.bottom : (win.screenHeight - height) / 2
-        z: win.layerZ
+        z: win.layerZ * 10000 + win.mapOrder
         Rectangle {
             anchors.fill: parent
             color: win.color

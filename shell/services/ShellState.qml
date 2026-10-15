@@ -17,6 +17,7 @@ QtObject {
     property bool powerOpen: false
     property bool storeOpen: false
     property bool filesOpen: false
+    property bool recentsOpen: false
     property var launching: null
     property point launchOrigin: Qt.point(200, 200)
     property bool launchReady: false
@@ -49,6 +50,7 @@ QtObject {
         powerOpen = false;
         storeOpen = false;
         filesOpen = false;
+        recentsOpen = false;
     }
     function cancelLaunch() {
         launching = null;
@@ -98,6 +100,14 @@ QtObject {
         close();
         activeScreen = screen;
         filesOpen = true;
+    }
+    function toggleRecents(screen) {
+        const open = !recentsOpen || activeScreen !== screen;
+        close();
+        activeScreen = screen;
+        recentsOpen = open;
+        if (open)
+            Windows.refresh();
     }
     function openPower(screen) {
         close();

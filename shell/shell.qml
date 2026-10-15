@@ -30,6 +30,9 @@ ShellRoot {
         function store(): void {
             ShellState.openStore(ShellState.focusedScreen());
         }
+        function recents(): void {
+            ShellState.toggleRecents(ShellState.focusedScreen());
+        }
         function power(): void {
             ShellState.openPower(ShellState.focusedScreen());
         }

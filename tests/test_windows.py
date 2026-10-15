@@ -7,8 +7,8 @@ from prismos.system import CommandError
 
 CLIENTS = [
     {"address": "0xAB12", "mapped": True, "hidden": False, "class": "firefox", "title": "Docs, drafts",
-     "workspace": {"id": 2}, "pid": 10},
-    {"address": "0xcd34", "mapped": True, "class": "foot", "title": "~", "workspace": {"id": 1}, "pid": 11},
+     "workspace": {"id": 2}, "pid": 10, "focusHistoryID": 0},
+    {"address": "0xcd34", "mapped": True, "class": "foot", "title": "~", "workspace": {"id": 1}, "pid": 11, "focusHistoryID": 3},
     {"address": "0xdead", "mapped": False, "class": "ghost", "title": "unmapped", "workspace": {"id": 1}},
     {"address": "not-hex", "mapped": True, "class": "evil", "workspace": {"id": 1}},
     {"address": "0xbeef", "mapped": True, "class": "", "title": "no app id", "workspace": {"id": 1}},
@@ -40,6 +40,10 @@ class WindowTests(unittest.TestCase):
         self.assertEqual([w["class"] for w in result], ["foot", "firefox"])
         self.assertTrue(result[1]["focused"])
         self.assertEqual(result[1]["title"], "Docs, drafts")
+
+    def test_recency_comes_from_focus_history(self):
+        by_class = {w["class"]: w["recency"] for w in windows.clients()}
+        self.assertEqual(by_class, {"firefox": 0, "foot": 3})
 
     def test_focus_sends_fixed_arguments_for_known_window(self):
         with patch("prismos.windows.run", side_effect=fake_run) as run:

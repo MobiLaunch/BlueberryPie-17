@@ -43,6 +43,19 @@ hl.bind("SUPER + RETURN", hl.dsp.exec_cmd("foot"))
 hl.bind("SUPER + E", hl.dsp.exec_cmd("prism-shell ipc files"))
 hl.bind("SUPER + L", hl.dsp.exec_cmd("prismctl action lock"))
 hl.bind("SUPER + SHIFT + Q", hl.dsp.window.close())
+hl.bind("SUPER + TAB", hl.dsp.exec_cmd("prism-shell ipc recents"))
+-- Hardware keys. Wrapped in pcall so a bind option this Hyprland build does not
+-- understand can never abort the rest of the session configuration.
+local function key_bind(keys, command, options)
+    pcall(hl.bind, keys, hl.dsp.exec_cmd(command), options)
+end
+local held = { locked = true, repeating = true }
+key_bind("XF86AudioRaiseVolume", "prismctl action volume-up", held)
+key_bind("XF86AudioLowerVolume", "prismctl action volume-down", held)
+key_bind("XF86AudioMute", "prismctl action mute", { locked = true })
+key_bind("XF86AudioMicMute", "prismctl action microphone-mute", { locked = true })
+key_bind("XF86MonBrightnessUp", "prismctl action brightness-up", held)
+key_bind("XF86MonBrightnessDown", "prismctl action brightness-down", held)
 hl.on("hyprland.start", function()
     hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP")
     hl.exec_cmd("/usr/lib/polkit-kde-authentication-agent-1")

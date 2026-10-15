@@ -135,6 +135,15 @@ def action(name, value=None):
         run(["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", f"{percentage(value)}%"])
     elif name == "brightness":
         run(["brightnessctl", "-c", "backlight", "set", f"{percentage(value, 1)}%"])
+    elif name == "volume-up":
+        run(["wpctl", "set-volume", "-l", "1", "@DEFAULT_AUDIO_SINK@", "5%+"])
+    elif name == "volume-down":
+        run(["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", "5%-"])
+    elif name == "brightness-up":
+        run(["brightnessctl", "-c", "backlight", "set", "5%+"])
+    elif name == "brightness-down":
+        # Never step to a black screen: keep at least 1% so the display stays usable.
+        run(["brightnessctl", "-c", "backlight", "--min-value=1", "set", "5%-"])
     elif name == "mute":
         run(["wpctl", "set-mute", "@DEFAULT_AUDIO_SINK@", "toggle"])
     elif name == "microphone-mute":

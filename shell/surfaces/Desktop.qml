@@ -34,10 +34,16 @@ Scope {
     FirstRun {
         screen: root.screen
     }
+    Recents {
+        screen: root.screen
+    }
     LaunchSplash {
         screen: root.screen
     }
     PowerMenu {
+        screen: root.screen
+    }
+    HeadsUp {
         screen: root.screen
     }
     Toast {

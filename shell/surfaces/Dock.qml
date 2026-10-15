@@ -90,6 +90,15 @@ PanelWindow {
                 }
                 IconButton {
                     anchors.verticalCenter: parent.verticalCenter
+                    symbol: "recents"
+                    variant: "tonal"
+                    implicitWidth: 48
+                    implicitHeight: 48
+                    Accessible.name: "Recent apps"
+                    onClicked: ShellState.toggleRecents(root.screen)
+                }
+                IconButton {
+                    anchors.verticalCenter: parent.verticalCenter
                     symbol: "folder"
                     variant: "tonal"
                     implicitWidth: 48

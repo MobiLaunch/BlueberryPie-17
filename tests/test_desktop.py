@@ -128,3 +128,24 @@ class AboutTests(unittest.TestCase):
         self.assertEqual(result["cpu"], "")
         self.assertIsNone(result["memory_gib"])
         self.assertIsNone(result["uptime_seconds"])
+
+
+class HardwareKeyTests(unittest.TestCase):
+    @patch("prismos.system.run", return_value="")
+    def test_media_key_actions_map_to_fixed_commands(self, run):
+        expected = {
+            "volume-up": ["wpctl", "set-volume", "-l", "1", "@DEFAULT_AUDIO_SINK@", "5%+"],
+            "volume-down": ["wpctl", "set-volume", "@DEFAULT_AUDIO_SINK@", "5%-"],
+            "brightness-up": ["brightnessctl", "-c", "backlight", "set", "5%+"],
+            "brightness-down": ["brightnessctl", "-c", "backlight", "--min-value=1", "set", "5%-"],
+        }
+        for name, command in expected.items():
+            with self.subTest(action=name):
+                run.reset_mock()
+                self.assertEqual(system.action(name), {"ok": True, "action": name})
+                run.assert_called_once_with(command)
+
+    @patch("prismos.system.run")
+    def test_step_actions_take_no_caller_value(self, run):
+        system.action("volume-up", "999; reboot")
+        self.assertNotIn("999; reboot", " ".join(run.call_args.args[0]))

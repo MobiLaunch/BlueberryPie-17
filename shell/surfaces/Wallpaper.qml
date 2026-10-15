@@ -19,7 +19,7 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: WlrLayer.Background
     WlrLayershell.namespace: "prism-wallpaper"
-    color: Theme.dark ? "#211b2d" : "#e8dff4"
+    color: Theme.primaryContainer
     Timer {
         interval: 1000
         running: true
@@ -29,11 +29,8 @@ PanelWindow {
             root.dateText = Qt.formatDate(new Date(), "dddd, MMMM d");
         }
     }
-    Image {
+    WallpaperArt {
         anchors.fill: parent
-        source: Quickshell.shellPath("../design/wallpaper.svg")
-        fillMode: Image.PreserveAspectCrop
-        opacity: Theme.dark ? .5 : 1
     }
     // Touchscreen gesture zone on *empty wallpaper* only. This does not
     // steal swipes from regular app windows, app toolbars or Quick Settings.

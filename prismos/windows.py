@@ -34,11 +34,12 @@ def clients():
         try:
             workspace_id = int(workspace.get("id", 0))
             pid = int(item.get("pid", 0))
+            recency = int(item.get("focusHistoryID", 999))  # 0 is the most recently focused
         except (TypeError, ValueError):
-            workspace_id, pid = 0, 0
+            workspace_id, pid, recency = 0, 0, 999
         result.append({"address": address.lower(), "class": app_class,
                        "title": str(item.get("title") or "")[:200],
-                       "workspace": workspace_id, "pid": pid,
+                       "workspace": workspace_id, "pid": pid, "recency": recency,
                        "focused": address == focused,
                        "hidden": bool(item.get("hidden", False))})
     result.sort(key=lambda window: (window["workspace"], window["class"].casefold(), window["address"]))

@@ -36,17 +36,28 @@ QtObject {
                 const oldest = current.find(item => item !== notification && item.urgency !== NotificationUrgency.Critical) || current[0];
                 oldest.dismiss();
             }
-            if (!SystemBridge.snapshot.settings.dnd) {
-                ShellState.toast = notification.summary;
-                clearToast.restart();
+            // Banner unless Do Not Disturb is on; important ones always break through.
+            if (!SystemBridge.snapshot.settings.dnd || notification.urgency === NotificationUrgency.Critical) {
+                root.headsUp = notification;
+                headsUpTimer.interval = notification.urgency === NotificationUrgency.Critical ? 12000 : 6000;
+                headsUpTimer.restart();
             }
         }
     }
-    property Timer clearToast: Timer {
-        interval: 5000
-        onTriggered: ShellState.toast = ""
+    // The notification currently shown as a banner, or null.
+    property var headsUp: null
+    property Timer headsUpTimer: Timer {
+        onTriggered: root.headsUp = null
+    }
+    property Connections headsUpWatch: Connections {
+        target: root.headsUp
+        ignoreUnknownSignals: true
+        function onClosed() {
+            root.headsUp = null;
+        }
     }
     function clear() {
+        headsUp = null;
         // Copy before dismissing: trackedNotifications changes during iteration.
         const items = server.trackedNotifications.values.slice();
         items.forEach(item => item.dismiss());
