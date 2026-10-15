@@ -99,6 +99,7 @@ HARDWARE = real compositor/device testing still required, GAP = missing.
   (an `onX` property naming collision made default text black in Qt 6.12).
 - UI: the harness-detected defects (clipped labels, 62 px dock overflow, black text in
   dark mode, glyph icons) are fixed and covered by tests that scan the live item tree.
-- Open: Recents thumbnails (needs screencopy), Quick Settings edit/reorder, wallpaper
-  picker, notification history persistence, on-screen keyboard and accessibility
+- Wallpaper picker (home pictures, accent extraction) is SOURCE / QA; videos, folders
+  outside `~/Pictures`, and per-monitor wallpapers are not supported.
+- Open: Recents thumbnails (needs screencopy), Quick Settings edit/reorder, notification history persistence, on-screen keyboard and accessibility
   settings, and every hardware or compositor check listed in `docs/VALIDATION.md`.

@@ -11,3 +11,4 @@ singleton InputState 1.0 InputState.qml
 singleton DisplayState 1.0 DisplayState.qml
 singleton Windows 1.0 Windows.qml
 singleton AboutState 1.0 AboutState.qml
+singleton WallpaperState 1.0 WallpaperState.qml

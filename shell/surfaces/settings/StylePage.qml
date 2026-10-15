@@ -27,6 +27,7 @@ SettingsPage {
     ]
     readonly property string seed: SystemBridge.snapshot.settings.seed || "#8469cf"
     property string customError: ""
+    Component.onCompleted: WallpaperState.refresh()
     // A live miniature of the home screen, painted with the current roles.
     Rectangle {
         width: parent.width
@@ -125,6 +126,54 @@ SettingsPage {
             height: 28
             radius: 14
             color: Theme.surfaceContainer
+        }
+    }
+    SettingsGroup {
+        width: parent.width
+        title: "Wallpaper"
+        Rectangle {
+            width: parent.width
+            height: 160
+            radius: Theme.shape.extraLarge - 4
+            color: Theme.surfaceContainer
+            property bool interactive: false
+            Flickable {
+                id: papers
+                anchors.fill: parent
+                anchors.margins: 14
+                contentWidth: paperRow.implicitWidth
+                clip: true
+                boundsBehavior: Flickable.StopAtBounds
+                Row {
+                    id: paperRow
+                    spacing: 12
+                    PaperTile {
+                        title: "Material"
+                        current: WallpaperState.current === ""
+                        onPicked: WallpaperState.clear()
+                    }
+                    Repeater {
+                        model: WallpaperState.items
+                        delegate: PaperTile {
+                            required property var modelData
+                            title: modelData.name
+                            preview: modelData.thumbnail
+                            current: WallpaperState.current === modelData.path
+                            onPicked: WallpaperState.choose(modelData.path)
+                        }
+                    }
+                }
+            }
+        }
+        Label {
+            width: parent.width
+            leftPadding: 16
+            rightPadding: 16
+            visible: WallpaperState.error.length > 0 || WallpaperState.items.length === 0
+            text: WallpaperState.error || "Put pictures in ~/Pictures/Wallpapers to choose them here. Your colors follow the picture you pick."
+            role: "bodySmall"
+            color: WallpaperState.error ? Theme.error : Theme.surfaceVariantInk
+            wrapMode: Text.WordWrap
         }
     }
     SettingsGroup {

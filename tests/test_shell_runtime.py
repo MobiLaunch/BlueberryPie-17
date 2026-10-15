@@ -195,6 +195,35 @@ class ShellRuntimeTests(unittest.TestCase):
         verdicts = [m for m in harness.messages if "PRISM_NATIVE_SMOKE" in m]
         self.assertEqual(verdicts, ["PRISM_NATIVE_SMOKE_OK"])
 
+    def test_choosing_a_wallpaper_sets_the_picture_and_recolors_the_shell(self):
+        import tempfile
+        from PIL import Image
+        home = tempfile.TemporaryDirectory()
+        self.addCleanup(home.cleanup)
+        folder = Path(home.name) / "Pictures" / "Wallpapers"
+        folder.mkdir(parents=True)
+        Image.new("RGB", (320, 180), (71, 132, 106)).save(folder / "Forest.png")
+        harness = Harness(files_home=home.name)
+        self.addCleanup(harness.close)
+        harness.write_settings(onboarding_complete=True)
+        harness.load()
+        harness.pump(1500)
+        harness.ipc("settings")
+        harness.pump(500)
+        row = harness.find("section-style")
+        harness.reveal(row)
+        harness.click(*harness.scene_pos(row))
+        self.assertTrue(harness.wait_for(lambda: any(
+            i.metaObject().className().startswith("PaperTile") and i.property("title") == "Forest"
+            for i in harness.visible_items()), 6000))
+        tile = next(i for i in harness.visible_items()
+                    if i.metaObject().className().startswith("PaperTile") and i.property("title") == "Forest")
+        harness.click(*harness.scene_pos(tile))
+        from prismos import settings
+        self.assertTrue(harness.wait_for(lambda: settings.load()["wallpaper"].endswith("Forest.png"), 6000))
+        self.assertEqual(settings.load()["seed"], "#47846a")
+        self.assertEqual(harness.problems(), [])
+
     def test_every_surface_opens_without_qml_errors(self):
         harness = self.boot()
         for surface in SURFACES:

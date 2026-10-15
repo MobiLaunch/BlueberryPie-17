@@ -33,6 +33,9 @@ ISO and hardware qualification have not been completed in this release.
   and About (real system facts).
 - **Launcher** with ranked search, categories and recents; **dock** with running-app
   indicators and window cycling; **Recents** overview (Super + Tab).
+- **Wallpaper picker**: choose any PNG/JPEG/WebP from `~/Pictures` (home folder only);
+  the whole shell recolors from the picture's accent. The default wallpaper is drawn
+  from the current palette.
 - **Hardware keys**: volume, mute, microphone mute and brightness bind to fixed actions.
 - **Verification**: `tests/test_shell_runtime.py` loads the real shell QML offscreen with
   stub Quickshell modules; it needs PySide6 and is skipped when unavailable.
@@ -180,8 +183,8 @@ when upgrading. Native hardware qualification remains open.
 ```
 
 Wallpaper sampling changes the shell palette. The default wallpaper is drawn from the
-current color roles, so it follows the palette and dark mode; a wallpaper picker is
-planned. Color uses a CAM16/HCT Tonal Spot implementation validated against
+current color roles, so it follows the palette and dark mode; Settings > Wallpaper &
+style picks pictures from `~/Pictures`. Color uses a CAM16/HCT Tonal Spot implementation validated against
 published Material values; it is not Google's Monet service, and wallpaper seed
 scoring is a simplified version of Material's. Third-party Linux applications retain
 their own themes in this milestone.

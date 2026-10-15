@@ -92,6 +92,6 @@ supported system controls. The v0.4 native shell includes power/session actions,
 tray, MPRIS, inline wireless selection/passwords and sound-device controls.
 Output and microphone tabs keep the sound surface compact on narrow screens.
 PIN pairing uses Blueman and
-advanced network configuration uses NetworkManager's editor. A wallpaper picker and actual app-surface morphs remain planned. The preview has
+advanced network configuration uses NetworkManager's editor. Actual app-surface morphs remain planned. The preview has
 not been rebuilt to match the v0.9 dual shade and Settings app; it shares tokens and
 icons with the native shell but is otherwise the v0.8 review aid.

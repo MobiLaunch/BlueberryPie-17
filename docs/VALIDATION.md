@@ -11,7 +11,7 @@ compositor. **It is an approximation, not Quickshell or Hyprland qualification.*
 
 | Check | Result |
 | --- | --- |
-| `scripts/check.sh` (Python suites, shell syntax, Node specs, QML syntax) | 178 tests passed; 0 skipped with Qt, Lua and Pillow present |
+| `scripts/check.sh` (Python suites, shell syntax, Node specs, QML syntax) | 186 tests passed; 0 skipped with Qt, Lua and Pillow present (on a bare host the runtime and Lua tests skip) |
 | HCT color engine against published Material Tonal Spot values (seed `#6750A4`) | Roles matched the reference scheme within 2/255 per channel; tone round-trips within 0.6 L* |
 | Contrast pairs (primary, containers, error, surface, inverse; 6 seeds × light/dark) | All ≥ 4.5:1 |
 | Real shell QML under the harness | Loads with zero QML errors; every surface (Quick Settings, launcher, Settings, Files, Store, power, Recents, first run) opens without errors |
@@ -19,6 +19,7 @@ compositor. **It is an approximation, not Quickshell or Hyprland qualification.*
 | Settings: all 11 sections loaded by clicking their rows | No errors, no elided text |
 | First-run wizard clicked through to completion | `prismctl welcome finish` ran; `onboarding_complete` persisted |
 | Notifications: grouping, swipe-target, dismiss, banner, Do Not Disturb, critical break-through | Pass |
+| Wallpaper picker: list, choose, accent extraction, path/symlink/size rejection | Pass (adapter tests and a clicked-through runtime test) |
 | Dark theme legibility | Ink roles resolve to scheme values; dark surface is dark, text is light |
 | `tests/native-smoke.qml` (the fixture CI runs on real Quickshell) | `PRISM_NATIVE_SMOKE_OK` under stub modules |
 | `config/hypr/hyprland.lua` | Lua 5.4 parse; executed against a mock `hl`; every bind checked against the shell IPC and `prism-shell` allowlist |

@@ -89,7 +89,7 @@ The list below retains the full acceptance scope.
    app-close animation; validate slow launches, already-running apps and errors.
 5. Add touch drag physics, dismiss gestures and desktop-friendly overscroll.
 6. Replace initial tonal generator with a licensed Material HCT adapter.
-7. Add wallpaper picker/extraction, themed symbolic icons and font variants.
+7. Themed symbolic icons and font variants (a wallpaper picker with accent extraction shipped in v0.9).
 
 **Gate:** reference comparisons and slow-motion recordings. "Exact" is a measured
 acceptance target, not a claim about the first prototype.
@@ -158,9 +158,9 @@ review large file transfers, media indexing and hotplug behavior.
 - Status bar with live status, running-app dock, ranked launcher, Recents (Super + Tab).
 - Settings app (11 sections incl. About and Shortcuts), restyled Files, Store, power
   menu and first-run wizard; theme-following wallpaper; refreshed lock screen.
-- Hardware volume/brightness/mute keys; offscreen QML runtime harness.
+- Wallpaper picker with accent extraction; hardware volume/brightness/mute keys; offscreen QML runtime harness.
 
 Follow-on acceptance: run the packaged session on real Arch + Hyprland hardware,
 verify `hyprctl` focus/close and hardware-key binds, then M2 reference measurements
-(Pixel SystemUI proportions), Recents thumbnails, tile edit/reorder, a wallpaper picker,
+(Pixel SystemUI proportions), Recents thumbnails, tile edit/reorder,
 other Material scheme variants and per-app notification controls.

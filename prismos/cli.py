@@ -2,7 +2,7 @@ import argparse
 import json
 import sys
 
-from . import about, android, apps, audio, displays, drives, favorites, fdroid, files, inputs, settings, store, system, theme, windows, wireless
+from . import about, android, apps, audio, displays, drives, favorites, fdroid, files, inputs, settings, store, system, theme, wallpaper, windows, wireless
 
 
 def main(argv=None):
@@ -11,6 +11,9 @@ def main(argv=None):
     sub.add_parser("status")
     sub.add_parser("apps")
     sub.add_parser("about")
+    paper = sub.add_parser("wallpaper")
+    paper.add_argument("operation", choices=("list", "set", "clear"))
+    paper.add_argument("path", nargs="?")
     win = sub.add_parser("windows")
     win.add_argument("operation", choices=("list", "focus", "close"))
     win.add_argument("address", nargs="?")
@@ -77,6 +80,9 @@ def main(argv=None):
             result = system.status()
         elif args.command == "apps":
             result = apps.entries()
+        elif args.command == "wallpaper":
+            result = (wallpaper.status() if args.operation == "list" else
+                      wallpaper.clear() if args.operation == "clear" else wallpaper.choose(args.path))
         elif args.command == "about":
             result = about.info()
         elif args.command == "windows":

@@ -29,8 +29,41 @@ PanelWindow {
             root.dateText = Qt.formatDate(new Date(), "dddd, MMMM d");
         }
     }
+    readonly property string photoPath: SystemBridge.snapshot.settings.wallpaper || ""
+    readonly property bool photo: photoPath.length > 0 && photoImage.status === Image.Ready
+    readonly property color ink: photo ? "#ffffff" : Theme.wallpaperInk
     WallpaperArt {
         anchors.fill: parent
+        visible: !root.photo
+    }
+    Image {
+        id: photoImage
+        anchors.fill: parent
+        source: WallpaperState.fileUrl(root.photoPath)
+        asynchronous: true
+        fillMode: Image.PreserveAspectCrop
+        sourceSize.width: root.width
+        sourceSize.height: root.height
+        visible: status === Image.Ready
+    }
+    // Keeps the clock readable over any picture; dims further in dark theme.
+    Rectangle {
+        anchors.fill: parent
+        visible: root.photo
+        gradient: Gradient {
+            GradientStop {
+                position: 0
+                color: Theme.withAlpha("#000000", Theme.dark ? 0.55 : 0.38)
+            }
+            GradientStop {
+                position: 0.6
+                color: Theme.withAlpha("#000000", Theme.dark ? 0.25 : 0.05)
+            }
+            GradientStop {
+                position: 1
+                color: Theme.withAlpha("#000000", Theme.dark ? 0.35 : 0.0)
+            }
+        }
     }
     // Touchscreen gesture zone on *empty wallpaper* only. This does not
     // steal swipes from regular app windows, app toolbars or Quick Settings.
@@ -100,19 +133,19 @@ PanelWindow {
         Label {
             text: root.dateText
             role: "titleLarge"
-            color: Theme.wallpaperInk
+            color: root.ink
         }
         Label {
             text: root.timeText
             font.pixelSize: Math.min(130, root.width * .12)
             font.weight: Font.Black
             font.letterSpacing: -6
-            color: Theme.wallpaperInk
+            color: root.ink
         }
         Label {
             text: "A little more you."
             role: "titleMedium"
-            color: Theme.wallpaperInk
+            color: root.ink
         }
     }
 }
