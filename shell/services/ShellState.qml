@@ -9,6 +9,8 @@ QtObject {
     property var activeScreen: Quickshell.screens.length ? Quickshell.screens[0] : null
     property bool onboardingOpen: false
     property bool installerOpen: false
+    property bool utilitiesOpen: false
+    property string utilitiesTab: "calculator"
     property bool firstRunChecked: false
     property bool shadeOpen: false
     property bool drawerOpen: false
@@ -54,6 +56,7 @@ QtObject {
         storeOpen = false;
         filesOpen = false;
         recentsOpen = false;
+        utilitiesOpen = false;
     }
     function cancelLaunch() {
         launching = null;
@@ -115,6 +118,15 @@ QtObject {
         activeScreen = screen || focusedScreen();
         InstallerState.open();
         installerOpen = true;
+    }
+    function openUtilities(screen, tab) {
+        const same = utilitiesOpen && activeScreen === screen && utilitiesTab === tab;
+        close();
+        if (same)
+            return;
+        activeScreen = screen || focusedScreen();
+        utilitiesTab = tab || "calculator";
+        utilitiesOpen = true;
     }
     function openSettings(screen, page) {
         close();

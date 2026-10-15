@@ -1,4 +1,27 @@
-# Validation record — 2026-10-15 (v0.9 + window management, widgets, installer)
+# Validation record — 2026-10-15 (v0.9 + window management, widgets, installer, round two)
+
+## Addendum: round two (schemes, tiles, screenshots, notifications, utilities)
+
+### Executed
+
+| Check | Result |
+| --- | --- |
+| `scripts/check.sh` | 308 Python tests passed, 0 skipped; Node specs (including the new calculator parser spec) passed; `qmlformat` accepted all QML files |
+| Color schemes | Contrast ≥ 4.5:1 for nine role pairs × 5 schemes × 8 seeds × light/dark; monochrome stays gray; invalid scheme names refused |
+| Text size at Largest | Every surface and Settings section opened with no QML errors or elided text (this found and fixed truncation in Quick Settings tiles and the Settings sidebar) |
+| Tile editor, mute, screenshot tile | Clicked through the offscreen shell; tile layout persisted by `prismctl tiles`; muted app dropped, critical alert shown; the screenshot tile ran `prismctl screenshot area` |
+| Airplane, Battery Saver, Night Light, screenshots | Adapters tested with mocked `nmcli`, `bluetoothctl`, `powerprofilesctl`, `hyprctl hyprsunset`, `grim`, `slurp` (argv lists, region pattern, failure does not persist state) |
+| Calculator | Parser spec (precedence, functions, errors, hostile text never executed) and a typed/clicked session in the shell |
+| Timer / stopwatch | Countdown, finish toast, laps and pause stability in the shell |
+
+### Not executed
+
+- Real `grim`/`slurp`/`wl-copy`, `hyprsunset`, `powerprofilesctl` and rfkill-style radio toggles on hardware.
+- `hyprctl hyprsunset ...` IPC names and the `Print` binds under Hyprland 0.56 with a Lua config.
+- Notification muting against real clients (a stub server only).
+- Timer sound and alarms do not exist yet.
+
+## Previous addendum — 2026-10-15 (v0.9 + window management, widgets, installer)
 
 ## Addendum: window controls, desktop widgets, disk installer
 

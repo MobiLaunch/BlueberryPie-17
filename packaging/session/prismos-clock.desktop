@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Clock
+Comment=Timer and stopwatch
+Exec=prism-shell ipc clock
+Icon=preferences-system-time
+Categories=Utility;
+Keywords=clock;timer;stopwatch;alarm;
+OnlyShowIn=PrismOS;
+StartupNotify=false
+Terminal=false

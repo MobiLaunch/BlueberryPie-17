@@ -17,6 +17,10 @@ HARDWARE = real compositor/device testing still required, GAP = missing.
 | Window caption controls, snap, minimize / restore, float | SOURCE / QA | `hyprctl dispatch` names and `special:minimized` unverified on Hyprland 0.56 Lua; snap math assumes the monitor's reserved area |
 | Desktop widgets (glance, clock, search, calendar, system, analog, media, weather) | SOURCE / QA | classic-style original designs; weather network path and layout on real monitors unverified |
 | Disk installer wizard + polkit helper | SOURCE / QA | never run on a disk; needs UEFI/BIOS VM and hardware passes (`docs/INSTALLER.md`) |
+| Color schemes (5) and text size | SOURCE / QA | Vibrant/Expressive hues approximate Material's tables |
+| Quick Settings tile editor; airplane, battery saver, night light, screenshot, lock tiles | SOURCE / QA | needs power-profiles-daemon, hyprsunset, grim/slurp on hardware |
+| Per-app notification mute | SOURCE / QA | real notification clients |
+| Calculator, timer, stopwatch | SOURCE / QA | no alarms; timer has no sound |
 | Recents overview (windows via hyprctl) | SOURCE / QA | verify focus/close dispatch on Hyprland 0.56 Lua; no thumbnails yet |
 | Heads-up banners and grouped swipe-dismiss shade | SOURCE / QA | real notification clients, long text, many apps |
 | Settings app (11 sections) | SOURCE / QA | real adapters on hardware; per-app notification controls missing |

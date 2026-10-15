@@ -176,3 +176,11 @@ other Material scheme variants and per-app notification controls.
 Follow-on acceptance: run all three on Arch + Hyprland; install into UEFI and BIOS VMs and
 on hardware; measure caption-control hit areas against the reference; add resizable
 widgets, thumbnails in Recents, an offline install mode and a published package repository.
+
+## Round two (development slice)
+
+- Five Material color schemes, a four-step text size, Quick Settings tile editor and five more tiles.
+- Screenshot adapter and keys, per-app notification mute, calculator/timer/stopwatch panel.
+
+Still open from the M2 list: Recents thumbnails (needs a screencopy path), per-tile detail panels,
+bit-exact Vibrant/Expressive hue tables, alarms, and measurements against the reference.

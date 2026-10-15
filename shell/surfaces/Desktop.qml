@@ -28,6 +28,9 @@ Scope {
     Files {
         screen: root.screen
     }
+    Utilities {
+        screen: root.screen
+    }
     Settings {
         screen: root.screen
     }

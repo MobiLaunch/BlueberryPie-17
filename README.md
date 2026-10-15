@@ -57,6 +57,23 @@ ISO and hardware qualification have not been completed in this release.
   to one whole disk after a typed confirmation and runs the root work through a
   polkit-protected helper. It is **unrun on real disks**; try it in a VM first.
 
+### Round two: schemes, tiles, screenshots and utilities
+
+- **Color schemes** (Settings → Wallpaper & style): Tonal Spot, Vibrant, Expressive, Neutral and
+  Monochrome, with contrast tested for every role pair. Vibrant and Expressive use fixed
+  hue offsets rather than Material's lookup tables, so they are close, not bit-exact.
+- **Text size**: Small, Default, Large and Largest scale the whole type scale; Quick Settings
+  tiles and the Settings sidebar adapt so nothing is elided.
+- **Quick Settings tiles**: Airplane mode, Battery Saver (power-profiles-daemon), Night Light
+  (hyprsunset), Screenshot and Lock screen, plus a pencil-activated editor to show, hide and
+  reorder tiles.
+- **Screenshots**: `Print` (area) and `Shift + Print` (full screen) via grim/slurp, saved to
+  `~/Pictures/Screenshots` and copied to the clipboard.
+- **Notifications**: mute individual apps in Settings → Notifications (critical alerts still
+  break through).
+- **Calculator, timer and stopwatch** in one panel: `Super + C`, the launcher, or
+  `prism-shell ipc calculator|clock`. The calculator is a hand-written parser (no `eval`).
+
 ## Build the ISO on Windows
 
 See **[Windows build instructions](docs/WINDOWS-ISO.md)** for the

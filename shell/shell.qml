@@ -40,6 +40,12 @@ ShellRoot {
         function screenshotFull(): void {
             ShellState.screenshot("full");
         }
+        function calculator(): void {
+            ShellState.openUtilities(ShellState.focusedScreen(), "calculator");
+        }
+        function clock(): void {
+            ShellState.openUtilities(ShellState.focusedScreen(), "timer");
+        }
         function recents(): void {
             ShellState.toggleRecents(ShellState.focusedScreen());
         }

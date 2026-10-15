@@ -29,5 +29,7 @@ package() {
     install -Dm755 bin/prism-session "${pkgdir}/usr/bin/prism-session"
     install -Dm644 packaging/session/prismos.desktop "${pkgdir}/usr/share/wayland-sessions/prismos.desktop"
     install -Dm644 packaging/session/prismos-files.desktop "${pkgdir}/usr/share/applications/prismos-files.desktop"
+    install -Dm644 packaging/session/prismos-calculator.desktop "${pkgdir}/usr/share/applications/prismos-calculator.desktop"
+    install -Dm644 packaging/session/prismos-clock.desktop "${pkgdir}/usr/share/applications/prismos-clock.desktop"
     install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
 }

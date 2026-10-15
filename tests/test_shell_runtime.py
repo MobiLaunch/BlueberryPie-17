@@ -19,7 +19,7 @@ except ImportError as error:  # PySide6 or its system libraries are absent
 else:
     SKIP_REASON = ""
 
-SURFACES = ("shade", "launcher", "settings", "files", "store", "power", "recents")
+SURFACES = ("shade", "launcher", "settings", "files", "store", "power", "recents", "calculator", "clock")
 SECTIONS = ("network", "bluetooth", "display", "sound", "notifications", "style", "widgets", "input", "shortcuts", "apps", "power", "about")
 WINDOWS = ('Windows.available = true; Windows.list = ['
            '{address:"0xaa01", class:"firefox", title:"Docs", workspace:1, pid:1, recency:0, focused:true, hidden:false},'
@@ -238,6 +238,64 @@ class ShellRuntimeTests(unittest.TestCase):
         harness.click(*harness.scene_pos(app))
         self.assertTrue(harness.wait_for(lambda: settings.load()["muted_apps"] == ["Chat"], 6000))
         self.assertEqual(harness.truncated_texts(), [])
+        self.assertEqual(harness.problems(), [])
+
+    def test_calculator_types_evaluates_and_rejects_bad_input(self):
+        from PySide6.QtTest import QTest
+        harness = self.boot()
+        harness.ipc("calculator")
+        harness.pump(500)
+        field = next(item for item in harness.visible_items()
+                     if "TextField" in item.metaObject().className() and item.property("placeholderText") == "0")
+        self.assertTrue(field.property("activeFocus"), "the expression field takes focus")
+        for character in "2+3*4":
+            QTest.keyClick(harness.view, character)
+        harness.pump(150)
+        texts = lambda: {str(item.property("text")) for item in harness.visible_items() if item.property("text")}
+        self.assertIn("= 14", texts())
+
+        def key(label):
+            button = next(item for item in harness.visible_items()
+                          if item.metaObject().className().startswith(("PillButton", "FilterChip")) and item.property("text") == label)
+            harness.click(*harness.scene_pos(button))
+            harness.pump(120)
+        key("=")
+        self.assertEqual(field.property("text"), "14")
+        key("÷"); key("0"); key("=")
+        self.assertIn("Can't divide by zero", texts())
+        key("C")
+        for character in "process.exit()":
+            QTest.keyClick(harness.view, character)
+        key("=")
+        self.assertTrue(any(word in text for text in texts() for word in ("Unknown", "Unexpected", "Check the number")))
+        key("C")
+        key("Scientific")
+        key("√"); key("9"); key("( )")
+        harness.pump(150)
+        self.assertEqual(harness.truncated_texts(), [])
+        self.assertEqual(harness.problems(), [])
+
+    def test_timer_counts_down_and_announces_and_stopwatch_laps(self):
+        harness = self.boot()
+        harness.ipc("clock")
+        harness.pump(500)
+        harness.eval("ClockState.setTimer(1)")
+        start = next(item for item in harness.visible_items()
+                     if item.metaObject().className().startswith("PillButton") and item.property("text") == "Start")
+        harness.click(*harness.scene_pos(start))
+        harness.pump(300)
+        self.assertEqual(harness.eval_value("ClockState.timerRunning"), "true")
+        self.assertTrue(harness.wait_for(lambda: harness.eval_value("ClockState.timerFinished") == "true", 4000))
+        self.assertEqual(harness.eval_value("ShellState.toast"), "Timer finished")
+        harness.eval("ClockState.startWatch(); ClockState.lap(); ClockState.lap()")
+        harness.pump(200)
+        self.assertEqual(harness.eval_value("ClockState.laps.length"), "2")
+        harness.eval("ClockState.stopWatch()")
+        elapsed = float(harness.eval_value("ClockState.watchElapsed"))
+        harness.pump(200)
+        self.assertEqual(float(harness.eval_value("ClockState.watchElapsed")), elapsed)
+        self.assertEqual(harness.eval_value("ClockState.clock(61000, false)"), "1:01")
+        self.assertEqual(harness.eval_value("ClockState.clock(3725120, true)"), "1:02:05.12")
         self.assertEqual(harness.problems(), [])
 
     def test_settings_search_filters_sections(self):
