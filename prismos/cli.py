@@ -21,11 +21,11 @@ class _Lazy:
         return getattr(self._module, attribute)
 
 
-(about, alarms, android, apps, audio, clipboard, clockset, notes, thumbnails, worldclock, displays, drives,
+(about, alarms, android, appinfo, apps, audio, clipboard, clockset, notes, thumbnails, worldclock, displays, drives,
  favorites, fdroid, files, inputs, installer, notifyprefs, hotspot, vpn, recorder, screenshot, settings, stats, storage, store,
  system, tiles, wallpaper, weather, websearch, widgets, windows, wireless) = (
     _Lazy(name) for name in (
-        "about", "alarms", "android", "apps", "audio", "clipboard", "clockset", "notes", "thumbnails",
+        "about", "alarms", "android", "appinfo", "apps", "audio", "clipboard", "clockset", "notes", "thumbnails",
         "worldclock", "displays", "drives", "favorites", "fdroid", "files", "inputs", "installer",
         "notifyprefs", "hotspot", "vpn", "recorder", "screenshot", "settings", "stats", "storage", "store", "system", "tiles",
         "wallpaper", "weather", "websearch", "widgets", "windows", "wireless"))
@@ -101,6 +101,9 @@ def main(argv=None):
     paper = sub.add_parser("wallpaper")
     paper.add_argument("operation", choices=("list", "set", "clear"))
     paper.add_argument("path", nargs="?")
+    appinfo_cmd = sub.add_parser("appinfo")
+    appinfo_cmd.add_argument("operation", choices=("info", "force-stop", "uninstall", "copy-command"))
+    appinfo_cmd.add_argument("desktop_id")
     win = sub.add_parser("windows")
     win.add_argument("operation", choices=("list",) + windowops.OPERATIONS)
     win.add_argument("address", nargs="?")
@@ -283,6 +286,9 @@ def main(argv=None):
             result = about.info()
         elif args.command == "storage":
             result = storage.usage() if args.operation == "usage" else storage.clear_previews()
+        elif args.command == "appinfo":
+            result = {"info": appinfo.info, "force-stop": appinfo.force_stop,
+                      "uninstall": appinfo.uninstall, "copy-command": appinfo.copy_command}[args.operation](args.desktop_id)
         elif args.command == "windows":
             result = (windows.status() if args.operation == "list"
                       else windows.dispatch(args.operation, args.address))

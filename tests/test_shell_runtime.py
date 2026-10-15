@@ -1633,6 +1633,68 @@ class ShellRuntimeTests(unittest.TestCase):
         self.assertEqual(settings.load()["seed"], "#47846a")
         self.assertEqual(harness.problems(), [])
 
+    def test_app_info_shows_status_stops_a_running_app_and_removes_a_user_flatpak(self):
+        import json
+        import os
+        import subprocess
+        from pathlib import Path
+        harness = Harness()
+        self.addCleanup(harness.close)
+        harness.add_desktop_entry("foot.desktop", "Foot", icon="foot", extra="StartupWMClass=foot\n")
+        exports = Path(os.environ["XDG_DATA_HOME"]) / "flatpak" / "exports" / "share" / "applications"
+        exports.mkdir(parents=True)
+        (exports / "org.example.Notes.desktop").write_text(
+            "[Desktop Entry]\nType=Application\nName=Notes\nExec=true\nIcon=notes\n")
+        harness.write_settings(onboarding_complete=True)
+        sleeper = subprocess.Popen(["sleep", "120"])
+        self.addCleanup(lambda: (sleeper.kill(), sleeper.wait()) if sleeper.poll() is None else None)
+        folder = Path(harness.sandbox) / "infobin"
+        folder.mkdir()
+        clients = Path(harness.sandbox) / "clients.json"
+        clients.write_text(json.dumps([{"address": "0xaa01", "mapped": True, "class": "foot", "title": "~",
+                                         "workspace": {"id": 1}, "pid": sleeper.pid}]))
+        installed = Path(harness.sandbox) / "flatpak-installed"
+        installed.write_text("yes")
+        (folder / "hyprctl").write_text(f"#!/bin/sh\ncase \"$2\" in clients) cat '{clients}';; *) echo '{{}}';; esac\n")
+        (folder / "flatpak").write_text(
+            "#!/bin/sh\n"
+            f"if [ \"$1\" = info ] && [ \"$2\" = --user ] && [ -e '{installed}' ]; then echo 'Version: 2.0'; exit 0; fi\n"
+            f"if [ \"$1\" = uninstall ] && [ \"$2\" = --user ]; then rm -f '{installed}'; exit 0; fi\n"
+            "echo 'not installed' >&2; exit 1\n")
+        for name in ("hyprctl", "flatpak"):
+            (folder / name).chmod(0o755)
+        os.environ["PATH"] = f"{folder}:{os.environ['PATH']}"
+        harness.load()
+        harness.pump(2000)
+        now = harness.eval_value
+
+        harness.eval('ShellState.openAppInfo({id: "foot.desktop", name: "Foot", icon: "foot"}, ShellState.focusedScreen())')
+        self.assertTrue(harness.wait_for(lambda: now("AppInfoState.loaded") == "true", 8000))
+        self.assertEqual(now("ShellState.appInfoOpen"), "true")
+        self.assertEqual(harness.find("appinfo-name").property("text"), "Foot")
+        self.assertIn("Running", str(harness.find("appinfo-row-0").property("supporting")))
+        self.assertFalse(harness.find("appinfo-uninstall").isVisible(), "system apps are never removed from here")
+        stop = harness.find("appinfo-force-stop")
+        self.assertTrue(stop.isEnabled())
+        harness.click(*harness.scene_pos(stop))
+        self.assertTrue(harness.wait_for(lambda: sleeper.poll() is not None, 8000))
+        self.assertEqual(harness.truncated_texts(), [])
+
+        harness.eval('ShellState.openAppInfo({id: "org.example.Notes.desktop", name: "Notes", icon: "notes"}, ShellState.focusedScreen())')
+        self.assertTrue(harness.wait_for(lambda: now("AppInfoState.loaded") == "true"
+                                         and now("AppInfoState.details.removable") == "true", 8000))
+        self.assertFalse(harness.find("appinfo-force-stop").isEnabled(), "nothing to stop when it is not running")
+        harness.click(*harness.scene_pos(harness.find("appinfo-uninstall")))
+        self.assertTrue(harness.wait_for(lambda: harness.find("appinfo-confirm").isVisible(), 3000))
+        self.assertTrue(installed.exists(), "asks first")
+        harness.click(*harness.scene_pos(harness.find("appinfo-confirm")))
+        self.assertTrue(harness.wait_for(lambda: not installed.exists(), 8000))
+        self.assertTrue(harness.wait_for(lambda: now("AppInfoState.gone") == "true", 8000))
+        self.assertEqual(harness.find("appinfo-status").property("text"), "Notes was removed")
+        harness.ipc("close")
+        self.assertEqual(now("ShellState.appInfoOpen"), "false")
+        self.assertEqual(harness.problems(), [])
+
     def test_every_surface_opens_without_qml_errors(self):
         harness = self.boot()
         for surface in SURFACES:

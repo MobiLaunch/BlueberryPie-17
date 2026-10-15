@@ -20,6 +20,7 @@ QtObject {
     // Text to prefill in the launcher search when it opens.
     property string launcherQuery: ""
     property bool powerOpen: false
+    property bool appInfoOpen: false
     property bool storeOpen: false
     property bool filesOpen: false
     property bool recentsOpen: false
@@ -66,6 +67,7 @@ QtObject {
         drawerOpen = false;
         settingsOpen = false;
         powerOpen = false;
+        appInfoOpen = false;
         storeOpen = false;
         filesOpen = false;
         recentsOpen = false;
@@ -214,6 +216,12 @@ QtObject {
         function onCaptured() {
             root.finishRecents();
         }
+    }
+    function openAppInfo(app, screen) {
+        close();
+        AppInfoState.open(app);
+        activeScreen = screen;
+        appInfoOpen = true;
     }
     function openPower(screen) {
         close();

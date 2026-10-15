@@ -194,6 +194,12 @@ One slice per gap an Android user notices first.
   top bar and stops the recording when pressed; a toast says where the file went. The shade closes first so
   it is not in the video, the recorder keeps running if the shell restarts, and stopping finishes the
   file properly.
+- **App info** (right-click an app in the dock or launcher → **App info**): shows whether the app is running,
+  where it came from (Flatpak, or the Arch package that owns it), its version and size. **Force stop** ends
+  only processes that own a window of that app, run as you and are not the shell, the compositor or a system
+  service: a polite stop first, then a hard one after two seconds. **Uninstall** is offered only for Flatpaks
+  installed for your user, after a confirmation; for system packages the page shows the exact
+  `sudo pacman -Rns ...` command with a **Copy command** button and never removes anything itself.
 
 ## Build the ISO on Windows
 

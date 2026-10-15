@@ -49,6 +49,9 @@ Scope {
     PowerMenu {
         screen: root.screen
     }
+    AppInfo {
+        screen: root.screen
+    }
     HeadsUp {
         screen: root.screen
     }

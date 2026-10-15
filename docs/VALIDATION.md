@@ -47,6 +47,19 @@
 
 - A real `wf-recorder` under Hyprland (portal and screencopy permissions, codecs, audio devices, large recordings, GPU load), and what happens to a recording if the session ends abruptly.
 
+### Slice 5: app info — executed
+
+| Check | Result |
+| --- | --- |
+| Adapter | Pacman apps show package, version and size plus a copyable `sudo pacman -Rns` command and are never uninstalled; a user Flatpak is removable with the fixed command `flatpak uninstall --user -y --noninteractive ID`; a system Flatpak only shows a command; unknown or malformed desktop IDs are refused before any command runs; running state matches windows by class like the dock |
+| Force stop | With real child processes: a polite one ends on SIGTERM, one that ignores SIGTERM is killed after the grace period; the shell, the bridge, PID 1, other users' processes, protected names and processes that no longer exist are never signalled; stopping an app that is not running is an error |
+| Copy | Only the generated command (never caller text) is written to `wl-copy`; nothing to copy for removable apps |
+| Shell | The page opens from the app menu, shows name, status and source rows, Force stop works against a real process through a fake `hyprctl`, a user Flatpak is removed only after the confirm step, a slow earlier read can no longer overwrite the page of the app opened next, no elided text |
+
+### Not executed (slice 5)
+
+- Real Hyprland window PIDs (Flatpak sandboxes report the sandbox's PID namespace, so force stop may not reach a sandboxed app), a real `flatpak uninstall` and `pacman -Qo/-Qi` output across versions and locales.
+
 ### Not executed (slice 2)
 
 - Real messengers: whether their notifications set the inline-reply capability and how they react to a reply or to a dismissal; the lock screen label in a real `hyprlock` (the config is only checked for structure).
