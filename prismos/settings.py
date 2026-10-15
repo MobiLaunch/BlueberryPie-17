@@ -12,6 +12,8 @@ from .theme import SCHEME_SPECS
 FONT_SCALES = (0.9, 1.0, 1.15, 1.3)
 TIME = re.compile(r"(?:[01]\d|2[0-3]):[0-5]\d\Z")
 MAX_ALARMS = 10
+RESIZABLE_WIDGETS = ("calendar", "weather", "system", "notes")
+WIDGET_SIZES = ("small", "medium", "large")
 NIGHT_TEMPS = (2500, 5500)
 MAX_WORLD_CLOCKS = 6
 
@@ -38,7 +40,7 @@ TILE_IDS = ("wifi", "bluetooth", "sound", "microphone", "dnd", "dark", "reduced_
             "airplane", "battery_saver", "night_light", "screenshot", "lock")
 WIDGET_IDS = ("glance", "clock", "search", "calendar", "media", "weather", "system", "analog", "notes")
 DEFAULTS = {"seed": "#8469cf", "dark": False, "reduced_motion": False, "dnd": False,
-            "favorites": None, "recent_apps": [], "wallpaper": "", "widgets": None, "weather": {}, "keyboard": "us", "night_temp": 3800, "recents_previews": True, "clock_24h": True, "world_clocks": [], "tiles": None, "alarms": [], "dnd_schedule": {"enabled": False, "start": "22:00", "end": "07:00"}, "clipboard_history": False, "muted_apps": [], "night_light": False, "scheme": "tonal_spot", "font_scale": 1.0, "android_enabled": False, "onboarding_complete": False,
+            "favorites": None, "recent_apps": [], "wallpaper": "", "widgets": None, "weather": {}, "keyboard": "us", "widget_sizes": {}, "night_temp": 3800, "recents_previews": True, "clock_24h": True, "world_clocks": [], "tiles": None, "alarms": [], "dnd_schedule": {"enabled": False, "start": "22:00", "end": "07:00"}, "clipboard_history": False, "muted_apps": [], "night_light": False, "scheme": "tonal_spot", "font_scale": 1.0, "android_enabled": False, "onboarding_complete": False,
             "natural_scroll": True, "tap_to_click": True,
             "pointer_speed": 0.0, "repeat_rate": 25, "display_scales": {}, "display_positions": {}}
 
@@ -93,6 +95,10 @@ def load():
         tiles = data.get("tiles")
         if isinstance(tiles, list):
             valid["tiles"] = [item for item in dict.fromkeys(tiles) if item in TILE_IDS]
+        sizes = data.get("widget_sizes")
+        if isinstance(sizes, dict):
+            valid["widget_sizes"] = {key: value for key, value in sizes.items()
+                                     if key in RESIZABLE_WIDGETS and value in WIDGET_SIZES}
         zones = data.get("world_clocks")
         if isinstance(zones, list):
             from .regional import timezones

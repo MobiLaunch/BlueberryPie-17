@@ -8,6 +8,7 @@ QtObject {
     property bool enabled: false
     property bool available: true
     property var items: []
+    property var pins: []
     property string error: ""
     property string lastAction: ""
     readonly property bool busy: reader.running || writer.running
@@ -33,6 +34,15 @@ QtObject {
     function clear() {
         run("clear");
     }
+    function pin(id) {
+        run("pin", [id]);
+    }
+    function unpin(pinId) {
+        run("unpin", [String(pinId)]);
+    }
+    function copyPin(pinId) {
+        run("copy-pin", [String(pinId)]);
+    }
     function setEnabled(on) {
         run(on ? "enable" : "disable");
     }
@@ -41,7 +51,9 @@ QtObject {
             error = data.error;
             return;
         }
-        if (data.enabled !== undefined) {
+        if (data.pins !== undefined)
+            pins = data.pins;
+        if (data.enabled !== undefined && lastAction !== "pin" && lastAction !== "unpin") {
             enabled = data.enabled === true;
             available = data.available !== false;
             items = data.items || [];
@@ -66,7 +78,7 @@ QtObject {
                     const data = JSON.parse(text);
                     if (data.ok === false)
                         root.error = data.error;
-                    else if (root.lastAction === "copy") {
+                    else if (root.lastAction === "copy" || root.lastAction === "copy-pin") {
                         ShellState.toast = "Copied to the clipboard";
                         ShellState.toastTimer.restart();
                     } else
@@ -76,7 +88,7 @@ QtObject {
                 }
             }
         }
-        onExited: if (root.lastAction !== "copy")
+        onExited: if (root.lastAction !== "copy" && root.lastAction !== "copy-pin")
             root.refresh()
     }
 }

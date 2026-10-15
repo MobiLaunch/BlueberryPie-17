@@ -93,6 +93,69 @@ class ActionTests(Isolated):
         run.assert_called_with(["cliphist", "wipe"], timeout=6)
 
 
+class PinTests(Isolated):
+    def setUp(self):
+        super().setUp()
+        patcher = patch.dict(os.environ, {"XDG_DATA_HOME": self.temp.name})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        settings.update(clipboard_history=True)
+
+    def run_for(self, decoded):
+        def fake(argv, timeout=4):
+            return LISTING if argv[:2] == ["cliphist", "list"] else decoded
+        return patch("prismos.clipboard.run", side_effect=fake)
+
+    def test_pin_copies_the_text_into_a_private_file_and_survives_clearing(self):
+        with self.run_for("hello world"):
+            result = self.call(["clipboard", "pin", "12"])[1]
+        self.assertEqual(result["pins"], [{"id": 1, "preview": "hello world"}])
+        from stat import S_IMODE
+        self.assertEqual(S_IMODE(clipboard.pins_path().stat().st_mode), 0o600)
+        with patch("prismos.clipboard.run", return_value=""):
+            clipboard.clear()
+        self.assertEqual(clipboard.status(items=False)["pins"][0]["id"], 1)
+
+    def test_duplicates_images_and_oversize_entries_are_not_pinned(self):
+        with self.run_for("hello world"):
+            self.call(["clipboard", "pin", "12"])
+            self.call(["clipboard", "pin", "12"])
+            self.assertEqual(len(clipboard.load_pins()), 1)
+            self.assertEqual(self.call(["clipboard", "pin", "11"])[0], 1)      # image
+            self.assertEqual(self.call(["clipboard", "pin", "999"])[0], 1)     # gone
+        with self.run_for("x" * (clipboard.PIN_MAX + 1)):
+            self.assertEqual(self.call(["clipboard", "pin", "10"])[0], 1)
+
+    def test_limit_and_unpin(self):
+        clipboard.save_pins([{"id": n, "text": f"t{n}"} for n in range(1, clipboard.PIN_LIMIT + 1)])
+        with self.run_for("brand new"):
+            self.assertEqual(self.call(["clipboard", "pin", "12"])[0], 1)
+        self.assertEqual(len(self.call(["clipboard", "unpin", "3"])[1]["pins"]), clipboard.PIN_LIMIT - 1)
+        for bad in ("x", "-1", "1;2"):
+            self.assertEqual(self.call(["clipboard", "unpin", bad])[0], 1, bad)
+
+    @patch("prismos.clipboard.subprocess.run", return_value=MagicMock(returncode=0))
+    def test_copy_pin_sends_the_text_on_stdin_to_wl_copy(self, run):
+        clipboard.save_pins([{"id": 4, "text": "line1\nline2"}])
+        self.call(["clipboard", "copy-pin", "4"])
+        self.assertEqual(run.call_args.args[0], ["wl-copy"])
+        self.assertEqual(run.call_args.kwargs["input"], b"line1\nline2")
+        self.assertEqual(self.call(["clipboard", "copy-pin", "9"])[0], 1)
+
+    def test_corrupt_pin_files_are_filtered(self):
+        clipboard.pins_path().parent.mkdir(parents=True, exist_ok=True)
+        clipboard.pins_path().write_text(json.dumps([{"id": 1, "text": "ok"}, {"id": "2", "text": "bad"}, {"id": 3, "text": ""},
+                                                     "junk", {"id": 4, "text": "x" * 5000}]))
+        self.assertEqual(clipboard.load_pins(), [{"id": 1, "text": "ok"}])
+        clipboard.pins_path().write_text("not json")
+        self.assertEqual(clipboard.load_pins(), [])
+
+    def test_pins_are_listed_even_when_history_is_off(self):
+        settings.update(clipboard_history=False)
+        clipboard.save_pins([{"id": 1, "text": "keep me"}])
+        self.assertEqual(self.call(["clipboard", "list"])[1]["pins"], [{"id": 1, "preview": "keep me"}])
+
+
 class WatcherTests(Isolated):
     @patch("prismos.clipboard.entries", return_value=[])
     @patch("prismos.clipboard._alive", return_value=False)

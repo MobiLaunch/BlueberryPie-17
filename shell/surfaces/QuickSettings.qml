@@ -16,12 +16,14 @@ PanelWindow {
     property string connectionKind: ""
     property bool soundOpen: false
     property bool editing: false
+    property string detailTile: ""
     readonly property var battery: SystemBridge.snapshot.battery
     readonly property string batteryText: battery.available ? battery.value + "%" + (battery.charging ? " · Charging" : "") : ""
     onSoundOpenChanged: AudioState.panelOpen = soundOpen
     onConnectionKindChanged: Wireless.watchedKind = connectionKind
     function showConnections(kind) {
         soundOpen = false;
+        detailTile = "";
         connectionKind = connectionKind === kind ? "" : kind;
         Wireless.error = "";
         Wireless.notice = "";
@@ -74,7 +76,11 @@ PanelWindow {
         }
     }
     function tileDetails(id) {
-        if (id === "wifi" || id === "bluetooth")
+        if (TilesState.detailTiles.indexOf(id) >= 0) {
+            soundOpen = false;
+            connectionKind = "";
+            detailTile = detailTile === id ? "" : id;
+        } else if (id === "wifi" || id === "bluetooth")
             showConnections(id);
         else if (id === "sound")
             showSound();
@@ -83,6 +89,7 @@ PanelWindow {
     }
     function showSound(kind = "output") {
         connectionKind = "";
+        detailTile = "";
         const open = !soundOpen || AudioState.tab !== kind;
         AudioState.tab = kind;
         soundOpen = open;
@@ -120,6 +127,7 @@ PanelWindow {
             card.forceActiveFocus();
         else {
             editing = false;
+            detailTile = "";
             connectionKind = "";
             soundOpen = false;
         }
@@ -279,8 +287,10 @@ PanelWindow {
                             symbol: info.symbol
                             hasDetails: info.hasDetails
                             activated: modelData === "audio_devices" ? root.soundOpen : info.activated
-                            enabled: info.enabled
-                            onClicked: root.activateTile(modelData)
+                            enabled: info.enabled || info.hasDetails
+                            dimmed: !info.enabled
+                            onClicked: if (info.enabled)
+                                root.activateTile(modelData)
                             onDetailsRequested: root.tileDetails(modelData)
                         }
                     }
@@ -297,6 +307,14 @@ PanelWindow {
                     visible: root.connectionKind.length > 0
                     height: visible ? implicitHeight : 0
                     onCloseRequested: root.connectionKind = ""
+                }
+                TileDetails {
+                    width: parent.width
+                    tile: root.detailTile
+                    visible: tile.length > 0 && !root.editing
+                    height: visible ? implicitHeight : 0
+                    onCloseRequested: root.detailTile = ""
+                    onSettingsRequested: page => ShellState.openSettings(root.screen, page)
                 }
                 SoundPanel {
                     width: parent.width

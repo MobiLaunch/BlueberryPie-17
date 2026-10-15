@@ -30,10 +30,37 @@ ColumnLayout {
     Label {
         Layout.fillWidth: true
         visible: !ClipboardState.enabled && ClipboardState.available
-        text: "Copied text and images stay on this computer until you clear them. Passwords you copy are saved too, so turn this on only if you want that."
+        text: "Copied text and images stay on this computer until you clear them. Passwords you copy are saved too, so turn this on only if you want that. Pinned snippets are kept until you unpin them."
         role: "bodySmall"
         color: Theme.surfaceVariantInk
         wrapMode: Text.WordWrap
+    }
+    SettingsGroup {
+        Layout.fillWidth: true
+        visible: ClipboardState.pins.length > 0
+        title: "Pinned"
+        Repeater {
+            model: ClipboardState.pins
+            delegate: ListRow {
+                required property var modelData
+                width: parent ? parent.width : 400
+                implicitHeight: 48
+                title: modelData.preview
+                symbol: "pin"
+                chipColor: Theme.primaryContainer
+                chipInk: Theme.primaryContainerInk
+                Accessible.name: "Copy pinned: " + modelData.preview
+                onClicked: ClipboardState.copyPin(modelData.id)
+                IconButton {
+                    symbol: "close"
+                    implicitWidth: 36
+                    implicitHeight: 36
+                    iconSize: 18
+                    Accessible.name: "Unpin"
+                    onClicked: ClipboardState.unpin(modelData.id)
+                }
+            }
+        }
     }
     SearchField {
         id: search
@@ -61,13 +88,25 @@ ColumnLayout {
             symbol: modelData.kind === "image" ? "photo" : "document"
             Accessible.name: "Copy: " + modelData.preview
             onClicked: ClipboardState.copy(modelData.id)
-            IconButton {
-                symbol: "close"
-                implicitWidth: 36
-                implicitHeight: 36
-                iconSize: 18
-                Accessible.name: "Remove from history"
-                onClicked: ClipboardState.remove(modelData.id)
+            RowLayout {
+                spacing: 0
+                IconButton {
+                    visible: modelData.kind === "text"
+                    symbol: "pin"
+                    implicitWidth: 36
+                    implicitHeight: 36
+                    iconSize: 18
+                    Accessible.name: "Pin"
+                    onClicked: ClipboardState.pin(modelData.id)
+                }
+                IconButton {
+                    symbol: "close"
+                    implicitWidth: 36
+                    implicitHeight: 36
+                    iconSize: 18
+                    Accessible.name: "Remove from history"
+                    onClicked: ClipboardState.remove(modelData.id)
+                }
             }
         }
         Label {

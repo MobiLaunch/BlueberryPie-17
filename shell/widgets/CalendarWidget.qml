@@ -19,7 +19,7 @@ WidgetCard {
             names.push(Qt.locale().dayName((firstDay + i) % 7, Locale.ShortFormat).charAt(0).toUpperCase());
         return names;
     }
-    implicitWidth: 292
+    widgetId: "calendar"
     function shift(delta) {
         const next = new Date(year, month + delta, 1);
         year = next.getFullYear();

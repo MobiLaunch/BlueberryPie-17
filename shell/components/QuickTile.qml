@@ -14,6 +14,9 @@ Button {
     property bool activated: false
     property bool large: true
     property bool hasDetails: false
+    // Looks unavailable but still takes input (so its details can explain why).
+    property bool dimmed: false
+    readonly property real fade: enabled && !dimmed ? 1 : 0.5
     // With large text the chevron gives way to the label; press and hold or right-click still opens details.
     readonly property bool showChevron: hasDetails && Theme.fontScale <= 1.1
     signal detailsRequested
@@ -42,7 +45,7 @@ Button {
     background: Rectangle {
         radius: root.down ? Theme.shape.large : root.activated ? height / 2 : Theme.shape.extraLarge - 4
         color: root.activated ? Theme.primary : Theme.surfaceContainerHighest
-        opacity: root.enabled ? 1 : 0.5
+        opacity: root.fade
         border.width: root.visualFocus ? 2 : 0
         border.color: Theme.primary
         Behavior on radius {
@@ -74,7 +77,7 @@ Button {
             height: 24
             name: root.symbol
             color: root.inkColor
-            opacity: root.enabled ? 1 : 0.5
+            opacity: root.fade
         }
         Column {
             visible: root.large
@@ -82,7 +85,7 @@ Button {
             y: (parent.height - height) / 2
             width: Math.max(0, parent.width - 56 - (root.showChevron ? 46 : 14))
             spacing: 1
-            opacity: root.enabled ? 1 : 0.5
+            opacity: root.fade
             Label {
                 width: parent.width
                 text: root.title

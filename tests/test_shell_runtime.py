@@ -629,6 +629,127 @@ class ShellRuntimeTests(unittest.TestCase):
         self.assertEqual(titles(), [])
         self.assertTrue(any(str(item.property("text")) == "No matches" for item in harness.visible_items()))
 
+    def test_clipboard_pins_show_copy_and_unpin_through_the_bridge(self):
+        from qml_runtime.stubs import Process
+        harness = self.boot()
+        harness.ipc("clipboard")
+        harness.pump(600)
+        harness.eval('ClipboardState.available = true; ClipboardState.enabled = true; ClipboardState.pins = ['
+                     '{id: 3, preview: "my address"}]; ClipboardState.items = [{id:"12", kind:"text", preview:"hello world"}, '
+                     '{id:"11", kind:"image", preview:"Image"}]')
+        harness.pump(300)
+        row = lambda title: next(item for item in harness.visible_items()
+                                 if item.metaObject().className().startswith("ListRow") and item.property("title") == title)
+        Process.log.clear()
+        harness.click(*harness.scene_pos(row("my address")))
+        self.assertTrue(harness.wait_for(lambda: ["prismctl", "clipboard", "copy-pin", "3"] in Process.log, 3000))
+        pin_buttons = [item for item in harness.visible_items(row("hello world")) if item.property("symbol") == "pin"]
+        self.assertEqual(len(pin_buttons), 1)
+        self.assertEqual([item for item in harness.visible_items(row("Image")) if item.property("symbol") == "pin"], [],
+                         "images cannot be pinned")
+        harness.click(*harness.scene_pos(pin_buttons[0]))
+        self.assertTrue(harness.wait_for(lambda: ["prismctl", "clipboard", "pin", "12"] in Process.log, 3000))
+        self.assertEqual(harness.truncated_texts(), [])
+        self.assertEqual(harness.problems(), [])
+
+    def test_tile_detail_panels_open_on_right_click_and_act(self):
+        from PySide6.QtCore import Qt
+        from prismos import settings
+        from qml_runtime.stubs import Process
+        harness = Harness()
+        self.addCleanup(harness.close)
+        harness.write_settings(onboarding_complete=True, tiles=["dark", "battery_saver", "screenshot", "night_light", "dnd"])
+        harness.load()
+        harness.pump(1500)
+        harness.ipc("shade")
+        harness.pump(600)
+        texts = lambda: {str(item.property("text")) for item in harness.visible_items() if item.property("text")}
+
+        def tile(title):
+            return next(item for item in harness.visible_items()
+                        if item.metaObject().className().startswith("QuickTile") and item.property("title") == title)
+
+        def chip(label):
+            return next(item for item in harness.visible_items()
+                        if item.metaObject().className().startswith("FilterChip") and item.property("text") == label)
+        harness.click(*harness.scene_pos(tile("Night Light")), button=Qt.RightButton)
+        harness.pump(400)
+        self.assertIn("Night Light needs the hyprsunset package.", texts())
+        harness.click(*harness.scene_pos(tile("Battery Saver")), button=Qt.RightButton)
+        harness.pump(300)
+        harness.eval('const snap = JSON.parse(JSON.stringify(SystemBridge.snapshot)); snap.profile = {available: true, profile: "balanced", saver: false}; SystemBridge.snapshot = snap;')
+        self.assertTrue(harness.wait_for(lambda: chip("Performance").property("enabled"), 2000))
+        Process.log.clear()
+        harness.click(*harness.scene_pos(chip("Performance")))
+        self.assertTrue(harness.wait_for(lambda: ["prismctl", "action", "power-performance"] in Process.log, 3000))
+        harness.click(*harness.scene_pos(tile("Dark theme")), button=Qt.RightButton)
+        harness.pump(300)
+        harness.click(*harness.scene_pos(chip("Vibrant")))
+        self.assertTrue(harness.wait_for(lambda: settings.load()["scheme"] == "vibrant", 6000))
+        harness.click(*harness.scene_pos(tile("Screenshot")), button=Qt.RightButton)
+        harness.pump(300)
+        Process.log.clear()
+        harness.click(*harness.scene_pos(chip("Full screen")))
+        self.assertTrue(harness.wait_for(lambda: ["prismctl", "screenshot", "full"] in Process.log, 4000))
+        self.assertEqual(harness.problems(), [])
+
+    def test_widget_size_changes_the_card_and_keeps_text_readable(self):
+        from prismos import settings
+        sizes = {}
+        for label, saved in (("small", "small"), ("large", "large")):
+            harness = Harness(width=1600, height=1000)
+            self.addCleanup(harness.close)
+            harness.write_settings(onboarding_complete=True, widgets=["glance", "system", "calendar", "notes"],
+                                   widget_sizes={"system": saved, "calendar": saved, "notes": saved})
+            harness.load()
+            harness.pump(1600)
+            card = next(item for item in harness.visible_items()
+                        if item.metaObject().className().startswith("SystemWidget"))
+            sizes[label] = card.width()
+            self.assertEqual(harness.truncated_texts(), [], label)
+            self.assertEqual(harness.problems(), [], label)
+        self.assertLess(sizes["small"], 292)
+        self.assertGreater(sizes["large"], 292)
+
+    def test_widgets_page_size_chips_reach_the_bridge(self):
+        from prismos import settings
+        harness = Harness()
+        self.addCleanup(harness.close)
+        harness.write_settings(onboarding_complete=True, widgets=["glance", "notes"])
+        harness.load()
+        harness.pump(1500)
+        harness.ipc("settings")
+        harness.pump(500)
+        row = harness.find("section-widgets")
+        harness.reveal(row)
+        harness.click(*harness.scene_pos(row))
+        harness.pump(700)
+        chip = next(item for item in harness.visible_items()
+                    if item.metaObject().className().startswith("FilterChip") and item.property("text") == "Large")
+        harness.reveal(chip)
+        harness.click(*harness.scene_pos(chip))
+        self.assertTrue(harness.wait_for(lambda: settings.load()["widget_sizes"].get("notes") == "large", 6000))
+        self.assertEqual(harness.truncated_texts(), [])
+
+    def test_recents_uses_live_window_contents_when_the_compositor_offers_them(self):
+        from qml_runtime import stubs
+        harness = self.boot()
+        harness.pump(300)
+        ipc = stubs.Services().hyprland
+        ipc.add_toplevel("aa01")            # no 0x prefix, as Quickshell may report it
+        ipc.add_toplevel("0xaa02", with_handle=False)   # window without a toplevel handle
+        harness.ipc("recents")
+        harness.pump(900)
+        harness.eval(WINDOWS)
+        harness.pump(400)
+        self.assertGreaterEqual(ipc.refreshes, 1, "refreshes the toplevel list when it opens")
+        live = [item for item in harness.visible_items() if item.metaObject().className().startswith("LivePreview")]
+        self.assertEqual(len(live), 1, "only the window with a handle shows live contents")
+        harness.ipc("close")
+        harness.pump(500)
+        self.assertEqual([item for item in harness.visible_items() if item.metaObject().className().startswith("LivePreview")], [])
+        self.assertEqual(harness.problems(), [])
+
     def test_settings_search_filters_sections(self):
         harness = self.boot()
         harness.ipc("settings")

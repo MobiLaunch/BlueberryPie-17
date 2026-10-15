@@ -25,6 +25,7 @@ HARDWARE = real compositor/device testing still required, GAP = missing.
 | Date & time page, 12/24-hour clock, keyboard layouts, world clock, ringing banner | SOURCE / QA | timedatectl/polkit and live layout changes unverified |
 | Lock screen layout and glance alarm/timer | SOURCE / QA | hyprlock rendering unverified |
 | Notes widget, Night Light warmth, power modes, clipboard search | SOURCE / QA | hyprsunset and power-profiles-daemon on hardware |
+| Clipboard pins, tile detail panels, widget sizes, live Recents | SOURCE / QA | ScreencopyView and toplevel address matching unverified on real Quickshell |
 | Recents overview (windows via hyprctl) with window previews | SOURCE / QA | verify focus/close dispatch and grim captures on Hyprland 0.56 Lua; previews are snapshots, not live |
 | Heads-up banners and grouped swipe-dismiss shade | SOURCE / QA | real notification clients, long text, many apps |
 | Settings app (11 sections) | SOURCE / QA | real adapters on hardware; per-app notification controls missing |

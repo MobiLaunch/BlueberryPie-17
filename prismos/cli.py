@@ -35,7 +35,7 @@ def main(argv=None):
     world.add_argument("operation", choices=("list", "add", "remove"))
     world.add_argument("zone", nargs="?")
     clip = sub.add_parser("clipboard")
-    clip.add_argument("operation", choices=("list", "copy", "delete", "clear", "enable", "disable", "resume"))
+    clip.add_argument("operation", choices=("list", "copy", "delete", "clear", "enable", "disable", "resume", "pin", "unpin", "copy-pin"))
     clip.add_argument("id", nargs="?")
     quiet = sub.add_parser("quiet-hours")
     quiet.add_argument("operation", choices=("get", "set"))
@@ -53,7 +53,7 @@ def main(argv=None):
     alerts.add_argument("operation", choices=("list", "mute", "unmute"))
     alerts.add_argument("app", nargs="?")
     gadget = sub.add_parser("widgets")
-    gadget.add_argument("operation", choices=("list", "set"))
+    gadget.add_argument("operation", choices=("list", "set", "size"))
     gadget.add_argument("ids", nargs="*")
     forecast = sub.add_parser("weather")
     forecast.add_argument("operation", choices=("get", "search", "set", "disable"))
@@ -179,6 +179,8 @@ def main(argv=None):
             op = args.operation
             result = (clipboard.status() if op == "list" else clipboard.copy(args.id) if op == "copy"
                       else clipboard.delete(args.id) if op == "delete" else clipboard.clear() if op == "clear"
+                      else clipboard.pin(args.id) if op == "pin" else clipboard.unpin(args.id) if op == "unpin"
+                      else clipboard.copy_pin(args.id) if op == "copy-pin"
                       else clipboard.resume() if op == "resume" else clipboard.enable(op == "enable"))
         elif args.command == "quiet-hours":
             result = (notifyprefs.schedule_status() if args.operation == "get"
@@ -198,7 +200,12 @@ def main(argv=None):
         elif args.command == "stats":
             result = stats.snapshot()
         elif args.command == "widgets":
-            result = widgets.status() if args.operation == "list" else widgets.change(args.ids)
+            if args.operation == "size":
+                if len(args.ids) != 2:
+                    raise ValueError("Usage: widgets size WIDGET small|medium|large")
+                result = widgets.resize(*args.ids)
+            else:
+                result = widgets.status() if args.operation == "list" else widgets.change(args.ids)
         elif args.command == "weather":
             if args.operation == "search":
                 result = weather.search(args.query)

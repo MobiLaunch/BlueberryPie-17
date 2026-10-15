@@ -154,3 +154,38 @@ class WebSearchTests(unittest.TestCase):
             with self.subTest(query=query), self.assertRaises(ValueError):
                 websearch.search(query)
         popen.assert_not_called()
+
+
+class WidgetSizeTests(unittest.TestCase):
+    def setUp(self):
+        import contextlib, io, json, os, tempfile
+        from unittest.mock import patch
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        patcher = patch.dict(os.environ, {"XDG_CONFIG_HOME": self.temp.name})
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        self.contextlib, self.io, self.json = contextlib, io, json
+
+    def call(self, argv):
+        from prismos import cli
+        with self.contextlib.redirect_stdout(self.io.StringIO()) as out:
+            code = cli.main(argv)
+        return code, self.json.loads(out.getvalue())
+
+    def test_sizes_persist_for_resizable_widgets_only(self):
+        from prismos import settings
+        code, result = self.call(["widgets", "size", "notes", "large"])
+        self.assertEqual((code, result["sizes"]), (0, {"notes": "large"}))
+        self.call(["widgets", "size", "system", "small"])
+        self.assertEqual(settings.load()["widget_sizes"], {"notes": "large", "system": "small"})
+        self.assertEqual(self.call(["widgets", "list"])[1]["resizable"], ["calendar", "weather", "system", "notes"])
+        for bad in (["clock", "large"], ["notes", "huge"], ["notes"], ["../x", "small"], ["notes", "large", "extra"]):
+            self.assertEqual(self.call(["widgets", "size", *bad])[0], 1, bad)
+        self.assertEqual(settings.load()["widget_sizes"], {"notes": "large", "system": "small"})
+
+    def test_corrupt_sizes_are_filtered(self):
+        from prismos import settings
+        settings.directory().mkdir()
+        (settings.directory() / "settings.json").write_text(self.json.dumps({"widget_sizes": {"notes": "large", "clock": "large", "system": "gigantic", "../x": "small"}}))
+        self.assertEqual(settings.load()["widget_sizes"], {"notes": "large"})

@@ -77,6 +77,8 @@ QtObject {
     // Shown tiles in the saved order, then the hidden ones in catalog order (for the editor).
     readonly property var arranged: enabled.concat(catalog.map(item => item.id).filter(id => enabled.indexOf(id) < 0))
 
+    // Compact tiles that open an inline details panel (long-press or right-click).
+    readonly property var detailTiles: ["night_light", "battery_saver", "screenshot", "dnd", "dark"]
     function entry(id) {
         return catalog.find(item => item.id === id) || {
             id: id,
@@ -142,7 +144,7 @@ QtObject {
                 symbol: Notifications.quiet ? "notifications_off" : "dnd",
                 activated: Notifications.quiet,
                 enabled: true,
-                hasDetails: false
+                hasDetails: true
             };
         case "dark":
             return {
@@ -152,7 +154,7 @@ QtObject {
                 symbol: "moon",
                 activated: Theme.dark,
                 enabled: true,
-                hasDetails: false
+                hasDetails: true
             };
         case "reduced_motion":
             return {
@@ -192,7 +194,7 @@ QtObject {
                 symbol: "battery",
                 activated: s.profile.saver === true,
                 enabled: s.profile.available,
-                hasDetails: false
+                hasDetails: true
             };
         case "night_light":
             return {
@@ -202,7 +204,7 @@ QtObject {
                 symbol: "night_light",
                 activated: s.night_light.enabled,
                 enabled: s.night_light.available,
-                hasDetails: false
+                hasDetails: true
             };
         case "screenshot":
             return {
@@ -212,7 +214,7 @@ QtObject {
                 symbol: "screenshot",
                 activated: false,
                 enabled: true,
-                hasDetails: false
+                hasDetails: true
             };
         case "lock":
             return {

@@ -66,10 +66,96 @@ def entries():
     return found
 
 
+PIN_LIMIT = 20
+PIN_MAX = 2000
+
+
+def pins_path():
+    base = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local/share"))
+    return base / "prismos" / "clipboard-pins.json"
+
+
+def load_pins():
+    """Pinned snippets: {id, text}. Stored privately and re-validated on every read."""
+    try:
+        data = json.loads(pins_path().read_text())
+    except (OSError, ValueError):
+        return []
+    found = []
+    for item in data if isinstance(data, list) else []:
+        if (isinstance(item, dict) and type(item.get("id")) is int and isinstance(item.get("text"), str)
+                and 0 < len(item["text"]) <= PIN_MAX):
+            found.append({"id": item["id"], "text": item["text"]})
+    return found[:PIN_LIMIT]
+
+
+def save_pins(pins):
+    import tempfile
+    target = pins_path()
+    target.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    fd, name = tempfile.mkstemp(prefix=".pins-", dir=target.parent)
+    try:
+        with os.fdopen(fd, "w") as stream:
+            json.dump(pins, stream)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.chmod(name, 0o600)
+        os.replace(name, target)
+    finally:
+        if os.path.exists(name):
+            os.unlink(name)
+
+
+def pin_views():
+    return [{"id": pin["id"], "preview": re.sub(r"[\x00-\x1f\x7f]", " ", pin["text"]).strip()[:120]} for pin in load_pins()]
+
+
+def pin(identity):
+    identity = check(identity)
+    item = next((entry for entry in entries() if entry["id"] == identity), None)
+    if item is None:
+        raise ValueError("That entry is already gone")
+    if item["kind"] != "text":
+        raise ValueError("Only text can be pinned")
+    text = run(["cliphist", "decode", identity], timeout=6)
+    if not text or len(text) > PIN_MAX:
+        raise ValueError("Only snippets up to %d characters can be pinned" % PIN_MAX)
+    pins = load_pins()
+    if any(existing["text"] == text for existing in pins):
+        return status(items=False)
+    if len(pins) >= PIN_LIMIT:
+        raise ValueError("You can pin up to %d snippets" % PIN_LIMIT)
+    save_pins(pins + [{"id": max([p["id"] for p in pins], default=0) + 1, "text": text}])
+    return status(items=False)
+
+
+def unpin(pin_id):
+    if not isinstance(pin_id, str) or not ID.fullmatch(pin_id):
+        raise ValueError("Invalid pin")
+    save_pins([pin for pin in load_pins() if pin["id"] != int(pin_id)])
+    return status(items=False)
+
+
+def copy_pin(pin_id):
+    if not isinstance(pin_id, str) or not ID.fullmatch(pin_id):
+        raise ValueError("Invalid pin")
+    found = next((pin for pin in load_pins() if pin["id"] == int(pin_id)), None)
+    if found is None:
+        raise ValueError("That pin no longer exists")
+    if not shutil.which("wl-copy"):
+        raise CommandError("Copying needs wl-clipboard")
+    outcome = subprocess.run(["wl-copy"], input=found["text"].encode(), timeout=8, check=False,
+                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    if outcome.returncode:
+        raise CommandError("That snippet could not be copied")
+    return {"ok": True, "id": found["id"]}
+
+
 def status(items=True):
     enabled = settings.load()["clipboard_history"]
     ready = available()
-    result = {"ok": True, "enabled": enabled, "available": ready, "running": running() if ready else False, "items": []}
+    result = {"ok": True, "enabled": enabled, "available": ready, "running": running() if ready else False,
+              "items": [], "pins": pin_views()}
     if items and ready and enabled:
         result["items"] = entries()
     return result

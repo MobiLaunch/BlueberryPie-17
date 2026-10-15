@@ -21,7 +21,17 @@ def enabled():
 
 
 def status():
-    return {"ok": True, "catalog": CATALOG, "enabled": enabled()}
+    return {"ok": True, "catalog": CATALOG, "enabled": enabled(), "sizes": settings.load()["widget_sizes"],
+            "resizable": list(settings.RESIZABLE_WIDGETS)}
+
+
+def resize(identifier, size):
+    if identifier not in settings.RESIZABLE_WIDGETS:
+        raise ValueError("That widget cannot be resized")
+    if size not in settings.WIDGET_SIZES:
+        raise ValueError("Size must be small, medium or large")
+    settings.modify(lambda data: {**data, "widget_sizes": {**data["widget_sizes"], identifier: size}})
+    return status()
 
 
 def change(ids):

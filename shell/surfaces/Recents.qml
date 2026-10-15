@@ -3,6 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
+import Quickshell.Hyprland
 import "../components"
 import "../services"
 import "../services/LaunchTracking.js" as LaunchTracking
@@ -13,6 +14,14 @@ PanelWindow {
     id: root
     property bool opened: ShellState.recentsOpen && ShellState.activeScreen === screen
     readonly property var windows: Windows.list.slice().sort((a, b) => a.recency - b.recency)
+    // Live window contents through the compositor's screencopy support, when it offers them.
+    // Quickshell hands Hyprland's address back with or without the 0x prefix, so compare without it.
+    readonly property var toplevels: Hyprland.toplevels ? Hyprland.toplevels.values : []
+    function liveSource(window) {
+        const want = String(window.address).replace(/^0x/, "").toLowerCase();
+        const match = toplevels.find(item => String(item.address).replace(/^0x/, "").toLowerCase() === want);
+        return match && match.wayland ? match.wayland : null;
+    }
     function appFor(window) {
         return SystemBridge.apps.find(app => LaunchTracking.matches(app, window.class)) || null;
     }
@@ -32,6 +41,7 @@ PanelWindow {
     color: "transparent"
     visible: opened || scrim.opacity > .01
     onOpenedChanged: if (opened) {
+        Hyprland.refreshToplevels();
         strip.currentIndex = 0;
         strip.forceActiveFocus();
     }
@@ -161,7 +171,7 @@ PanelWindow {
                         color: slot.modelData.focused ? Theme.primary : Theme.secondaryContainer
                         Image {
                             anchors.fill: parent
-                            visible: preview.shot.length > 0 && status === Image.Ready
+                            visible: preview.shot.length > 0 && status === Image.Ready && !live.hasContent
                             source: preview.shot
                             asynchronous: true
                             cache: false
@@ -169,11 +179,21 @@ PanelWindow {
                             horizontalAlignment: Image.AlignLeft
                             verticalAlignment: Image.AlignTop
                         }
+                        Loader {
+                            id: live
+                            anchors.fill: parent
+                            // Capture only while the overview is open and the window is not minimized.
+                            active: root.opened && !slot.modelData.minimized && root.liveSource(slot.modelData) !== null
+                            source: "../components/LivePreview.qml"
+                            readonly property bool hasContent: status === Loader.Ready && item !== null && item.hasContent
+                            onLoaded: item.source = Qt.binding(() => root.liveSource(slot.modelData))
+                            visible: hasContent
+                        }
                         Image {
                             anchors.centerIn: parent
                             width: 72
                             height: 72
-                            visible: preview.shot.length === 0
+                            visible: preview.shot.length === 0 && !live.hasContent
                             sourceSize: Qt.size(144, 144)
                             fillMode: Image.PreserveAspectFit
                             source: Quickshell.iconPath(slot.app ? slot.app.icon : slot.modelData.class.toLowerCase(), "application-x-executable")

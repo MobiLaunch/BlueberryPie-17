@@ -7,7 +7,11 @@ Rectangle {
     id: root
     default property alias content: slot.data
     property real padding: 16
-    implicitWidth: 280
+    // Resizable cards name themselves; Settings → Widgets chooses small, medium or large.
+    property string widgetId: ""
+    property real baseWidth: 292
+    readonly property real sizeFactor: WidgetsState.sizeFactor(widgetId)
+    implicitWidth: Math.round(baseWidth * sizeFactor)
     implicitHeight: slot.childrenRect.height + padding * 2
     radius: Theme.shape.extraLarge
     color: Theme.withAlpha(Theme.surfaceContainer, 0.93)

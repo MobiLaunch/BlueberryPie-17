@@ -7,7 +7,7 @@ import "../services"
 WidgetCard {
     id: root
     readonly property var stats: WidgetsState.stats
-    implicitWidth: 292
+    widgetId: "system"
     component Meter: Item {
         id: meter
         property string label

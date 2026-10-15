@@ -72,6 +72,18 @@ QtObject {
     property string searchError: ""
     readonly property var place: SystemBridge.snapshot.settings.weather || ({})
     readonly property bool weatherConfigured: place && place.label !== undefined
+    readonly property var sizes: SystemBridge.snapshot.settings.widget_sizes || ({})
+    readonly property var resizable: ["calendar", "weather", "system", "notes"]
+    function sizeFactor(id) {
+        const size = sizes[id];
+        return size === "small" ? 0.85 : size === "large" ? 1.3 : 1;
+    }
+    function setSize(id, size) {
+        if (writer.running)
+            return;
+        writer.command = ["prismctl", "widgets", "size", id, size];
+        writer.running = true;
+    }
     function has(id) {
         return enabled.indexOf(id) >= 0;
     }

@@ -1,4 +1,25 @@
-# Validation record — 2026-10-15 (v0.9 through round six)
+# Validation record — 2026-10-15 (v0.9 through round seven)
+
+## Addendum: round seven (pins, tile details, widget sizes, live Recents)
+
+### Executed
+
+| Check | Result |
+| --- | --- |
+| Clipboard pins | Private (0600) atomic file, text only, duplicate/oversize/limit refusal, survive clearing and a disabled history, corrupt files filtered; copy sends the text on stdin to `wl-copy`; the pane's rows send the right commands and images get no pin button |
+| Tile details | Right-click opens the panel even on tiles that look unavailable (so they can say why); battery modes, color scheme and screenshot mode chips act through the bridge |
+| Widget sizes | Validation (only four widgets, three sizes), persistence, corrupt files; small and large cards render at the expected widths with no elided text; Settings chips reach the bridge |
+| Live Recents | With a stub toplevel list (addresses with and without `0x`), only the window with a handle gets a live view, none while closed; the live view loads on demand so a Quickshell without screencopy cannot break the overview |
+| `scripts/check.sh` | Passed |
+
+### Not executed
+
+- **The real `ScreencopyView`**: whether Quickshell on Arch was built with screencopy, whether
+  `HyprlandToplevel.address` matches `hyprctl` addresses as assumed, permission prompts, frame rates, and
+  the cost of capturing many windows at once. The harness uses a flat-color test double.
+- Pinned text is stored unencrypted in the user's data directory (by design, like the notes widget).
+
+## Previous record — 2026-10-15 (through round six)
 
 ## Addendum: round six (notes, warmth, power modes, clipboard search)
 

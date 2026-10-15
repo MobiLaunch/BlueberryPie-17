@@ -251,13 +251,36 @@ class HyprlandEvent(QObject):
         return self.data_
 
 
+class HyprlandToplevel(QObject):
+    """Quickshell's HyprlandToplevel: a window address and its Wayland toplevel handle."""
+    addressChanged, address = prop(str, "address", "")
+    waylandChanged, wayland = prop(QObject, "wayland", None)
+
+
 class HyprlandIpc(QObject):
     focusedMonitorChanged = Signal()
     rawEvent = Signal(QObject)
+    toplevelsChanged = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self._monitor = None
+        self._toplevels = ObjectList(self)
+        self.refreshes = 0
+
+    @Property(QObject, notify=toplevelsChanged)
+    def toplevels(self):
+        return self._toplevels
+
+    @Slot()
+    def refreshToplevels(self):
+        self.refreshes += 1
+
+    def add_toplevel(self, address, with_handle=True):
+        item = HyprlandToplevel(self)
+        item.address = address
+        item.wayland = QObject(self) if with_handle else None
+        self._toplevels.add(item)
 
     @Property(QObject, notify=focusedMonitorChanged)
     def focusedMonitor(self):

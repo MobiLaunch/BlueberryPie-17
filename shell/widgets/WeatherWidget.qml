@@ -6,7 +6,7 @@ WidgetCard {
     id: root
     readonly property var data: WidgetsState.weather
     readonly property bool ready: WidgetsState.weatherConfigured && data.ok === true && data.temperature !== undefined
-    implicitWidth: 292
+    widgetId: "weather"
     Column {
         width: parent.width
         spacing: 6

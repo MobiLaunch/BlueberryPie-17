@@ -206,3 +206,9 @@ Still open: per-tile detail panels, clipboard search/pinning, resizable widgets,
 ## Round six (development slice)
 
 - Notes widget, Night Light warmth, power modes, clipboard search.
+
+## Round seven (development slice)
+
+- Clipboard pinning, Quick Settings tile detail panels, widget sizes, live Recents when screencopy is available.
+
+Still open: measurements against the Android reference and everything listed under "Not executed" in `docs/VALIDATION.md`.

@@ -112,6 +112,16 @@ ISO and hardware qualification have not been completed in this release.
   (Power saver, Balanced, Performance) in Settings → Battery & power, when power-profiles-daemon is present.
 - **Clipboard search** in the clipboard history panel.
 
+### Round seven: pins, tile details, widget sizes and live Recents
+
+- **Clipboard pinning**: pin a text entry to keep it when history is cleared or turned off; pins live in
+  `~/.local/share/prismos/clipboard-pins.json` (private, up to 20 snippets of 2000 characters).
+- **Tile details**: right-click or long-press Night Light (warmth), Battery Saver (modes), Screenshot
+  (area/window/full screen), Do Not Disturb (quiet hours) or Dark theme (color scheme) in Quick Settings.
+- **Widget sizes**: Calendar, Weather, System and Notes can be small, medium or large (Settings → Widgets).
+- **Live Recents**: when Quickshell exposes Hyprland toplevels and screencopy, cards show the window's live
+  contents while the overview is open; otherwise the snapshot or an icon is used.
+
 ## Build the ISO on Windows
 
 See **[Windows build instructions](docs/WINDOWS-ISO.md)** for the

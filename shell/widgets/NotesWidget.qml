@@ -11,8 +11,9 @@ WidgetCard {
     property string status: ""
     property string error: ""
     padding: 14
-    implicitWidth: 300
-    implicitHeight: 220
+    widgetId: "notes"
+    baseWidth: 300
+    implicitHeight: Math.round(220 * sizeFactor)
     function save() {
         if (!loaded || writer.running)
             return;

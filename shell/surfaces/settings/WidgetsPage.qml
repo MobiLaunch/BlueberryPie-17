@@ -23,6 +23,31 @@ SettingsPage {
                 onSwitched: value => WidgetsState.set(modelData.id, value)
             }
         }
+        Repeater {
+            model: WidgetsState.catalog.filter(item => WidgetsState.resizable.indexOf(item.id) >= 0 && WidgetsState.has(item.id))
+            delegate: ListRow {
+                id: sizeRow
+                required property var modelData
+                width: parent ? parent.width : 600
+                interactive: false
+                implicitHeight: 56
+                title: modelData.title + " size"
+                symbol: "widgets"
+                RowLayout {
+                    spacing: 6
+                    Repeater {
+                        model: ["small", "medium", "large"]
+                        delegate: FilterChip {
+                            required property string modelData
+                            text: modelData.charAt(0).toUpperCase() + modelData.slice(1)
+                            implicitHeight: 34
+                            selected: (WidgetsState.sizes[sizeRow.modelData.id] || "medium") === modelData
+                            onClicked: WidgetsState.setSize(sizeRow.modelData.id, modelData)
+                        }
+                    }
+                }
+            }
+        }
     }
     SettingsGroup {
         width: parent.width
