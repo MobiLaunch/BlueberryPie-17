@@ -9,10 +9,33 @@ PrismOS is a new Arch Linux desktop project inspired by Android 17 and Material
 3 Expressive: playful color, tactile rounded controls, emphasized typography,
 and motion that connects an action to its result.
 
-The v0.8 source release includes a native **Qt Quick / Quickshell** shell, an
-interactive offline design preview, real Linux system adapters, and an Arch
+The v0.9 source release rebuilds the native **Qt Quick / Quickshell** shell on a
+real Material 3 color system (CAM16/HCT Tonal Spot), shared Expressive components,
+an Android-style Settings app, a dual notification/Quick Settings shade, a
+running-app dock, Recents, and an offscreen QML runtime harness. It also keeps the
+interactive offline preview, real Linux system adapters, and the Arch
 package/live-ISO staging pipeline. This is a development foundation. A bootable
 ISO and hardware qualification have not been completed in this release.
+
+### What's new in v0.9
+
+- **Material 3 dynamic color**: `prismos/hct.py` implements CAM16/HCT; the Tonal Spot
+  scheme produces the full M3 role set, validated against published reference values.
+  The wallpaper, Settings preview and every surface follow the palette and dark mode.
+- **Fixed**: clipped button labels, unreadable dark mode (content-color roles rendered
+  black), a dock that clipped its last button, and glyph icons. Icons are now a 68-symbol
+  original set recolored at runtime.
+- **Quick Settings**: large and compact tiles (active = pill, inactive = squircle),
+  brightness/volume sliders, MPRIS media card, and Android's dual shade on wide
+  screens with grouped, swipe-to-dismiss notifications and heads-up banners.
+- **Settings**: searchable two-pane app with Network, Bluetooth, Display, Sound,
+  Notifications, Wallpaper & style, Pointer & keyboard, Shortcuts, Apps, Battery & power
+  and About (real system facts).
+- **Launcher** with ranked search, categories and recents; **dock** with running-app
+  indicators and window cycling; **Recents** overview (Super + Tab).
+- **Hardware keys**: volume, mute, microphone mute and brightness bind to fixed actions.
+- **Verification**: `tests/test_shell_runtime.py` loads the real shell QML offscreen with
+  stub Quickshell modules; it needs PySide6 and is skipped when unavailable.
 
 ## Build the ISO on Windows
 
@@ -40,12 +63,12 @@ controls and app contents are explicitly simulated. Native controls use Linux.
 
 | Area | First implementation |
 | --- | --- |
-| Native shell | Wallpaper, top bar, saved dock favorites, app badges, system tray, searchable app drawer, appearance panel |
-| Quick Settings | Split radio/sound/microphone controls, inline connection and audio panels, Do Not Disturb, dark theme, brightness, reduced motion |
+| Native shell | Theme-following wallpaper, status bar with live status icons, running-app dock, system tray, ranked app launcher, Recents, Settings app |
+| Quick Settings | Large/compact tiles, split radio/sound/microphone controls, inline connection and audio panels, Do Not Disturb, dark theme, brightness, reduced motion, dual notification shade |
 | System controls | NetworkManager, BlueZ, WirePlumber/PipeWire, brightnessctl; no shell evaluation |
-| Color | Four palettes, custom seed, optional wallpaper sampling, contrast-checked semantic roles |
+| Color | CAM16/HCT Tonal Spot, four palettes, custom seed, optional wallpaper sampling, full Material 3 role set, M3 type scale and shape tokens |
 | Motion | Tile shape response, slider feedback, shade/drawer transitions, morphing loader, launch splash that ends on matching Hyprland window arrival/focus |
-| Notifications | Action buttons, urgency, 50-item retention cap, plain-text cards, dismissal and quiet mode |
+| Notifications | Grouped by app, swipe to dismiss, action buttons, urgency, heads-up banners, 50-item retention cap, plain-text cards, quiet mode |
 | Media | MPRIS metadata/artwork, capability-guarded playback controls and player selection |
 | Sound devices | Output/microphone tabs, default selection, levels, independent mute, unavailable-device feedback and filtered PipeWire event updates |
 | Session | Confirmed power actions, idle locking, per-monitor shortcuts and unplug recovery |
@@ -140,7 +163,10 @@ when upgrading. Native hardware qualification remains open.
 | --- | --- |
 | Super + Space / Super + A | App drawer |
 | Super + Q | Quick Settings |
-| Super + comma | Appearance |
+| Super + Tab | Recent apps |
+| Super + comma | Settings |
+| Super + S | Prism Store |
+| Volume, mute, microphone mute, brightness keys | Fixed `prismctl` actions |
 | Super + Enter | Terminal |
 | Super + E | Files |
 | Super + L | Lock |
@@ -153,10 +179,23 @@ when upgrading. Native hardware qualification remains open.
 ./bin/prismctl theme --seed '#47846a'
 ```
 
-Wallpaper sampling changes the shell palette. The v0.4 desktop still uses the
-bundled vector wallpaper; a wallpaper picker is planned. The initial tonal
-algorithm is HSL-based with contrast checks, **not** Google's HCT/Monet system.
-Third-party Linux applications retain their own themes in this milestone.
+Wallpaper sampling changes the shell palette. The default wallpaper is drawn from the
+current color roles, so it follows the palette and dark mode; a wallpaper picker is
+planned. Color uses a CAM16/HCT Tonal Spot implementation validated against
+published Material values; it is not Google's Monet service, and wallpaper seed
+scoring is a simplified version of Material's. Third-party Linux applications retain
+their own themes in this milestone.
+
+### Run the offscreen shell checks
+
+```bash
+python -m venv .venv && .venv/bin/pip install PySide6-Essentials pillow
+.venv/bin/python -m unittest tests.test_shell_runtime -v
+```
+
+The harness needs Qt's EGL libraries (`libEGL.so.1`) and optionally `lua` for the
+Hyprland config test. It uses stub Quickshell modules; see `docs/VALIDATION.md` for
+exactly what it does and does not prove.
 
 ## Build a live ISO on Arch
 

@@ -13,7 +13,11 @@ HARDWARE = real compositor/device testing still required, GAP = missing.
 
 | Surface | Status | Expected next acceptance |
 | --- | --- | --- |
-| Top bar, wallpaper, dock, app launcher | SOURCE / QA | monitor DPI + touch hardware |
+| Status bar, theme-following wallpaper, running-app dock, ranked launcher | SOURCE / QA | monitor DPI + touch hardware |
+| Recents overview (windows via hyprctl) | SOURCE / QA | verify focus/close dispatch on Hyprland 0.56 Lua; no thumbnails yet |
+| Heads-up banners and grouped swipe-dismiss shade | SOURCE / QA | real notification clients, long text, many apps |
+| Settings app (11 sections) | SOURCE / QA | real adapters on hardware; per-app notification controls missing |
+| Hardware volume / brightness / mute keys | SOURCE | real keyboard; bind flags unverified |
 | Quick Settings: Wi-Fi, Bluetooth, brightness, microphone, volume | SOURCE / QA | pairing, secure network, backlight hardware |
 | Desktop right-click background menu | SOURCE / QA | right-click positioning and high DPI |
 | Dock and launcher app menus | SOURCE / QA | keyboard/long press/right click |
@@ -32,7 +36,8 @@ HARDWARE = real compositor/device testing still required, GAP = missing.
 | Display scaling and arrangement with rollback | SOURCE / QA | physical multi-monitor hotplug and arrangement checks |
 | Printer, monitor arrangement, audio streams, permissions | GAP | settings panels with service APIs |
 | Installer, disk manager, Wi-Fi first boot, persistence | GAP | supervised destructive disk QA |
-| HCT dynamic material color across GTK/Qt | GAP | implement supported accent handoff, live reapply |
+| HCT dynamic material color in the shell | SOURCE / QA | other scheme variants (Vibrant, Expressive); GTK/Qt accent handoff stays a GAP |
+| Dynamic color across GTK/Qt/Electron apps | GAP | supported accent handoff, live reapply |
 | Secure Android APK trust and seamless native install | GAP | publisher signatures, authorized F-Droid API |
 | Notification history, clipboard, share sheet / portal UI | PARTIAL / GAP | full action tests |
 | ISO and USB boot | HARDWARE | Arch mkarchiso, real USB, Intel+AMD |
@@ -86,3 +91,14 @@ HARDWARE = real compositor/device testing still required, GAP = missing.
   rename resolution, removable-drive hotplug push notifications, drag across
   processes, actual touchscreen edge gestures, display rotation/duplicate mode
   with rollback, and real hardware testing.
+
+
+## v0.9 engineering status
+
+- Color: validated CAM16/HCT Tonal Spot with the full M3 role set; `*Ink` content roles
+  (an `onX` property naming collision made default text black in Qt 6.12).
+- UI: the harness-detected defects (clipped labels, 62 px dock overflow, black text in
+  dark mode, glyph icons) are fixed and covered by tests that scan the live item tree.
+- Open: Recents thumbnails (needs screencopy), Quick Settings edit/reorder, wallpaper
+  picker, notification history persistence, on-screen keyboard and accessibility
+  settings, and every hardware or compositor check listed in `docs/VALIDATION.md`.

@@ -1,4 +1,70 @@
-# Validation record — 2026-10-14
+# Validation record — 2026-10-15 (v0.9)
+
+This pass rebuilt most of the native shell. A new **offscreen QML runtime harness**
+(`tests/qml_runtime/`) loads the real `shell/` QML with *stub* Quickshell modules
+under plain Qt Quick (PySide6 / Qt 6.12, software renderer, offscreen platform),
+runs the genuine `prismctl` bridge against an isolated config, and can screenshot
+the composited desktop. It finds binding, reference and layout errors without a
+compositor. **It is an approximation, not Quickshell or Hyprland qualification.**
+
+## Executed
+
+| Check | Result |
+| --- | --- |
+| `scripts/check.sh` (Python suites, shell syntax, Node specs, QML syntax) | 178 tests passed; 0 skipped with Qt, Lua and Pillow present |
+| HCT color engine against published Material Tonal Spot values (seed `#6750A4`) | Roles matched the reference scheme within 2/255 per channel; tone round-trips within 0.6 L* |
+| Contrast pairs (primary, containers, error, surface, inverse; 6 seeds × light/dark) | All ≥ 4.5:1 |
+| Real shell QML under the harness | Loads with zero QML errors; every surface (Quick Settings, launcher, Settings, Files, Store, power, Recents, first run) opens without errors |
+| Elided or clipped text on every surface | None (automated item-tree scan) |
+| Settings: all 11 sections loaded by clicking their rows | No errors, no elided text |
+| First-run wizard clicked through to completion | `prismctl welcome finish` ran; `onboarding_complete` persisted |
+| Notifications: grouping, swipe-target, dismiss, banner, Do Not Disturb, critical break-through | Pass |
+| Dark theme legibility | Ink roles resolve to scheme values; dark surface is dark, text is light |
+| `tests/native-smoke.qml` (the fixture CI runs on real Quickshell) | `PRISM_NATIVE_SMOKE_OK` under stub modules |
+| `config/hypr/hyprland.lua` | Lua 5.4 parse; executed against a mock `hl`; every bind checked against the shell IPC and `prism-shell` allowlist |
+| `qmlformat` over 72 QML files | Pass |
+| `qmllint` with stub type roots | 0 errors (warnings remain; real-type lint runs in Arch CI) |
+| Browser preview interactions (Playwright 1.56.1, Chromium 1194) | Passed with regenerated Material 3 tokens |
+| Generated assets reproducible (`generate-design.py`) | No diff |
+
+## Not executed — treat as open
+
+- **Native Quickshell + Hyprland session.** Layer-shell focus, `HyprlandFocusGrab`,
+  stacking of overlays over the dock, input regions and monitor hotplug are
+  stubbed in the harness.
+- **Hyprland control calls.** `hyprctl dispatch focuswindow|closewindow` (dock,
+  Recents) is unverified on Hyprland 0.56 with a Lua config; failures surface as
+  a toast and leave windows untouched. Bind options `locked`/`repeating` for
+  hardware keys are unverified; the binds are `pcall`-guarded so an unsupported
+  option cannot break the session config.
+- **Hardware keys, touchpad gestures, brightness/volume steps** on real devices.
+- **`hyprlock` configuration** (new layout): not run; it uses documented options only.
+- **GPU rendering.** All screenshots are from the software renderer. Icons are
+  recolored SVG data URIs (no shader effects) and should render the same on GL.
+- **Fonts.** The harness host lacks Roboto/Google Sans Flex and fell back to Inter;
+  metrics on Arch with Roboto may differ slightly (labels are measured, not guessed).
+- **Real MPRIS, tray and notification clients** (stubs only), PipeWire/NetworkManager/
+  BlueZ writes (hosts lacked them), Waydroid, Flatpak.
+- **ISO build and boot, `makepkg`.** Not run on this host.
+- **Publication.** These commits were made locally; the push was refused because the
+  session lacked GitHub access to the repository.
+
+## Defects found and fixed this pass
+
+- Every button label was clipped: Qt's Material `Button` pins 24/16 px padding that
+  `PillButton` did not budget for. Close (`×`) and tile chevrons had zero content width.
+- Inside `components/`, `Label` resolved to `QtQuick.Controls.Label`, so shared
+  components never used the Theme font or color for text.
+- **Content-color roles (`onPrimary`, `onSurface`, …) silently evaluated to black.** A
+  property named `onX` beside a property `x` loses its binding in Qt 6.12. Default
+  text was therefore black on every surface, which is unreadable in dark mode. The
+  roles are now `*Ink` (for example `Theme.surfaceInk`) and covered by a test.
+- The dock was 62 px too narrow, clipping its last button for any number of favorites.
+- A stray "Prism Store" button overlapped the app drawer header, and the Settings page
+  was one long mixed scroll. (While rebuilding, the harness also caught `ToggleRow`
+  redeclaring `Button`'s final `checked` property before it shipped.)
+
+## Previous record — 2026-10-14 (v0.8)
 
 This record distinguishes source/preview verification from a running desktop and
 a bootable distribution. The latter still require an Arch machine or VM.

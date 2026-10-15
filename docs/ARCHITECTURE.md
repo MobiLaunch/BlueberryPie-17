@@ -17,9 +17,10 @@ flowchart TD
 | Location | Responsibility |
 | --- | --- |
 | `shell/services` | State, process dispatch, theme and notification daemon |
-| `shell/components` | Tiles, sliders, pills, symbols, labels and loader |
-| `shell/surfaces` | Per-monitor desktop, shade, drawer, appearance and launch splash |
-| `prismos` | Python adapters, settings, color generation and desktop entry discovery |
+| `shell/components` | Shared Expressive components (buttons, tiles, list rows, chips, notification cards, symbols) |
+| `shell/surfaces` | Per-monitor wallpaper, status bar, dock, shade, launcher, Settings (and `settings/` pages), Files, Store, Recents, banners, power, first run, launch splash |
+| `prismos` | Python adapters (system, windows, about, files, drives, displays, audio, wireless, apps), settings, HCT color and desktop entry discovery |
+| `tests/qml_runtime`, `tests/qmlstubs` | Offscreen harness: stub Quickshell modules plus a Qt Quick runner (test infrastructure only) |
 | `design` | Original icons, wallpaper and generated shared palette tokens |
 | `preview` | Offline design review; deliberately simulated hardware and applications |
 | `config/hypr` | Dedicated compositor session and lock configuration |
@@ -40,8 +41,22 @@ strings are never evaluated by a shell. User overrides, Hidden/NoDisplay,
 OnlyShowIn/NotShowIn and TryExec are honored.
 
 Settings use a private XDG config directory, file locking and atomic replacement.
-The theme generates semantic color roles; components do not choose palette-specific
-text colors. HSL tones are an initial adapter and can be replaced with HCT later.
+The theme generates semantic Material 3 color roles (CAM16/HCT Tonal Spot); components
+do not choose palette-specific colors. Window state comes from `prismctl windows`
+(`hyprctl -j clients`), refreshed on Hyprland events with a ten-second recovery poll;
+focus and close send a fixed dispatcher with a validated address. `prismctl about`
+reads `/etc/os-release` and `/proc` without running commands. Recently launched apps
+and app categories come from `prismctl apps` and `launch`.
+
+## Verification without a compositor
+
+`tests/qml_runtime` registers stand-ins for the Quickshell modules PrismOS imports
+(`Process` runs real argv commands through `QProcess`; `PanelWindow` becomes a
+positioned item on a shared desk) and boots the real `shell/shell.qml` in Qt Quick's
+offscreen software renderer. Tests drive it with clicks, IPC calls and injected
+service state, and fail on QML errors, elided text or layout regressions. Nothing
+here models layer-shell focus, input regions, Hyprland or hardware; see
+`docs/VALIDATION.md` for the boundary.
 
 ## Runtime and performance
 

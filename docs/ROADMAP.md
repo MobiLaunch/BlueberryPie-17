@@ -147,3 +147,20 @@ working permissions and predictable error/retry handling across every app.
 Follow-on acceptance: boot and run PrismOS on real Arch hardware, test
 touchscreen gestures, external displays, live drag/drop, XDG portals, and
 review large file transfers, media indexing and hotplug behavior.
+
+
+## v0.9 delivered development slice
+
+- Material 3 dynamic color (CAM16/HCT Tonal Spot), M3 type, shape and state-layer tokens.
+- Rebuilt shared component set; icons recolored at runtime from one original SVG set.
+- Quick Settings (large/compact tiles), dual shade, grouped swipe-dismiss notifications,
+  heads-up banners, MPRIS card.
+- Status bar with live status, running-app dock, ranked launcher, Recents (Super + Tab).
+- Settings app (11 sections incl. About and Shortcuts), restyled Files, Store, power
+  menu and first-run wizard; theme-following wallpaper; refreshed lock screen.
+- Hardware volume/brightness/mute keys; offscreen QML runtime harness.
+
+Follow-on acceptance: run the packaged session on real Arch + Hyprland hardware,
+verify `hyprctl` focus/close and hardware-key binds, then M2 reference measurements
+(Pixel SystemUI proportions), Recents thumbnails, tile edit/reorder, a wallpaper picker,
+other Material scheme variants and per-app notification controls.
